@@ -3151,7 +3151,7 @@
                             <div>
                                 ${isPaid
                                     ? '<span class="badge badge-success">납부완료</span>'
-                                    : `<button onclick="markMonthCell('${tenant.id}','${renewalMonthKey}')" class="btn btn-secondary" style="padding:8px 14px;font-size:14px;">납부 처리</button>`
+                                    : `<button onclick="markMonthCell('${tenant.id}','${renewalMonthKey}')" class="btn btn-secondary" style="padding:8px 14px;font-size:14px;white-space:nowrap;">납부 처리</button>`
                                 }
                             </div>
                         </div>`;
@@ -3717,7 +3717,7 @@
             const monthRents = appData.rents.filter(r => r.month === monthStr);
             const paidRents = monthRents.filter(r => r.status === 'paid');
             const monthlyIncome = paidRents.reduce((sum, r) => sum + r.amount, 0);
-            const unpaidRents = monthRents.filter(r => r.status === 'pending' || r.status === 'overdue');
+            const unpaidRents = appData.rents.filter(r => r.status === 'pending' || r.status === 'overdue');
             // 이번달 수입예정: 월세는 매달, 연세는 계약 시작 월에만 포함
             const thisMonth = String(today.getMonth() + 1).padStart(2, '0'); // 'MM'
             const monthlyExpected = appData.tenants
