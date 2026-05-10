@@ -418,6 +418,165 @@
         .tc-past-badge { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px; background: #F1F5F9; color: #6B7280; }
         .tc-past-dates { font-size: 12px; color: #6B7280; }
 
+        /* ═══════════════════════════ TENANT DETAIL PAGE ═══════════════════════════ */
+        .td-overlay {
+            display: none; position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 1100; background: #EEF1F9;
+            flex-direction: column; overflow: hidden;
+        }
+        .td-overlay.active { display: flex; }
+        .td-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: max(14px, env(safe-area-inset-top)) 16px 14px;
+            background: #EEF1F9; flex-shrink: 0;
+        }
+        .td-back-btn {
+            background: white; border: none; width: 40px; height: 40px;
+            border-radius: 12px; font-size: 18px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.10); color: #1E293B;
+            touch-action: manipulation;
+        }
+        .td-header-title { font-size: 17px; font-weight: 800; color: #1E293B; }
+        .td-edit-btn {
+            background: white; border: none; height: 36px; padding: 0 14px;
+            border-radius: 10px; font-size: 14px; font-weight: 700; color: #2563EB;
+            cursor: pointer; box-shadow: 0 1px 6px rgba(0,0,0,0.10);
+            touch-action: manipulation;
+        }
+        .td-body {
+            flex: 1; overflow-y: auto; overflow-x: hidden;
+            padding: 0 0 100px; -webkit-overflow-scrolling: touch;
+        }
+        /* Hero card */
+        .td-hero-card {
+            background: white; margin: 0 12px 12px;
+            border-radius: 18px; border: 1px solid #EAECF4;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.07); overflow: hidden;
+        }
+        .td-hero-top {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 14px 10px; background: #F8FAFC;
+            border-bottom: 1px solid #EAECF4;
+        }
+        .td-hero-building { font-size: 13px; font-weight: 700; color: #1E293B; display: flex; align-items: center; gap: 5px; }
+        .td-hero-badge { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px; }
+        .td-hero-main {
+            display: flex; align-items: flex-start; gap: 12px;
+            padding: 14px 14px 10px;
+        }
+        .td-avatar {
+            width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
+            background: linear-gradient(135deg, #3B82F6, #1D4ED8);
+            color: white; font-size: 22px; font-weight: 900;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .td-hero-info { flex: 1; min-width: 0; }
+        .td-hero-name { font-size: 20px; font-weight: 900; color: #1E293B; margin-bottom: 5px; }
+        .td-hero-contact { font-size: 13px; color: #64748B; display: flex; align-items: center; gap: 5px; margin-top: 3px; }
+        .td-hero-rent-col { text-align: right; flex-shrink: 0; }
+        .td-hero-rent-label { font-size: 10px; color: #94A3B8; font-weight: 600; margin-bottom: 2px; }
+        .td-hero-rent-amount { font-size: 18px; font-weight: 900; color: #2563EB; white-space: nowrap; }
+        .td-hero-rows { padding: 0 14px 10px; border-top: 1px solid #F1F5F9; margin-top: 6px; }
+        .td-hero-row {
+            display: flex; align-items: flex-start; justify-content: space-between;
+            padding: 7px 0; border-bottom: 1px solid #F8FAFC;
+            font-size: 13px;
+        }
+        .td-hero-row:last-child { border-bottom: none; }
+        .td-hero-row-label { color: #64748B; display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+        .td-hero-row-value { color: #1E293B; font-weight: 600; text-align: right; max-width: 62%; }
+        .td-hero-btns { display: flex; gap: 8px; padding: 4px 14px 14px; }
+        .td-hero-btn-outline {
+            flex: 1; padding: 11px 0; border: 1.5px solid #2563EB; border-radius: 12px;
+            background: white; color: #2563EB; font-size: 14px; font-weight: 700;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px;
+            touch-action: manipulation;
+        }
+        .td-hero-btn-fill {
+            flex: 1; padding: 11px 0; border: none; border-radius: 12px;
+            background: #2563EB; color: white; font-size: 14px; font-weight: 700;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px;
+            touch-action: manipulation;
+        }
+        /* Sections */
+        .td-section { margin: 0 12px 12px; }
+        .td-section-title { font-size: 15px; font-weight: 800; color: #1E293B; margin-bottom: 8px; padding-left: 2px; }
+        .td-section-card {
+            background: white; border-radius: 16px;
+            border: 1px solid #EAECF4;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.05); overflow: hidden;
+        }
+        .td-amount-pair {
+            display: flex; border-bottom: 1px solid #F1F5F9;
+        }
+        .td-amount-cell {
+            flex: 1; padding: 14px 14px 12px;
+        }
+        .td-amount-cell:first-child { border-right: 1px solid #F1F5F9; }
+        .td-amount-cell-label { font-size: 11px; color: #94A3B8; font-weight: 600; margin-bottom: 4px; }
+        .td-amount-cell-value { font-size: 17px; font-weight: 900; color: #1E293B; }
+        .td-info-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 11px 14px; border-bottom: 1px solid #F8FAFC; font-size: 13px;
+        }
+        .td-info-row:last-child { border-bottom: none; }
+        .td-info-label { color: #64748B; display: flex; align-items: center; gap: 6px; }
+        .td-info-value { color: #1E293B; font-weight: 600; text-align: right; max-width: 60%; word-break: break-word; }
+        .td-pay-status-row {
+            display: flex; align-items: center; justify-content: space-between;
+            margin: 2px 10px 10px; padding: 10px 12px;
+            border-radius: 10px; font-size: 13px; font-weight: 700;
+        }
+        .td-pay-ok { background: #DCFCE7; color: #166534; }
+        .td-pay-fail { background: #FEE2E2; color: #991B1B; }
+        .td-pay-none { background: #F1F5F9; color: #475569; }
+        .td-rent-history-btn {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 11px 14px; font-size: 13px; font-weight: 700;
+            color: #2563EB; cursor: pointer; border-top: 1px solid #F1F5F9;
+            background: none; border-left: none; border-right: none; border-bottom: none;
+            width: 100%; touch-action: manipulation;
+        }
+        /* Deposit refund badge */
+        .td-deposit-ok { background: #DCFCE7; color: #166534; border-radius: 10px; padding: 8px 12px; margin: 8px 10px; font-size: 13px; font-weight: 700; }
+        /* Bottom action bar */
+        .td-bottom-bar {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            padding: 12px 16px max(12px, env(safe-area-inset-bottom));
+            background: white; border-top: 1px solid #EAECF4;
+            display: flex; gap: 10px; z-index: 1200;
+        }
+        .td-bottom-btn-danger {
+            flex: 1; padding: 13px 0; border: 1.5px solid #EF4444; border-radius: 12px;
+            background: white; color: #EF4444; font-size: 14px; font-weight: 700;
+            cursor: pointer; touch-action: manipulation;
+        }
+        .td-bottom-btn-outline {
+            flex: 1; padding: 13px 0; border: 1.5px solid #2563EB; border-radius: 12px;
+            background: white; color: #2563EB; font-size: 14px; font-weight: 700;
+            cursor: pointer; touch-action: manipulation;
+        }
+        .td-bottom-btn-fill {
+            flex: 1; padding: 13px 0; border: none; border-radius: 12px;
+            background: #2563EB; color: white; font-size: 14px; font-weight: 700;
+            cursor: pointer; touch-action: manipulation;
+        }
+        /* rent history in detail */
+        .td-rent-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 14px; border-bottom: 1px solid #F8FAFC; font-size: 13px;
+        }
+        .td-rent-item:last-child { border-bottom: none; }
+        .td-rent-item-label { color: #374151; font-weight: 600; }
+        .td-rent-item-sub { font-size: 11px; color: #94A3B8; margin-top: 2px; }
+        .td-rent-item-right { text-align: right; }
+        .td-rent-item-amount { font-size: 14px; font-weight: 800; color: #1E293B; }
+        .td-badge-ok { background: #DCFCE7; color: #166534; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 12px; margin-top: 3px; display: inline-block; }
+        .td-badge-fail { background: #FEE2E2; color: #DC2626; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 12px; margin-top: 3px; display: inline-block; }
+        .td-badge-partial { background: #FEF3C7; color: #D97706; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 12px; margin-top: 3px; display: inline-block; }
+
         /* ═══════════════════════════ TOAST ═══════════════════════════ */
         .toast {
             position: fixed; bottom: 80px; left: 16px; right: 16px;
@@ -1639,14 +1798,14 @@
             <div id="dashboardDetailContent" style="padding-bottom:8px;"></div>
         </div>
     </div>
-    <div class="modal-overlay" id="tenantDetailModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="tenantDetailTitle">세입자 상세정보</h2>
-                <button class="modal-close" onclick="closeModal('tenantDetailModal')">✕</button>
-            </div>
-            <div id="tenantDetailContent"></div>
+    <div class="td-overlay" id="tenantDetailModal">
+        <div class="td-header">
+            <button class="td-back-btn" onclick="closeModal('tenantDetailModal')">‹</button>
+            <span class="td-header-title">세입자 상세</span>
+            <button class="td-edit-btn" id="tdEditBtn" onclick="editCurrentTenant()">수정</button>
         </div>
+        <div class="td-body" id="tenantDetailContent"></div>
+        <div class="td-bottom-bar" id="tdBottomBar" style="display:none;"></div>
     </div>
     <!-- Firebase SDK (실시간 동기화) -->
     <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
@@ -1806,10 +1965,16 @@
             const el = document.getElementById(modalId);
             if (!el) return;
             // 기존에 열린 모달 모두 닫기 (모달 중첩 방지)
-            document.querySelectorAll('.modal-overlay.active').forEach(m => {
+            // — includes both .modal-overlay and .td-overlay
+            document.querySelectorAll('.modal-overlay.active, .td-overlay.active').forEach(m => {
                 if (m.id !== modalId) {
                     m.classList.remove('active');
                     m.style.zIndex = '';
+                    // reset td bottom bar if closing tenant detail
+                    if (m.id === 'tenantDetailModal') {
+                        var bb = document.getElementById('tdBottomBar');
+                        if (bb) bb.style.display = 'none';
+                    }
                 }
             });
             _modalZBase++;
@@ -2528,9 +2693,10 @@
             appData.tenants[index].depositRefundDate = refundDate;
             saveData();
             showToast('✅ 보증금 반환 완료 처리되었습니다 (₩' + tenant.deposit.toLocaleString() + ')');
-            closeModal('tenantDetailModal');
             renderTenants();
             renderDashboard();
+            // refresh the detail view if it's still open
+            if (_currentDetailTenantId === tenantId) { showTenantDetail(tenantId); }
         }
         function addCleaningFeeRecord(tenantId) {
             const tenant = appData.tenants.find(t => t.id === tenantId);
@@ -2562,78 +2728,207 @@
             showTenantDetail(tenantId);
             showToast('청소비 수납 기록이 추가되었습니다');
         }
+        var _currentDetailTenantId = null;
+        function editCurrentTenant() {
+            if (_currentDetailTenantId) { editTenant(_currentDetailTenantId); }
+        }
         function showTenantDetail(tenantId) {
-            const tenant = appData.tenants.find(t => t.id === tenantId);
+            const tenant = appData.tenants.find(function(t) { return t.id === tenantId; });
             if (!tenant) { showToast('⚠️ 세입자 정보를 찾을 수 없습니다'); return; }
-            const room = appData.rooms.find(r => r.id === tenant.roomId);
-            const building = appData.buildings.find(b => b.id === tenant.buildingId);
-            const tenantRents = appData.rents.filter(r => r.tenantId === tenantId)
-                .sort((a, b) => {
-                    const order = { deposit: 0, monthly: 1, cleaning: 2 };
-                    return (order[a.type] ?? 1) - (order[b.type] ?? 1) || b.month.localeCompare(a.month);
-                });
-            const hasCleaningRecord = tenantRents.some(r => r.type === 'cleaning');
-            let html = `
-                <div class="card">
-                    <h3 style="font-weight: 600; margin-bottom: 12px;">${tenant.name}</h3>
-                    <div style="font-size: 14px; line-height: 1.8; color: #555;">
-                        <div>🏢 ${building?.name} ${room?.roomNumber}</div>
-                        ${tenant.residentId ? `<div>🪪 주민번호: ${tenant.residentId}</div>` : ''}
-                        <div>📱 ${tenant.phone}</div>
-                        <div>💰 ${tenant.rentType === 'annual' ? '연세' : '월세'}: ₩${(tenant.monthlyRent + (tenant.managementFee||0)).toLocaleString()}${tenant.rentType !== 'annual' && tenant.managementFee > 0 ? ` (관리비 ₩${tenant.managementFee.toLocaleString()} 포함)` : tenant.rentType === 'annual' ? ' (연 1회)' : ''}</div>
-                        <div>🏦 보증금: ₩${tenant.deposit.toLocaleString()} / 청소비: ₩${(tenant.cleaningFee||0).toLocaleString()}</div>
-                        <div>📅 ${tenant.contractStart} ~ ${tenant.contractEnd}</div>
-                        <div>📍 입주: ${tenant.moveInDate}</div>
-                        ${tenant.memo ? `<div>📝 ${tenant.memo}</div>` : ''}
-                    </div>
-                    ${!hasCleaningRecord && tenant.cleaningFee > 0 ? `
-                    <button onclick="addCleaningFeeRecord('${tenant.id}')" class="btn btn-secondary" style="margin-top: 12px; width: 100%; font-size: 14px;">
-                        🧹 청소비 수납 등록 (퇴실)
-                    </button>` : ''}
-                    ${tenant.deposit > 0 ? (tenant.depositRefunded
-                        ? `<div style="margin-top: 12px; padding: 10px 14px; background: #dcfce7; border-radius: 10px; font-size: 14px; color: #166534; font-weight: 600;">✅ 보증금 반환 완료 (${tenant.depositRefundDate || '날짜 미기록'})</div>`
-                        : `<button onclick="refundDeposit('${tenant.id}')" class="btn btn-secondary" style="margin-top: 12px; width: 100%; font-size: 14px; border: 2px solid #f59e0b; color: #92400e; background: #fffbeb;">
-                        🏦 보증금 반환 완료 처리 (₩${tenant.deposit.toLocaleString()})
-                    </button>`) : ''}
-                </div>
-                <h4 style="margin: 16px 8px 8px; font-size: 16px; font-weight: 700;">수납 내역</h4>
-            `;
-            if (tenantRents.length === 0) {
-                html += '<div class="empty-state" style="padding: 20px;"><p style="font-size: 14px;">수납 내역이 없습니다</p></div>';
+            _currentDetailTenantId = tenantId;
+            const room = appData.rooms.find(function(r) { return r.id === tenant.roomId; });
+            const building = appData.buildings.find(function(b) { return b.id === tenant.buildingId; });
+            const bName = building ? building.name : '미지정';
+            const rNum = room ? room.roomNumber : '?';
+
+            // Status badge
+            const today = new Date();
+            const _td = today.toISOString().split('T')[0];
+            const endDate = new Date(tenant.contractEnd || _td);
+            const daysLeft = Math.floor((endDate - today) / 86400000);
+            const isActive = tenant.status === 'active';
+            let badgeText, badgeBg, badgeColor;
+            if (!isActive) { badgeText='퇴거'; badgeBg='#F1F5F9'; badgeColor='#6B7280'; }
+            else if (daysLeft < 0) { badgeText='계약만료'; badgeBg='#FEE2E2'; badgeColor='#DC2626'; }
+            else if (daysLeft < 30) { badgeText='D-'+daysLeft; badgeBg='#FEF3C7'; badgeColor='#D97706'; }
+            else { badgeText='입주중'; badgeBg='#DCFCE7'; badgeColor='#16A34A'; }
+
+            // Rent info
+            const totalRent = (tenant.monthlyRent||0) + (tenant.managementFee||0);
+            const rentLabel = tenant.rentType==='annual' ? '연세' : (tenant.managementFee>0 ? '월세+관리비' : '월세');
+
+            // Contract duration
+            function contractDuration(s, e) {
+                if (!s || !e) return '';
+                const ms = new Date(e) - new Date(s);
+                const months = Math.round(ms / (1000*60*60*24*30.44));
+                const y = Math.floor(months/12); const m = months%12;
+                return (y>0 ? y+'년 ' : '') + (m>0 ? m+'개월' : '');
+            }
+            const dur = contractDuration(tenant.contractStart, tenant.contractEnd);
+            const cPeriod = (tenant.contractStart||'-') + ' ~ ' + (tenant.contractEnd||'-') + (dur ? ' ('+dur+')' : '');
+
+            // Payment info
+            const tenantRents = (appData.rents||[]).filter(function(r) { return r.tenantId===tenantId; })
+                .sort(function(a,b) { return b.month.localeCompare(a.month); });
+            const curMonth = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0');
+            const thisMonthRent = tenantRents.find(function(r) { return r.month===curMonth && (!r.type||r.type==='monthly'); });
+            const unpaidRents = tenantRents.filter(function(r) { return (r.status==='pending'||r.status==='overdue') && (!r.type||r.type==='monthly') && r.month<=curMonth; });
+            const hasCleaningRecord = tenantRents.some(function(r) { return r.type==='cleaning'; });
+
+            // ─── Hero card ───
+            let html = '<div class="td-hero-card">';
+            html += '<div class="td-hero-top">';
+            html += '<div class="td-hero-building">🏢 '+bName+' '+rNum+'호</div>';
+            html += '<span class="td-hero-badge" style="background:'+badgeBg+';color:'+badgeColor+';">'+badgeText+'</span>';
+            html += '</div>';
+            html += '<div class="td-hero-main">';
+            html += '<div class="td-avatar">'+tenant.name.charAt(0)+'</div>';
+            html += '<div class="td-hero-info">';
+            html += '<div class="td-hero-name">'+tenant.name+'</div>';
+            if (tenant.phone) html += '<div class="td-hero-contact"><span>📱</span>'+tenant.phone+'</div>';
+            if (tenant.email) html += '<div class="td-hero-contact"><span>✉️</span>'+tenant.email+'</div>';
+            html += '</div>';
+            html += '<div class="td-hero-rent-col">';
+            html += '<div class="td-hero-rent-label">'+rentLabel+'</div>';
+            html += '<div class="td-hero-rent-amount">₩'+totalRent.toLocaleString()+'</div>';
+            html += '</div></div>';
+            // info rows
+            html += '<div class="td-hero-rows">';
+            html += '<div class="td-hero-row"><span class="td-hero-row-label">📅 계약기간</span><span class="td-hero-row-value">'+cPeriod+'</span></div>';
+            if (tenant.moveInDate) html += '<div class="td-hero-row"><span class="td-hero-row-label">🏠 입주일</span><span class="td-hero-row-value">'+tenant.moveInDate+'</span></div>';
+            if (tenant.payDay) html += '<div class="td-hero-row"><span class="td-hero-row-label">💳 납부일</span><span class="td-hero-row-value">매월 '+tenant.payDay+'일</span></div>';
+            html += '<div class="td-hero-row"><span class="td-hero-row-label">📝 메모</span><span class="td-hero-row-value">'+(tenant.memo||'없음')+'</span></div>';
+            html += '</div>';
+            // action buttons
+            html += '<div class="td-hero-btns">';
+            if (tenant.phone) {
+                html += '<button class="td-hero-btn-outline" onclick="window.location.href=\'tel:'+tenant.phone+'\'">📞 전화하기</button>';
+                html += '<button class="td-hero-btn-fill" onclick="window.location.href=\'sms:'+tenant.phone+'\'">💬 문자하기</button>';
             } else {
-                tenantRents.forEach(rent => {
-                    let statusBadge = '완납';
-                    let badgeClass = 'badge-success';
-                    if (rent.status === 'pending') {
-                        statusBadge = '미납';
-                        badgeClass = 'badge-danger';
-                    } else if (rent.status === 'partial') {
-                        statusBadge = '부분납부';
-                        badgeClass = 'badge-warning';
-                    }
-                    const typeLabel = rent.type === 'deposit' ? '🏦 보증금'
-                        : rent.type === 'cleaning' ? '🧹 청소비'
-                        : `📅 ${rent.month}`;
-                    const feeBreakdown = rent.type === 'monthly' && rent.managementFee
-                        ? `<div style="font-size: 13px; color: var(--text-secondary);">월세 ₩${(rent.rentAmount||0).toLocaleString()} + 관리비 ₩${rent.managementFee.toLocaleString()}</div>`
-                        : '';
-                    html += `
-                        <div class="list-item" style="border-bottom: 1px solid var(--border-color); cursor:pointer; touch-action:manipulation; -webkit-tap-highlight-color:transparent;" onclick="markRentPaid('${rent.id}')">
-                            <div style="flex: 1;">
-                                <div class="list-item-title">${typeLabel}</div>
-                                ${feeBreakdown}
-                                <span class="badge ${badgeClass}">${statusBadge}</span>
-                            </div>
-                            <div class="list-item-right">
-                                <div class="list-item-amount">₩${rent.amount.toLocaleString()}</div>
-                            </div>
-                        </div>
-                    `;
+                html += '<button class="td-hero-btn-outline" onclick="editCurrentTenant()">✏️ 정보 수정</button>';
+            }
+            html += '</div></div>';
+
+            // ─── 납부 정보 ───
+            html += '<div class="td-section"><div class="td-section-title">납부 정보</div>';
+            html += '<div class="td-section-card">';
+            html += '<div class="td-amount-pair">';
+            html += '<div class="td-amount-cell"><div class="td-amount-cell-label">보증금</div><div class="td-amount-cell-value">₩'+(tenant.deposit||0).toLocaleString()+'</div></div>';
+            html += '<div class="td-amount-cell"><div class="td-amount-cell-label">'+rentLabel+'</div><div class="td-amount-cell-value" style="color:#2563EB;">₩'+totalRent.toLocaleString()+'</div></div>';
+            html += '</div>';
+            // This month status
+            if (thisMonthRent) {
+                const isPaid = thisMonthRent.status==='paid';
+                const isPartial = thisMonthRent.status==='partial';
+                const statusClass = isPaid ? 'td-pay-ok' : (isPartial ? 'td-pay-none' : 'td-pay-fail');
+                const statusIcon = isPaid ? '✅' : (isPartial ? '⚠️' : '❌');
+                const paidInfo = isPaid ? (thisMonthRent.paidDate||'') : (isPartial ? '부분납부' : '미납');
+                html += '<div class="td-pay-status-row '+statusClass+'">';
+                html += '<span>'+statusIcon+' '+curMonth.replace('-','년 ')+'월 '+(isPaid?'납부 완료':isPartial?'부분 납부':'미납')+'</span>';
+                html += '<span>'+paidInfo+'</span></div>';
+                if (thisMonthRent.status !== 'paid') {
+                    html += '<div style="padding:0 10px 8px;"><button class="td-bottom-btn-fill" style="width:100%;padding:9px;" onclick="markRentPaid(\''+thisMonthRent.id+'\')">💰 수납 처리</button></div>';
+                }
+            } else {
+                html += '<div class="td-pay-status-row td-pay-none"><span>📋 '+curMonth.replace('-','년 ')+'월 기록 없음</span><span></span></div>';
+            }
+            // Unpaid count
+            html += '<div class="td-info-row"><span class="td-info-label">미납 내역</span><span class="td-info-value" style="'+(unpaidRents.length>0?'color:#DC2626;':'color:#16A34A;')+'">'+(unpaidRents.length>0?unpaidRents.length+'건':'없음')+'</span></div>';
+            // Full history button
+            html += '<button class="td-rent-history-btn" onclick="_toggleRentHistory(\''+tenantId+'\')">전체 수납 내역 보기 <span>›</span></button>';
+            html += '</div></div>';
+
+            // ─── 수납 내역 (collapsed) ───
+            html += '<div id="tdRentHistory" style="display:none;">';
+            html += '<div class="td-section"><div class="td-section-title">수납 내역</div>';
+            html += '<div class="td-section-card">';
+            const monthlyRents = tenantRents.filter(function(r) { return !r.type||r.type==='monthly'; }).slice(0,24);
+            if (monthlyRents.length===0) {
+                html += '<div style="padding:16px;text-align:center;color:#94A3B8;font-size:13px;">수납 내역이 없습니다</div>';
+            } else {
+                monthlyRents.forEach(function(rent) {
+                    const badgeCls = rent.status==='paid'?'td-badge-ok':rent.status==='partial'?'td-badge-partial':'td-badge-fail';
+                    const badgeTxt = rent.status==='paid'?'완납':rent.status==='partial'?'부분납부':'미납';
+                    html += '<div class="td-rent-item" style="cursor:pointer;" onclick="markRentPaid(\''+rent.id+'\')">';
+                    html += '<div><div class="td-rent-item-label">'+rent.month+'</div>';
+                    if (rent.managementFee>0) html += '<div class="td-rent-item-sub">월세 ₩'+(rent.rentAmount||0).toLocaleString()+' + 관리비 ₩'+rent.managementFee.toLocaleString()+'</div>';
+                    html += '<span class="'+badgeCls+'">'+badgeTxt+'</span></div>';
+                    html += '<div class="td-rent-item-right"><div class="td-rent-item-amount">₩'+rent.amount.toLocaleString()+'</div>';
+                    if (rent.paidDate) html += '<div class="td-rent-item-sub">'+rent.paidDate+'</div>';
+                    html += '</div></div>';
                 });
             }
-            document.getElementById('tenantDetailTitle').textContent = tenant.name;
-            document.getElementById('tenantDetailContent').innerHTML = html;
+            html += '</div></div></div>';
+
+            // ─── 계약 정보 ───
+            html += '<div class="td-section"><div class="td-section-title">계약 정보</div>';
+            html += '<div class="td-section-card">';
+            html += '<div class="td-info-row"><span class="td-info-label">📅 계약 기간</span><span class="td-info-value">'+cPeriod+'</span></div>';
+            html += '<div class="td-info-row"><span class="td-info-label">🏦 보증금</span><span class="td-info-value">₩'+(tenant.deposit||0).toLocaleString()+'</span></div>';
+            html += '<div class="td-info-row"><span class="td-info-label">💰 월세</span><span class="td-info-value">₩'+(tenant.monthlyRent||0).toLocaleString()+(tenant.rentType==='annual'?' (연 1회)':'')+'</span></div>';
+            if (tenant.managementFee>0) html += '<div class="td-info-row"><span class="td-info-label">🏠 관리비</span><span class="td-info-value">₩'+(tenant.managementFee||0).toLocaleString()+'</span></div>';
+            if ((tenant.cleaningFee||0)>0) html += '<div class="td-info-row"><span class="td-info-label">🧹 청소비</span><span class="td-info-value">₩'+(tenant.cleaningFee||0).toLocaleString()+'</span></div>';
+            if (tenant.residentId) html += '<div class="td-info-row"><span class="td-info-label">🪪 주민번호</span><span class="td-info-value">'+tenant.residentId+'</span></div>';
+            if (tenant.depositRefunded) {
+                html += '<div class="td-deposit-ok">✅ 보증금 반환 완료 ('+(tenant.depositRefundDate||'날짜 미기록')+')</div>';
+            }
+            html += '</div></div>';
+
+            // ─── Cleaning fee / deposit actions (non-active tenants) ───
+            if (!isActive && !hasCleaningRecord && (tenant.cleaningFee||0)>0) {
+                html += '<div class="td-section">';
+                html += '<button class="td-bottom-btn-outline" style="width:100%;padding:13px;" onclick="addCleaningFeeRecord(\''+tenantId+'\')">🧹 청소비 수납 등록</button>';
+                html += '</div>';
+            }
+
+            // Bottom padding
+            html += '<div style="height:80px;"></div>';
+
+            // ─── Bottom action bar ───
+            const bottomBar = document.getElementById('tdBottomBar');
+            bottomBar.style.display = 'flex';
+            bottomBar.innerHTML = '';
+            if (isActive) {
+                if (tenant.deposit>0 && !tenant.depositRefunded) {
+                    const refundBtn = document.createElement('button');
+                    refundBtn.className='td-bottom-btn-danger';
+                    refundBtn.textContent='🏦 보증금 반환';
+                    refundBtn.onclick=function() { refundDeposit(tenantId); };
+                    bottomBar.appendChild(refundBtn);
+                }
+                const renewBtn = document.createElement('button');
+                renewBtn.className='td-bottom-btn-outline';
+                renewBtn.textContent='📋 계약 갱신';
+                renewBtn.onclick=function() { openRenewModal(tenantId); };
+                bottomBar.appendChild(renewBtn);
+            } else {
+                if (tenant.deposit>0 && !tenant.depositRefunded) {
+                    const refundBtn = document.createElement('button');
+                    refundBtn.className='td-bottom-btn-danger';
+                    refundBtn.textContent='🏦 보증금 반환';
+                    refundBtn.onclick=function() { refundDeposit(tenantId); };
+                    bottomBar.appendChild(refundBtn);
+                }
+            }
+
+            const contentEl = document.getElementById('tenantDetailContent');
+            contentEl.innerHTML = html;
+            contentEl.scrollTop = 0;
+            // Re-attach rent click handlers (event delegation safe)
             openModal('tenantDetailModal');
+        }
+        function _toggleRentHistory(tenantId) {
+            const el = document.getElementById('tdRentHistory');
+            if (!el) return;
+            const btn = document.querySelector('.td-rent-history-btn');
+            if (el.style.display==='none') {
+                el.style.display='block';
+                if (btn) btn.innerHTML = '접기 <span>∧</span>';
+            } else {
+                el.style.display='none';
+                if (btn) btn.innerHTML = '전체 수납 내역 보기 <span>›</span>';
+            }
         }
         // ============ UTILS ============
         function getMonthStr(date) {
