@@ -56,47 +56,38 @@
             width: 100%; background: var(--bg-page);
         }
         .app-header {
-            background: linear-gradient(135deg, #1a3587 0%, #1e40af 60%, #2563eb 100%);
-            color: white;
-            padding: max(14px, env(safe-area-inset-top)) 16px 12px;
+            background: #EEF1F9;
+            color: #1E293B;
+            padding: max(16px, env(safe-area-inset-top)) 16px 14px;
             flex-shrink: 0;
-            display: flex; justify-content: center; align-items: center;
-            box-shadow: 0 2px 16px rgba(30,64,175,0.3);
-            z-index: 100; position: relative; overflow: hidden;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 100; position: relative;
         }
-        .app-header::before {
-            content: ''; position: absolute;
-            top: -40px; right: -30px;
-            width: 120px; height: 120px;
-            background: rgba(255,255,255,0.06);
-            border-radius: 50%;
-        }
-        .app-header::after {
-            content: ''; position: absolute;
-            bottom: -50px; right: 30px;
-            width: 90px; height: 90px;
-            background: rgba(255,255,255,0.04);
-            border-radius: 50%;
-        }
-        .header-left { display: flex; flex-direction: column; gap: 1px; text-align: center; position: relative; z-index: 1; }
-        .header-title { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
-        .header-subtitle { font-size: 12px; opacity: 0.8; font-weight: 500; }
-        .header-actions { display: flex; gap: 8px; position: absolute; right: 16px; top: 50%; transform: translateY(-50%); z-index: 1; }
+        .header-left { display: flex; flex-direction: column; gap: 2px; }
+        .header-title { font-size: 28px; font-weight: 800; letter-spacing: -0.8px; color: #1E293B; }
+        .header-subtitle { font-size: 13px; color: #94A3B8; font-weight: 500; }
+        .header-actions { display: flex; gap: 10px; }
         .icon-btn {
-            background: rgba(255,255,255,0.18);
-            border: 1px solid rgba(255,255,255,0.25);
-            color: white; width: 42px; height: 42px;
-            border-radius: var(--radius-sm); cursor: pointer;
-            font-size: 18px; display: flex; align-items: center; justify-content: center;
+            background: white;
+            border: none;
+            color: #374151;
+            width: 58px; height: 58px;
+            border-radius: 16px;
+            cursor: pointer;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
             transition: all 0.15s ease; touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent; backdrop-filter: blur(4px);
+            -webkit-tap-highlight-color: transparent;
         }
-        .icon-btn:active { background: rgba(255,255,255,0.3); transform: scale(0.93); }
+        .icon-btn .btn-icon { font-size: 20px; line-height: 1; }
+        .icon-btn .btn-label { font-size: 10px; font-weight: 700; color: #374151; white-space: nowrap; }
+        .icon-btn:active { transform: scale(0.93); box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
 
         .content-area {
             flex: 1; overflow-y: auto; overflow-x: hidden;
             -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain;
             padding-bottom: 32px;
+            background: #EEF1F9;
         }
         .page { display: none; animation: fadeIn 0.18s ease; }
         .page.active { display: block; }
@@ -104,35 +95,59 @@
 
         /* ═══════════════════════════ BOTTOM NAV ═══════════════════════════ */
         .bottom-nav {
-            display: flex; align-items: stretch;
+            display: flex; align-items: flex-end;
             background: white;
-            border-top: 1px solid var(--border-color);
-            padding-bottom: max(6px, env(safe-area-inset-bottom));
+            border-top: 1px solid #EAECF4;
+            padding: 6px 4px max(10px, env(safe-area-inset-bottom));
             flex-shrink: 0; z-index: 100;
-            box-shadow: 0 -4px 20px rgba(30,64,175,0.08);
+            box-shadow: 0 -2px 16px rgba(0,0,0,0.07);
         }
         .nav-item {
-            flex: 1; padding: 8px 2px 6px;
+            flex: 1; padding: 7px 2px 4px;
             text-align: center; cursor: pointer;
-            background: none; border: none; color: var(--text-tertiary);
-            transition: color 0.15s ease;
+            background: none; border: none; color: #9CA3AF;
+            transition: all 0.2s ease;
             display: flex; flex-direction: column; align-items: center; gap: 3px;
             position: relative; touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent; min-height: 54px;
+            -webkit-tap-highlight-color: transparent;
+            border-radius: 16px;
         }
-        .nav-item.active { color: var(--primary); }
-        .nav-item.active .nav-icon { transform: scale(1.08); }
-        .nav-item::before {
-            content: ''; position: absolute;
-            top: 0; left: 50%; transform: translateX(-50%);
-            width: 0; height: 3px; border-radius: 0 0 3px 3px;
-            background: var(--primary); transition: width 0.2s ease;
+        .nav-item.active {
+            color: white;
+            background: #5856D6;
+            box-shadow: 0 4px 14px rgba(88,86,214,0.35);
+            padding: 9px 8px 7px;
+            margin: -3px 2px 0;
+            border-radius: 18px;
         }
-        .nav-item.active::before { width: 28px; }
-        .nav-icon { font-size: 22px; line-height: 1; transition: transform 0.15s ease; }
-        .nav-label {
-            font-size: 11px; font-weight: 600; letter-spacing: -0.2px;
-            white-space: nowrap;
+        .nav-item.active .nav-label { color: white; font-weight: 700; }
+        .nav-icon { font-size: 20px; line-height: 1; }
+        .nav-item.active .nav-icon { font-size: 21px; }
+        .nav-label { font-size: 11px; font-weight: 600; letter-spacing: -0.2px; white-space: nowrap; }
+        /* 수납 FAB 버튼 */
+        .nav-item.nav-fab {
+            flex: 1; padding: 0 2px 4px;
+            background: none; margin: 0;
+            align-items: center; justify-content: flex-end;
+            flex-direction: column; gap: 3px;
+        }
+        .nav-fab-circle {
+            width: 52px; height: 52px; border-radius: 50%;
+            background: #5856D6;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 16px rgba(88,86,214,0.45);
+            margin-top: -18px; position: relative;
+        }
+        .nav-item.nav-fab .nav-icon { font-size: 22px; color: white; }
+        .nav-item.nav-fab .nav-label { color: #5856D6; font-weight: 700; font-size: 11px; }
+        .nav-item.nav-fab.active .nav-label { color: #5856D6; }
+        .nav-item.nav-fab .nav-badge {
+            position: absolute; top: -2px; right: -2px;
+            background: #EF4444; color: white;
+            border-radius: 10px; min-width: 18px; height: 18px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: 700; padding: 0 4px;
+            border: 2px solid white;
         }
         .nav-badge {
             position: absolute; top: 6px; right: calc(50% - 18px);
@@ -715,39 +730,37 @@
         /* 듀얼 도넛 */
         .dash-donut-row {
             display: flex; margin: 12px 12px 0;
-            background: white; border-radius: var(--radius-md);
-            border: 1px solid var(--border-color); box-shadow: var(--shadow-md);
+            background: white; border-radius: 20px;
+            border: 1px solid #EAECF4;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.06);
             overflow: hidden;
         }
         .dash-donut-half {
-            flex: 1; padding: 16px 10px 14px;
+            flex: 1; padding: 18px 10px 16px;
             display: flex; flex-direction: column;
-            align-items: center; gap: 8px;
+            align-items: center; gap: 10px;
+            background: transparent; min-width: 0;
         }
         .dash-donut-half:first-child {
-            border-right: 1px solid var(--border-color);
-            background: #F8FAFC;
+            border-right: 1px solid #EAECF4;
         }
-        .dash-donut-half.dash-donut-curr {
-            background: #EEF2FF;
-        }
+        .dash-donut-half.dash-donut-curr { background: transparent; }
         .dash-donut-month {
-            font-size: 12px; font-weight: 700;
-            color: var(--text-secondary); letter-spacing: 0.3px;
-            text-transform: uppercase;
+            font-size: 13px; font-weight: 700;
+            color: #94A3B8; letter-spacing: 0.2px;
         }
         .dash-donut-curr .dash-donut-month {
-            color: var(--primary);
+            color: #3B82F6;
         }
         .dash-donut-detail {
-            width: 100%; display: flex; flex-direction: column; gap: 4px;
+            width: 100%; display: flex; flex-direction: column; gap: 5px;
         }
         .ddd-row {
             display: flex; justify-content: space-between;
-            align-items: center; font-size: 12px; padding: 0 2px;
+            align-items: center; padding: 0 2px;
         }
-        .ddd-label { color: var(--text-tertiary); font-weight: 500; }
-        .ddd-val { font-weight: 700; color: var(--text-primary); font-size: 12px; }
+        .ddd-label { color: var(--text-tertiary); font-weight: 500; font-size: 13px; }
+        .ddd-val { font-weight: 700; color: var(--text-primary); font-size: 13px; }
         .ddd-val-primary { color: var(--primary); }
         .ddd-val-danger { color: var(--danger); }
         .ddd-val-success { color: var(--success); }
@@ -762,9 +775,18 @@
         .unpaid-history-scroll::-webkit-scrollbar { display: none; }
         .unpaid-chip {
             flex-shrink: 0; min-width: 82px;
-            padding: 10px 12px; border-radius: 12px;
-            text-align: center; border: 1.5px solid transparent;
+            padding: 12px 10px 10px; border-radius: 16px;
+            text-align: center; border: none;
+            display: flex; flex-direction: column;
+            align-items: center; gap: 5px;
         }
+        .chip-icon-circle {
+            width: 26px; height: 26px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px; font-weight: 900; margin-top: 2px;
+        }
+        .chip-icon-ok  { background: #16A34A; color: white; }
+        .chip-icon-warn { background: #DC2626; color: white; }
         .unpaid-chip.chip-all-paid {
             background: var(--success-light); border-color: #86EFAC;
         }
@@ -886,8 +908,14 @@
                 <div class="header-subtitle" id="headerSubtitle">임대관리 대시보드</div>
             </div>
             <div class="header-actions">
-                <button class="icon-btn" onclick="openSmsModal()" title="입금문자 확인">📱</button>
-                <button class="icon-btn" onclick="openModal('addBuildingModal')" title="건물 추가">🏢</button>
+                <button class="icon-btn" onclick="openSmsModal()" title="입금문자 확인">
+                    <span class="btn-icon">📱</span>
+                    <span class="btn-label">모바일</span>
+                </button>
+                <button class="icon-btn" onclick="openModal('addBuildingModal')" title="건물 추가">
+                    <span class="btn-icon">🏢</span>
+                    <span class="btn-label">건물관리</span>
+                </button>
             </div>
         </header>
 
@@ -902,14 +930,14 @@
                     <!-- 왼쪽: 지난달 -->
                     <div class="dash-donut-half">
                         <div class="dash-donut-month" id="prevMonthLabel">지난달</div>
-                        <svg width="88" height="88" viewBox="0 0 88 88" style="display:block;">
-                            <circle cx="44" cy="44" r="35" fill="none" stroke="#E2E8F0" stroke-width="8"/>
-                            <circle cx="44" cy="44" r="35" fill="none" stroke="#94A3B8" stroke-width="8"
-                                stroke-dasharray="219.9" stroke-dashoffset="219.9"
-                                stroke-linecap="round" transform="rotate(-90 44 44)"
+                        <svg width="104" height="104" viewBox="0 0 104 104" style="display:block;flex-shrink:0;">
+                            <circle cx="52" cy="52" r="40" fill="none" stroke="rgba(99,102,241,0.12)" stroke-width="9"/>
+                            <circle cx="52" cy="52" r="40" fill="none" stroke="#6366F1" stroke-width="9"
+                                stroke-dasharray="251.3" stroke-dashoffset="251.3"
+                                stroke-linecap="round" transform="rotate(-90 52 52)"
                                 id="prevDonutArc"/>
-                            <text x="44" y="40" text-anchor="middle" fill="#1e40af" font-size="14" font-weight="900" id="prevDonutPct" style="font-family:inherit;">0%</text>
-                            <text x="44" y="53" text-anchor="middle" fill="#94A3B8" font-size="9" font-weight="600" style="font-family:inherit;">수납률</text>
+                            <text x="52" y="50" text-anchor="middle" dominant-baseline="middle" fill="#4338CA" font-size="18" font-weight="900" id="prevDonutPct" style="font-family:inherit;">0%</text>
+                            <text x="52" y="64" text-anchor="middle" dominant-baseline="middle" fill="#A5B4FC" font-size="10" font-weight="600" style="font-family:inherit;">수납률</text>
                         </svg>
                         <div class="dash-donut-detail">
                             <div class="ddd-row">
@@ -920,19 +948,27 @@
                                 <span class="ddd-label">받을금액</span>
                                 <span class="ddd-val" id="prevMonthExpected">-</span>
                             </div>
+                            <div class="ddd-row" id="prevUnpaidRow" style="display:none;">
+                                <span class="ddd-label">⚠️ 미납</span>
+                                <span class="ddd-val ddd-val-danger" id="prevUnpaidInfo">-</span>
+                            </div>
+                            <div class="ddd-row" id="prevPaidRow" style="display:none;">
+                                <span class="ddd-label">✅ 완료</span>
+                                <span class="ddd-val ddd-val-success" id="prevPaidInfo">전체 완료!</span>
+                            </div>
                         </div>
                     </div>
                     <!-- 오른쪽: 이번달 + 진행사항 -->
                     <div class="dash-donut-half dash-donut-curr">
                         <div class="dash-donut-month" id="currMonthLabel">이번달</div>
-                        <svg width="88" height="88" viewBox="0 0 88 88" style="display:block;">
-                            <circle cx="44" cy="44" r="35" fill="none" stroke="rgba(30,64,175,0.15)" stroke-width="9"/>
-                            <circle cx="44" cy="44" r="35" fill="none" stroke="#1e40af" stroke-width="9"
-                                stroke-dasharray="219.9" stroke-dashoffset="219.9"
-                                stroke-linecap="round" transform="rotate(-90 44 44)"
+                        <svg width="104" height="104" viewBox="0 0 104 104" style="display:block;flex-shrink:0;">
+                            <circle cx="52" cy="52" r="40" fill="none" stroke="rgba(59,130,246,0.12)" stroke-width="9"/>
+                            <circle cx="52" cy="52" r="40" fill="none" stroke="#3B82F6" stroke-width="9"
+                                stroke-dasharray="251.3" stroke-dashoffset="251.3"
+                                stroke-linecap="round" transform="rotate(-90 52 52)"
                                 id="donutArc"/>
-                            <text x="44" y="40" text-anchor="middle" fill="#1e40af" font-size="15" font-weight="900" id="donutPct" style="font-family:inherit;">0%</text>
-                            <text x="44" y="53" text-anchor="middle" fill="#64748B" font-size="9" font-weight="600" style="font-family:inherit;">수납률</text>
+                            <text x="52" y="50" text-anchor="middle" dominant-baseline="middle" fill="#1D4ED8" font-size="18" font-weight="900" id="donutPct" style="font-family:inherit;">0%</text>
+                            <text x="52" y="64" text-anchor="middle" dominant-baseline="middle" fill="#93C5FD" font-size="10" font-weight="600" style="font-family:inherit;">수납률</text>
                         </svg>
                         <div class="dash-donut-detail">
                             <div class="ddd-row">
@@ -1185,10 +1221,12 @@
                 <span class="nav-icon">👥</span>
                 <span class="nav-label">세입자</span>
             </button>
-            <button class="nav-item" onclick="switchPage('rentPage')">
-                <span class="nav-icon">💰</span>
+            <button class="nav-item nav-fab" onclick="switchPage('rentPage')">
+                <div class="nav-fab-circle">
+                    <span class="nav-icon">💰</span>
+                    <div class="nav-badge" id="rentBadge" style="display:none;">0</div>
+                </div>
                 <span class="nav-label">수납</span>
-                <div class="nav-badge" id="rentBadge" style="display:none;">0</div>
             </button>
             <button class="nav-item" onclick="switchPage('expensesPage')">
                 <span class="nav-icon">📄</span>
@@ -2790,7 +2828,7 @@
                         const card = document.createElement('div');
                         card.className = 'rent-year-card';
                         card.innerHTML = `
-                            <div class="rent-year-card-header">
+                            <div class="rent-year-card-header" onclick="showTenantDetail('${tenant.id}')" style="cursor:pointer;">
                                 <div>
                                     <div class="rent-year-card-name">${tenant.name}</div>
                                     <div class="rent-year-card-sub">₩${monthlyAmount.toLocaleString()}/월</div>
@@ -2798,6 +2836,7 @@
                                 <div class="rent-year-card-summary">
                                     <span style="color:#166534;">납부 ${paidCount}</span> /
                                     <span style="color:#991b1b;">미납 ${pendingCount}</span>
+                                    <span style="font-size:16px;color:#94A3B8;margin-left:4px;">›</span>
                                 </div>
                             </div>
                             <div class="rent-months-grid">${monthCells}</div>
@@ -4572,14 +4611,14 @@
                 /* ────────────────────────────────────────────────
                    ② 이번달 도넛 (오른쪽) 업데이트  r=35 → circ≈219.9
                 ──────────────────────────────────────────────── */
-                var circ = 2 * Math.PI * 35;
+                var circ = 2 * Math.PI * 40; // r=40 → 251.3
                 var donutArc = document.getElementById('donutArc');
                 var donutPct = document.getElementById('donutPct');
                 if (donutArc) {
                     var dashOffset = circ - (Math.min(rate, 100) / 100) * circ;
                     donutArc.setAttribute('stroke-dasharray', circ.toFixed(1));
                     donutArc.setAttribute('stroke-dashoffset', dashOffset.toFixed(1));
-                    donutArc.setAttribute('stroke', rate >= 100 ? '#22C55E' : '#1e40af');
+                    donutArc.setAttribute('stroke', rate >= 100 ? '#22C55E' : '#3B82F6');
                 }
                 if (donutPct) donutPct.textContent = rate + '%';
 
@@ -4645,7 +4684,7 @@
                     var prevOffset = circ - (Math.min(prevRate, 100) / 100) * circ;
                     prevDonutArc.setAttribute('stroke-dasharray', circ.toFixed(1));
                     prevDonutArc.setAttribute('stroke-dashoffset', prevOffset.toFixed(1));
-                    prevDonutArc.setAttribute('stroke', prevRate >= 100 ? '#22C55E' : '#94A3B8');
+                    prevDonutArc.setAttribute('stroke', prevRate >= 100 ? '#22C55E' : '#6366F1');
                 }
                 if (prevDonutPct) prevDonutPct.textContent = prevRate + '%';
 
@@ -4656,6 +4695,28 @@
                 var prevMonthExpected = document.getElementById('prevMonthExpected');
                 if (prevMonthIncome)   prevMonthIncome.textContent   = prevPaidAmt.toLocaleString() + '원';
                 if (prevMonthExpected) prevMonthExpected.textContent = prevExpected > 0 ? prevExpected.toLocaleString() + '원' : '-';
+
+                /* 지난달 미납/완료 뱃지 — 독립 재계산 (scope 문제 방지) */
+                var _pum = m - 1, _puy = y;
+                if (_pum < 1) { _pum = 12; _puy -= 1; }
+                var _puStr = _puy + '-' + String(_pum).padStart(2, '0');
+                var _puAll = (appData.rents || []).filter(function(r) { return r.month === _puStr; });
+                var _puUnpaid = _puAll.filter(function(r) { return r.status === 'pending' || r.status === 'overdue'; });
+                var _puPaid   = _puAll.filter(function(r) { return r.status === 'paid'; });
+                var prevUnpaidRow  = document.getElementById('prevUnpaidRow');
+                var prevUnpaidInfo = document.getElementById('prevUnpaidInfo');
+                var prevPaidRow    = document.getElementById('prevPaidRow');
+                if (_puUnpaid.length > 0) {
+                    if (prevUnpaidRow)  { prevUnpaidRow.style.display = 'flex'; }
+                    if (prevUnpaidInfo) { prevUnpaidInfo.textContent = _puUnpaid.length + '건'; }
+                    if (prevPaidRow)    { prevPaidRow.style.display = 'none'; }
+                } else if (_puPaid.length > 0 && _puUnpaid.length === 0) {
+                    if (prevUnpaidRow) { prevUnpaidRow.style.display = 'none'; }
+                    if (prevPaidRow)   { prevPaidRow.style.display = 'flex'; }
+                } else {
+                    if (prevUnpaidRow) { prevUnpaidRow.style.display = 'none'; }
+                    if (prevPaidRow)   { prevPaidRow.style.display = 'none'; }
+                }
 
                 /* ────────────────────────────────────────────────
                    ④ 미납 현황 멀티월 칩 (최근 4개월 + 이번달)
@@ -4692,10 +4753,16 @@
                             statusText = hPaid + '/' + hTotal;
                         }
 
+                        var chipIcon = hUnpaid === 0 && hPaid > 0
+                            ? '<div class="chip-icon-circle chip-icon-ok">✓</div>'
+                            : hUnpaid > 0
+                            ? '<div class="chip-icon-circle chip-icon-warn">!</div>'
+                            : '';
                         chips.push(
                             '<div class="unpaid-chip ' + chipClass + '">' +
                             '<span class="chip-month-label">' + hm + '월</span>' +
                             '<span class="chip-status-text">' + statusText + '</span>' +
+                            chipIcon +
                             '</div>'
                         );
                     }
@@ -4726,15 +4793,17 @@
                                 var endStr = (t.contractEnd || '').slice(0, 10).replace(/-/g, '.');
                                 var urgency = d <= 14 ? 'ibadge-danger' : d <= 30 ? 'ibadge-warning' : 'ibadge-info';
                                 var urgencyLabel = d <= 14 ? '긴급' : d <= 30 ? '임박' : '예정';
-                                return '<div class="info-row">' +
+                                return '<div class="info-row" onclick="showTenantDetail(\'' + t.id + '\')" style="cursor:pointer;">' +
                                     '<div class="info-row-left">' +
-                                    '<span class="info-row-room">' + roomNo + '</span>' +
-                                    '<span class="info-row-name">(' + t.name + ')</span>' +
+                                    '<div class="info-row-room">' + roomNo + '</div>' +
+                                    '<div class="info-row-name">' + t.name + '</div>' +
                                     '</div>' +
                                     '<div class="info-row-right">' +
-                                    '<span class="info-row-date">' + endStr + '</span>' +
-                                    '<span class="info-row-badge ' + urgency + '">' + d + '일 후 · ' + urgencyLabel + '</span>' +
-                                    '</div></div>';
+                                    '<div class="info-row-date">' + endStr + '</div>' +
+                                    '<div class="info-row-badge ' + urgency + '">' + d + '일 후 · ' + urgencyLabel + '</div>' +
+                                    '</div>' +
+                                    '<span style="color:#CBD5E1;font-size:20px;margin-left:6px;align-self:center;">›</span>' +
+                                    '</div>';
                             }).join('');
                         }
                     } else {
