@@ -8,994 +8,649 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#1e40af">
     <meta name="format-detection" content="telephone=no">
-    <title>동거동락 - 임대관리앱</title>
+    <title>원룸관리앱</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
-            --primary: #1e40af;
-            --primary-light: #3b82f6;
-            --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --info: #3b82f6;
-            --neutral-light: #f9fafb;
-            --neutral-gray: #6b7280;
-            --border-color: #e5e7eb;
-            --safe-area: max(0px, env(safe-area-inset-bottom));
+            --primary:        #1e40af;
+            --primary-light:  #3b82f6;
+            --primary-pale:   #EEF2FF;
+            --success:        #059669;
+            --success-light:  #D1FAE5;
+            --danger:         #DC2626;
+            --danger-light:   #FEE2E2;
+            --warning:        #D97706;
+            --warning-light:  #FEF3C7;
+            --info:           #0284C7;
+            --info-light:     #E0F2FE;
+            --text-primary:   #0F172A;
+            --text-secondary: #64748B;
+            --text-tertiary:  #94A3B8;
+            --bg-page:        #F1F5FF;
+            --bg-card:        #FFFFFF;
+            --border-color:   #E2E8F0;
+            --border-light:   #F1F5F9;
+            --shadow-sm:      0 1px 3px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04);
+            --shadow-md:      0 4px 16px rgba(30,64,175,0.10), 0 1px 4px rgba(15,23,42,0.06);
+            --shadow-lg:      0 8px 32px rgba(30,64,175,0.15), 0 2px 8px rgba(15,23,42,0.08);
+            --radius-sm:      8px;
+            --radius-md:      14px;
+            --radius-lg:      20px;
+            --safe-bottom:    max(0px, env(safe-area-inset-bottom));
         }
         html, body {
-            width: 100%;
-            height: 100%;
+            width: 100%; height: 100%;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans KR', sans-serif;
-            background: #ffffff;
-            color: #111827;
-            font-size: 16px;
-            line-height: 1.5;
-            -webkit-user-select: none;
-            user-select: none;
+            background: var(--bg-page);
+            color: var(--text-primary);
+            font-size: 16px; line-height: 1.5;
+            -webkit-user-select: none; user-select: none;
             -webkit-touch-callout: none;
         }
-        body {
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
+        body { overflow: hidden; display: flex; flex-direction: column; }
+
+        /* ═══════════════════════════ APP SHELL ═══════════════════════════ */
         .app-container {
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            height: 100svh;
-            width: 100%;
-            background: #ffffff;
+            display: flex; flex-direction: column;
+            height: 100vh; height: 100svh;
+            width: 100%; background: var(--bg-page);
         }
         .app-header {
-            background: var(--primary);
+            background: linear-gradient(135deg, #1a3587 0%, #1e40af 60%, #2563eb 100%);
             color: white;
-            padding: 14px 16px;
-            padding-top: max(14px, env(safe-area-inset-top));
+            padding: max(14px, env(safe-area-inset-top)) 16px 12px;
             flex-shrink: 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-            z-index: 100;
+            display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 2px 16px rgba(30,64,175,0.3);
+            z-index: 100; position: relative; overflow: hidden;
         }
-        .app-header h1 {
-            font-size: 22px;
-            font-weight: 700;
-            letter-spacing: -0.3px;
+        .app-header::before {
+            content: ''; position: absolute;
+            top: -40px; right: -30px;
+            width: 120px; height: 120px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 50%;
         }
-        .header-actions {
-            display: flex;
-            gap: 8px;
+        .app-header::after {
+            content: ''; position: absolute;
+            bottom: -50px; right: 30px;
+            width: 90px; height: 90px;
+            background: rgba(255,255,255,0.04);
+            border-radius: 50%;
         }
+        .header-left { display: flex; flex-direction: column; gap: 1px; text-align: center; position: relative; z-index: 1; }
+        .header-title { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+        .header-subtitle { font-size: 12px; opacity: 0.8; font-weight: 500; }
+        .header-actions { display: flex; gap: 8px; position: absolute; right: 16px; top: 50%; transform: translateY(-50%); z-index: 1; }
         .icon-btn {
-            background: rgba(255,255,255,0.2);
-            border: none;
-            color: white;
-            width: 44px;
-            height: 44px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.15s ease;
-            touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent;
+            background: rgba(255,255,255,0.18);
+            border: 1px solid rgba(255,255,255,0.25);
+            color: white; width: 42px; height: 42px;
+            border-radius: var(--radius-sm); cursor: pointer;
+            font-size: 18px; display: flex; align-items: center; justify-content: center;
+            transition: all 0.15s ease; touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent; backdrop-filter: blur(4px);
         }
-        .icon-btn:active {
-            background: rgba(255,255,255,0.35);
-            transform: scale(0.93);
-        }
+        .icon-btn:active { background: rgba(255,255,255,0.3); transform: scale(0.93); }
+
         .content-area {
-            flex: 1;
-            overflow-y: auto;
-            overflow-x: hidden;
-            -webkit-overflow-scrolling: touch;
-            overscroll-behavior-y: contain;
+            flex: 1; overflow-y: auto; overflow-x: hidden;
+            -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain;
             padding-bottom: 32px;
-            /* GPU 가속 스크롤 */
-            will-change: scroll-position;
         }
-        .page {
-            display: none;
-            animation: fadeIn 0.2s ease;
-        }
-        .page.active {
-            display: block;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        /* Navigation */
+        .page { display: none; animation: fadeIn 0.18s ease; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ═══════════════════════════ BOTTOM NAV ═══════════════════════════ */
         .bottom-nav {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
+            display: flex; align-items: stretch;
             background: white;
-            border-top: 2px solid var(--border-color);
-            padding-bottom: max(8px, env(safe-area-inset-bottom));
-            padding-top: 6px;
-            flex-shrink: 0;
-            z-index: 100;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
-            width: 100%;
-            box-sizing: border-box;
+            border-top: 1px solid var(--border-color);
+            padding-bottom: max(6px, env(safe-area-inset-bottom));
+            flex-shrink: 0; z-index: 100;
+            box-shadow: 0 -4px 20px rgba(30,64,175,0.08);
         }
         .nav-item {
-            flex: 1;
-            padding: 6px 2px 8px;
-            text-align: center;
-            cursor: pointer;
-            background: none;
-            border: none;
-            color: #9ca3af;
-            transition: all 0.15s ease;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 2px;
-            position: relative;
-            touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent;
-            min-height: 52px;
-            min-width: 0;
+            flex: 1; padding: 8px 2px 6px;
+            text-align: center; cursor: pointer;
+            background: none; border: none; color: var(--text-tertiary);
+            transition: color 0.15s ease;
+            display: flex; flex-direction: column; align-items: center; gap: 3px;
+            position: relative; touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent; min-height: 54px;
         }
-        .nav-item.active {
-            color: var(--primary);
+        .nav-item.active { color: var(--primary); }
+        .nav-item.active .nav-icon { transform: scale(1.08); }
+        .nav-item::before {
+            content: ''; position: absolute;
+            top: 0; left: 50%; transform: translateX(-50%);
+            width: 0; height: 3px; border-radius: 0 0 3px 3px;
+            background: var(--primary); transition: width 0.2s ease;
         }
-        .nav-item span:first-child {
-            font-size: 22px;
-            line-height: 1;
-        }
-        .nav-item span:last-child {
-            font-size: 11px;
-            font-weight: 600;
-            letter-spacing: -0.3px;
+        .nav-item.active::before { width: 28px; }
+        .nav-icon { font-size: 22px; line-height: 1; transition: transform 0.15s ease; }
+        .nav-label {
+            font-size: 11px; font-weight: 600; letter-spacing: -0.2px;
             white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            width: 100%;
         }
         .nav-badge {
-            position: absolute;
-            top: 4px;
-            right: 6px;
-            background: var(--danger);
-            color: white;
-            border-radius: 10px;
-            min-width: 20px;
-            height: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 13px;
-            font-weight: 700;
-            padding: 0 4px;
+            position: absolute; top: 6px; right: calc(50% - 18px);
+            background: var(--danger); color: white;
+            border-radius: 10px; min-width: 18px; height: 18px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: 700; padding: 0 4px;
+            border: 2px solid white;
         }
-        /* Cards and Components */
+
+        /* ═══════════════════════════ CARDS ═══════════════════════════ */
         .card {
-            background: white;
-            border-radius: 16px;
-            padding: 16px;
-            margin: 8px;
+            background: var(--bg-card); border-radius: var(--radius-md);
+            padding: 16px; margin: 8px;
             border: 1px solid var(--border-color);
-            box-sizing: border-box;
-            overflow: hidden;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-            transition: all 0.15s ease;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.15s ease; overflow: hidden;
         }
-        .card:active {
-            background: #f9fafb;
+        .card:active { background: #F8FAFC; }
+        .card-title {
+            font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;
         }
+        .card-sub { font-size: 13px; color: var(--text-secondary); }
+
+        /* ═══════════════════════════ KPI TILES ═══════════════════════════ */
+        .kpi-tile {
+            border-radius: var(--radius-md); padding: 16px 14px;
+            color: white; overflow: hidden; position: relative;
+            min-width: 0;
+        }
+        .kpi-tile::before {
+            content: ''; position: absolute;
+            top: -20px; right: -20px; width: 80px; height: 80px;
+            background: rgba(255,255,255,0.12); border-radius: 50%;
+        }
+        .kpi-blue  { background: linear-gradient(135deg, #1e3a8a, #2563eb); box-shadow: 0 4px 16px rgba(30,64,175,0.30); }
+        .kpi-green { background: linear-gradient(135deg, #065F46, #059669); box-shadow: 0 4px 16px rgba(5,150,105,0.30); }
+        .kpi-label {
+            font-size: 12px; font-weight: 600; opacity: 0.88;
+            margin-bottom: 6px; white-space: nowrap; position: relative; z-index: 1;
+        }
+        .kpi-value {
+            font-size: 20px; font-weight: 800; letter-spacing: -0.5px;
+            word-break: break-all; position: relative; z-index: 1;
+        }
+
+        /* stat-card (used in buildingDetail) */
         .stat-card {
             background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-            color: white;
-            padding: 14px 10px;
-            border-radius: 16px;
-            margin: 8px;
-            text-align: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-            min-width: 0;
-            overflow: hidden;
+            color: white; padding: 14px 10px; border-radius: var(--radius-md);
+            margin: 8px; text-align: center; box-shadow: var(--shadow-md);
         }
-        .filter-btn {
-            padding: 12px 18px;
-            border-radius: 12px;
-            border: 2px solid var(--border-color);
-            background: white;
-            font-size: 15px;
-            font-weight: 700;
-            cursor: pointer;
-            color: var(--text-secondary);
-            white-space: nowrap;
-            touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent;
-            line-height: 1.3;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.07);
-            min-height: 48px;
-            flex: 1 1 auto;
-            text-align: center;
-        }
-        .filter-btn.active {
-            background: var(--primary);
-            border-color: var(--primary);
-            color: white;
-            box-shadow: 0 2px 8px rgba(99,102,241,0.25);
-        }
-        .stat-label {
-            font-size: 12px;
-            opacity: 0.9;
-            margin-bottom: 4px;
-            font-weight: 500;
-        }
-        .stat-value {
-            font-size: 20px;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-            word-break: break-all;
-            overflow-wrap: break-word;
-        }
+        .stat-label { font-size: 12px; opacity: 0.9; margin-bottom: 4px; font-weight: 500; }
+        .stat-value { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; word-break: break-all; }
+
+        /* ═══════════════════════════ BADGES ═══════════════════════════ */
         .badge {
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 700;
-            margin-right: 4px;
+            display: inline-block; padding: 3px 9px;
+            border-radius: 20px; font-size: 12px; font-weight: 700; margin-right: 4px;
         }
-        .badge-success {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--success);
-        }
-        .badge-danger {
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--danger);
-        }
-        .badge-warning {
-            background: rgba(245, 158, 11, 0.1);
-            color: var(--warning);
-        }
-        .badge-info {
-            background: rgba(59, 130, 246, 0.1);
-            color: var(--info);
-        }
-        .badge-gray {
-            background: rgba(107, 114, 128, 0.1);
-            color: var(--neutral-gray);
-        }
-        /* Buttons */
+        .badge-success { background: var(--success-light); color: var(--success); }
+        .badge-danger  { background: var(--danger-light);  color: var(--danger); }
+        .badge-warning { background: var(--warning-light); color: var(--warning); }
+        .badge-info    { background: var(--info-light);    color: var(--info); }
+        .badge-gray    { background: #F1F5F9; color: var(--text-secondary); }
+
+        /* ═══════════════════════════ BUTTONS ═══════════════════════════ */
         .btn {
-            display: block;
-            width: 100%;
-            padding: 0 16px;
-            height: 52px;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            border: none;
-            transition: all 0.15s ease;
-            touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            width: 100%; height: 50px; padding: 0 16px;
+            border-radius: var(--radius-sm); font-size: 15px; font-weight: 700;
+            cursor: pointer; border: none; transition: all 0.15s ease;
+            touch-action: manipulation; -webkit-tap-highlight-color: transparent;
         }
-        .btn-block {
-            width: calc(100% - 16px);
-            margin-left: 8px;
-            margin-right: 8px;
-            margin-bottom: 8px;
-            box-sizing: border-box;
-            display: block;
-        }
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-        }
-        .btn-primary:active {
-            background: #1e3a8a;
-            transform: scale(0.98);
-        }
-        .btn-secondary {
-            background: var(--neutral-light);
-            color: var(--primary);
-            border: 1.5px solid var(--border-color);
-        }
-        .btn-secondary:active {
-            background: #e5e7eb;
-            transform: scale(0.98);
-        }
-        .btn-danger {
-            background: var(--danger);
-            color: white;
-        }
-        .btn-danger:active {
-            background: #dc2626;
-            transform: scale(0.98);
-        }
-        /* Forms */
-        .form-group {
-            margin-bottom: 16px;
-        }
+        .btn-block { width: calc(100% - 16px); margin: 0 8px 8px; display: flex; }
+        .btn-primary { background: var(--primary); color: white; box-shadow: 0 2px 8px rgba(30,64,175,0.25); }
+        .btn-primary:active { background: #1e3a8a; transform: scale(0.98); }
+        .btn-secondary { background: #F1F5F9; color: var(--primary); border: 1.5px solid var(--border-color); }
+        .btn-secondary:active { background: #E2E8F0; transform: scale(0.98); }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-danger:active { background: #B91C1C; transform: scale(0.98); }
+
+        /* ═══════════════════════════ FORMS ═══════════════════════════ */
+        .form-group { margin-bottom: 16px; }
         .form-group label {
-            display: block;
-            font-size: 15px;
-            font-weight: 600;
-            color: #374151;
-            margin-bottom: 8px;
+            display: block; font-size: 14px; font-weight: 600;
+            color: var(--text-secondary); margin-bottom: 7px;
         }
         .form-group input,
         .form-group select,
         .form-group textarea {
-            width: 100%;
-            padding: 13px 14px;
-            border: 2px solid var(--border-color);
-            border-radius: 10px;
-            font-size: 16px;
-            color: #111827;
-            background: white;
-            transition: border-color 0.15s;
-            -webkit-appearance: none;
+            width: 100%; padding: 12px 14px;
+            border: 1.5px solid var(--border-color); border-radius: 10px;
+            font-size: 15px; color: var(--text-primary); background: white;
+            transition: border-color 0.15s; -webkit-appearance: none;
             touch-action: manipulation;
         }
         .form-group input:focus,
         .form-group select:focus,
         .form-group textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(30,64,175,0.12);
+            outline: none; border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(30,64,175,0.10);
         }
-        .form-group textarea {
-            resize: none;
-            height: 80px;
-            line-height: 1.5;
-        }
-        /* Modal */
+        .form-group textarea { resize: none; height: 80px; line-height: 1.5; }
+
+        /* ═══════════════════════════ MODAL ═══════════════════════════ */
         .modal-overlay {
-            display: none;
-            position: fixed;
+            display: none; position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.6);
-            z-index: 1000;
-            align-items: flex-end;
-            justify-content: center;
-            backdrop-filter: blur(2px);
+            background: rgba(15,23,42,0.55);
+            z-index: 1000; align-items: flex-end; justify-content: center;
+            backdrop-filter: blur(3px);
         }
-        .modal-overlay.active {
-            display: flex;
-            animation: modalFadeIn 0.2s ease;
-        }
-        @keyframes modalFadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
+        .modal-overlay.active { display: flex; animation: modalFadeIn 0.2s ease; }
+        @keyframes modalFadeIn { from { opacity: 0; } to { opacity: 1; } }
         .modal-content {
-            background: white;
-            width: 100%;
-            max-height: min(90vh, 90dvh);
-            overflow-y: auto;
-            overflow-x: hidden;
-            border-radius: 20px 20px 0 0;
+            background: white; width: 100%;
+            max-height: min(92vh, 92dvh); overflow-y: auto; overflow-x: hidden;
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
             padding: 0 16px max(32px, calc(env(safe-area-inset-bottom) + 24px));
-            -webkit-overflow-scrolling: touch;
-            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
             animation: slideUp 0.25s ease;
         }
-        @keyframes slideUp {
-            from { transform: translateY(100%); }
-            to { transform: translateY(0); }
-        }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 18px 0 14px;
-            border-bottom: 2px solid var(--border-color);
-            margin-bottom: 16px;
-            position: sticky;
-            top: 0;
-            background: white;
-            z-index: 1;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 18px 0 14px; border-bottom: 1.5px solid var(--border-color);
+            margin-bottom: 18px; position: sticky; top: 0; background: white; z-index: 1;
         }
-        .modal-header h2 {
-            font-size: 20px;
-            font-weight: 700;
-        }
+        .modal-header h2 { font-size: 19px; font-weight: 800; color: var(--text-primary); }
         .modal-close {
-            background: #f3f4f6;
-            border: none;
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            font-size: 18px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #374151;
-            touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent;
-            font-weight: 700;
+            background: #F1F5F9; border: none; width: 40px; height: 40px;
+            border-radius: 50%; font-size: 16px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--text-secondary); touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent; font-weight: 700;
         }
-        .modal-close:active {
-            background: #e5e7eb;
-            transform: scale(0.93);
-        }
-        /* List Items */
+        .modal-close:active { background: #E2E8F0; transform: scale(0.93); }
+
+        /* ═══════════════════════════ LIST ITEMS ═══════════════════════════ */
         .list-item {
-            display: flex;
-            align-items: center;
-            padding: 14px 12px;
-            border-bottom: 1px solid var(--border-color);
-            gap: 12px;
-            transition: background 0.1s;
-            touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent;
-            min-height: 72px;
+            display: flex; align-items: center;
+            padding: 14px 12px; border-bottom: 1px solid var(--border-light);
+            gap: 12px; transition: background 0.1s;
+            touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+            min-height: 70px;
         }
-        .list-item:active {
-            background: #f9fafb;
-        }
+        .list-item:active { background: #F8FAFC; }
         .list-item-avatar {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
+            width: 46px; height: 46px; border-radius: 50%;
             background: linear-gradient(135deg, var(--primary), var(--primary-light));
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            font-weight: 700;
-            flex-shrink: 0;
+            color: white; display: flex; align-items: center; justify-content: center;
+            font-size: 19px; font-weight: 800; flex-shrink: 0;
         }
-        .list-item-content {
-            flex: 1;
-            min-width: 0;
-        }
-        .list-item-title {
-            font-size: 16px;
-            font-weight: 700;
-            color: #111827;
-            margin-bottom: 4px;
-        }
-        .list-item-subtitle {
-            font-size: 13px;
-            color: var(--neutral-gray);
-            line-height: 1.4;
-        }
-        .list-item-right {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 4px;
-            flex-shrink: 0;
-        }
-        .list-item-amount {
-            font-size: 17px;
-            font-weight: 800;
-            color: var(--primary);
-            letter-spacing: -0.5px;
-        }
-        /* Toast */
+        .list-item-content { flex: 1; min-width: 0; }
+        .list-item-title { font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 3px; }
+        .list-item-subtitle { font-size: 13px; color: var(--text-secondary); line-height: 1.4; }
+        .list-item-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+        .list-item-amount { font-size: 16px; font-weight: 800; color: var(--primary); letter-spacing: -0.3px; }
+
+        /* ═══════════════════════════ TOAST ═══════════════════════════ */
         .toast {
-            position: fixed;
-            bottom: 80px;
-            left: 16px;
-            right: 16px;
-            background: #1f2937;
-            color: white;
-            padding: 12px 16px;
-            border-radius: 8px;
-            z-index: 2000;
-            animation: slideUp 0.3s ease;
-            font-size: 14px;
-            font-weight: 500;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            position: fixed; bottom: 80px; left: 16px; right: 16px;
+            background: #1E293B; color: white;
+            padding: 12px 16px; border-radius: 12px;
+            z-index: 2000; animation: slideUp 0.3s ease;
+            font-size: 14px; font-weight: 600;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
         }
-        .toast.error {
-            background: var(--danger);
+        .toast.error { background: var(--danger); }
+        .toast.success { background: var(--success); }
+
+        /* ═══════════════════════════ DASHBOARD ═══════════════════════════ */
+        .dash-hero {
+            background: linear-gradient(135deg, #1a3587 0%, #1e40af 60%, #2563eb 100%);
+            padding: 20px 16px 18px; margin: 0; position: relative; overflow: hidden;
         }
-        .toast.success {
-            background: var(--success);
+        .dash-hero::before {
+            content: ''; position: absolute;
+            top: -30px; right: -20px; width: 110px; height: 110px;
+            background: rgba(255,255,255,0.07); border-radius: 50%;
         }
-        /* Page Specific */
+        .dash-hero::after {
+            content: ''; position: absolute;
+            bottom: -40px; right: 40px; width: 80px; height: 80px;
+            background: rgba(255,255,255,0.05); border-radius: 50%;
+        }
+        .dash-hero-inner { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .dash-hero-left { flex: 1; min-width: 0; }
+        .dash-hero-right { flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+        /* hero KPI */
+        .hero-kpi-label { font-size: 12px; color: rgba(255,255,255,0.72); font-weight: 500; margin-bottom: 2px; }
+        .hero-kpi-value { font-size: 26px; font-weight: 900; color: white; letter-spacing: -0.8px; line-height: 1.15; }
+        .hero-kpi-value.secondary { font-size: 22px; color: rgba(255,255,255,0.88); }
+        .hero-kpi-divider { border: none; border-top: 1px solid rgba(255,255,255,0.18); margin: 11px 0 10px; }
+        /* compat hidden */
+        .dash-month-row { display: none; }
+        .collection-rate-label { display: none; }
+        .dash-subtitle { display: none; }
+
+        .kpi-row {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 10px; margin: 10px 12px 0;
+        }
+
+        /* Section headers */
+        .dash-section { margin: 16px 0 0; }
+        .dash-section-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 16px; margin-bottom: 8px;
+        }
+        .dash-section-label {
+            font-size: 15px; font-weight: 700;
+            color: var(--text-primary);
+        }
+        .dash-section-more {
+            font-size: 13px; color: var(--text-tertiary); cursor: pointer;
+            display: flex; align-items: center; gap: 2px;
+        }
+        /* Recent payments */
+        .recent-pay-card {
+            background: var(--bg-card); border-radius: var(--radius-md);
+            margin: 0 12px 1px; padding: 13px 16px;
+            border: 1px solid var(--border-color);
+        }
+        .recent-pay-card:first-child { border-radius: var(--radius-md) var(--radius-md) 0 0; }
+        .recent-pay-card:last-child  { border-radius: 0 0 var(--radius-md) var(--radius-md); margin-bottom: 0; border-top: none; }
+        .recent-pay-card:only-child  { border-radius: var(--radius-md); margin-bottom: 0; border-top: 1px solid var(--border-color); }
+        .recent-pay-row { display: flex; align-items: center; justify-content: space-between; }
+        .recent-pay-who { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+        .recent-pay-room { font-size: 14px; font-weight: 400; color: var(--text-secondary); margin-right: 4px; }
+        .recent-pay-date { font-size: 12px; color: var(--text-tertiary); margin-top: 2px; }
+        .recent-pay-amount { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+        .recent-pay-empty { text-align: center; padding: 20px 16px; color: var(--text-tertiary); font-size: 13px; }
+        .alert-card {
+            display: flex; align-items: center; gap: 12px;
+            border-radius: var(--radius-md);
+            margin: 0 12px 8px; padding: 14px 14px;
+            cursor: pointer; touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent; transition: all 0.15s;
+            border: none; box-shadow: none;
+        }
+        .alert-card:active { transform: scale(0.98); opacity: 0.85; }
+        .alert-card.ac-danger  { background: #FFF1F2; }
+        .alert-card.ac-warning { background: #FFFBEB; }
+        .alert-card.ac-info    { background: #EFF6FF; }
+        .alert-card.ac-yellow  { background: #FEFCE8; }
+        .alert-card.ac-purple  { background: #F5F3FF; }
+        .alert-card.ac-orange  { background: #FFF7ED; }
+        /* icon box */
+        .alert-icon-box {
+            width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center; font-size: 19px;
+        }
+        .ac-danger  .alert-icon-box { background: #FECDD3; }
+        .ac-warning .alert-icon-box { background: #FED7AA; }
+        .ac-info    .alert-icon-box { background: #BAE6FD; }
+        .ac-yellow  .alert-icon-box { background: #FEF08A; }
+        .ac-purple  .alert-icon-box { background: #DDD6FE; }
+        .ac-orange  .alert-icon-box { background: #FED7AA; }
+        /* body */
+        .alert-card-body { flex: 1; min-width: 0; }
+        .alert-card-title { font-size: 14px; font-weight: 700; margin-bottom: 1px; color: var(--text-primary); }
+        .alert-card-desc  { font-size: 12px; color: var(--text-secondary); line-height: 1.3; }
+        /* right-side value */
+        .alert-card-value { font-size: 13px; font-weight: 700; flex-shrink: 0; text-align: right; white-space: nowrap; }
+        .ac-danger  .alert-card-value { color: #BE123C; }
+        .ac-warning .alert-card-value { color: #B45309; }
+        .ac-info    .alert-card-value { color: #1D4ED8; }
+        .ac-yellow  .alert-card-value { color: #92400E; }
+        .ac-purple  .alert-card-value { color: #5B21B6; }
+        .ac-orange  .alert-card-value { color: #9A3412; }
+        .alert-card-arrow { display: none; }
+
+        /* quick actions */
         .dashboard-actions {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin: 8px;
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 10px; margin: 0 12px 12px;
         }
         .quick-action {
-            background: white;
-            border: 1.5px solid var(--border-color);
-            border-radius: 14px;
-            padding: 14px 8px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.15s;
-            touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent;
-            min-height: 80px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-        }
-        .quick-action:active {
-            background: #f0f4ff;
-            border-color: var(--primary);
-            transform: scale(0.97);
-        }
-        .quick-action-icon {
-            font-size: 28px;
-            line-height: 1;
-        }
-        .quick-action div:last-child {
-            font-size: 13px;
-            font-weight: 600;
-            color: #374151;
-        }
-        .alert {
-            margin: 8px;
-            padding: 14px 16px;
-            border-radius: 12px;
-            background: rgba(239, 68, 68, 0.08);
-            border: 1.5px solid rgba(239, 68, 68, 0.25);
-            color: #991b1b;
-        }
-        .alert-title {
-            font-size: 15px;
-            font-weight: 700;
-            margin-bottom: 6px;
-        }
-        .alert div {
-            font-size: 14px;
-            line-height: 1.6;
-        }
-        /* Tab Buttons */
-        .tab-buttons {
-            display: flex;
-            gap: 0;
-            margin: 0 8px 8px;
-            background: #f3f4f6;
-            border-radius: 12px;
-            padding: 4px;
-        }
-        .tab-btn {
-            flex: 1;
-            padding: 10px 8px;
-            border: none;
-            background: transparent;
-            border-radius: 9px;
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--neutral-gray);
-            cursor: pointer;
-            transition: all 0.15s;
-            touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .tab-btn.active {
-            background: white;
-            color: var(--primary);
-            box-shadow: 0 1px 4px rgba(0,0,0,0.12);
-        }
-        /* Month Selector */
-        .month-selector {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin: 8px;
-            padding: 8px 12px;
-            background: var(--neutral-light);
-            border-radius: 8px;
-        }
-        .month-selector button {
-            background: white;
+            background: var(--bg-card);
             border: 1px solid var(--border-color);
-            width: 32px;
-            height: 32px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .month-selector span {
-            font-weight: 600;
-            color: var(--primary);
-        }
-        /* ===== 수납 섹션 - Galaxy Z Flip 6 최적화 ===== */
-        /* Z Flip 6: 393px CSS 뷰포트, 22:9, DPR 2.75 */
-        /* 300ms 탭 딜레이 제거 + 텍스트 선택 방지 */
-        .rent-year-card,
-        .rent-month-cell,
-        #rentPage .month-selector button,
-        #rentPage .btn {
-            touch-action: manipulation;
+            border-radius: var(--radius-md);
+            padding: 16px 10px;
+            text-align: center; cursor: pointer;
+            transition: all 0.15s; touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
-            user-select: none;
-            -webkit-user-select: none;
+            min-height: 82px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 7px; box-shadow: var(--shadow-sm);
         }
-        .rent-year-card {
-            background: white;
-            border-radius: 14px;
-            padding: 14px 12px;
-            margin: 6px 8px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.10);
-        }
-        .rent-year-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 12px;
-        }
-        .rent-year-card-name {
-            font-weight: 700;
-            font-size: 15px;
-            letter-spacing: -0.2px;
-        }
-        .rent-year-card-sub {
-            font-size: 14px;
-            color: var(--neutral-gray);
-            margin-top: 3px;
-            line-height: 1.4;
-        }
-        .rent-year-card-summary {
-            font-size: 13px;
-            text-align: right;
-            white-space: nowrap;
-            padding-left: 8px;
-        }
-        /* 6열 그리드: 393px 뷰포트 기준
-           (393 - 16margin - 24padding) / 6 - 5gap ≈ 54px/셀 */
-        .rent-months-grid {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 5px;
-        }
-        /* 최소 터치타겟 44px 보장 */
-        .rent-month-cell {
-            text-align: center;
-            min-height: 52px;
-            padding: 7px 2px 6px;
-            border-radius: 8px;
-            cursor: pointer;
-            border: 1px solid transparent;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.1s ease, opacity 0.1s ease;
-            will-change: transform;
-        }
-        .rent-month-cell:active {
-            transform: scale(0.92);
-            opacity: 0.8;
-        }
-        .rent-month-cell.paid {
-            background: #dcfce7;
-            border-color: #86efac;
-            color: #166534;
-        }
-        .rent-month-cell.pending {
-            background: #fee2e2;
-            border-color: #fca5a5;
-            color: #991b1b;
-        }
-        .rent-month-cell.partial {
-            background: #fef9c3;
-            border-color: #fde047;
-            color: #713f12;
-        }
-        .rent-month-cell.none {
-            background: #f3f4f6;
-            border-color: #e5e7eb;
-            color: #9ca3af;
-        }
-        .rent-month-cell .m-label {
-            font-size: 13px;
-            font-weight: 700;
-            margin-bottom: 3px;
-            line-height: 1;
-        }
-        .rent-month-cell .m-icon {
-            font-size: 14px;
-            line-height: 1;
-            font-weight: 600;
-        }
-        .rent-month-cell .m-date {
-            font-size: 13px;
-            margin-top: 3px;
-            line-height: 1;
-            opacity: 0.9;
-            font-weight: 500;
-        }
-        /* 연도 선택바 버튼 최소 44px */
-        #rentPage .month-selector button {
-            width: 44px;
-            height: 44px;
-            font-size: 18px;
-        }
-        #rentPage .month-selector span {
-            font-size: 17px;
-        }
-        /* 범례 + 생성 버튼 바 */
-        .rent-legend-bar {
-            display: flex;
-            gap: 6px 10px;
-            margin: 0 8px 8px;
-            font-size: 13px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        .rent-legend-bar .legend-item {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            white-space: nowrap;
-        }
-        .rent-legend-bar .legend-dot {
-            width: 11px;
-            height: 11px;
-            border-radius: 3px;
-            display: inline-block;
-            flex-shrink: 0;
-        }
-        /* 이번달 생성 버튼 - 최소 44px 터치타겟 */
-        .rent-generate-btn {
-            margin-left: auto;
-            padding: 0 14px;
-            height: 44px;
-            font-size: 13px;
-            font-weight: 600;
-            border-radius: 10px;
-            white-space: nowrap;
-            flex-shrink: 0;
-            touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent;
-        }
-        /* Search Bar */
-        .search-bar {
-            margin: 8px;
-            position: relative;
-        }
-        .search-bar input {
-            width: 100%;
-            padding: 8px 12px 8px 36px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 14px;
-        }
-        .search-bar::before {
-            content: '🔍';
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 16px;
-        }
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 48px 20px;
-            color: var(--neutral-gray);
-        }
-        .empty-state-icon {
-            font-size: 52px;
-            margin-bottom: 14px;
-        }
-        .empty-state p {
-            font-size: 16px;
-            font-weight: 500;
-        }
-        /* Sync Status */
-        .sync-indicator {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            font-size: 14px;
-            padding: 4px 8px;
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--success);
-            border-radius: 4px;
-        }
-        .sync-indicator.syncing {
-            background: rgba(59, 130, 246, 0.1);
-            color: var(--info);
-            animation: pulse 1s infinite;
-        }
-        .sync-indicator.error {
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--danger);
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        /* Building Income Summary */
-        .income-breakdown {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin: 0 8px 8px;
-        }
-        .income-item {
-            background: rgba(16, 185, 129, 0.08);
-            border-radius: 12px;
-            padding: 14px 12px;
-            text-align: center;
-        }
-        .income-item-label {
-            font-size: 13px;
-            color: var(--neutral-gray);
-            font-weight: 500;
-            margin-bottom: 6px;
-        }
-        .income-item-value {
-            font-size: 18px;
-            font-weight: 800;
-            color: var(--success);
-            letter-spacing: -0.5px;
-        }
-        /* Category Summary */
-        .category-summary {
-            padding: 12px 8px;
-        }
-        .category-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 0;
+        .quick-action:active { background: #EEF2FF; border-color: var(--primary); transform: scale(0.97); }
+        .quick-action-icon { font-size: 26px; line-height: 1; }
+        .quick-action div:last-child { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+
+        /* ═══════════════════════════ TENANTS PAGE ═══════════════════════════ */
+        .page-header {
+            background: var(--bg-card); padding: 14px 16px 12px;
             border-bottom: 1px solid var(--border-color);
         }
-        .category-item:last-child {
-            border-bottom: none;
+        .page-header-title { font-size: 18px; font-weight: 800; color: var(--text-primary); }
+        .segment-control {
+            display: flex; gap: 0; background: #F1F5F9;
+            border-radius: 10px; padding: 3px; margin: 10px 12px;
         }
-        .category-name {
-            font-size: 13px;
-            font-weight: 500;
+        .seg-btn {
+            flex: 1; padding: 9px 8px; border: none;
+            background: transparent; border-radius: 8px;
+            font-size: 14px; font-weight: 600; color: var(--text-secondary);
+            cursor: pointer; transition: all 0.15s;
+            touch-action: manipulation; -webkit-tap-highlight-color: transparent;
         }
-        .category-amount {
-            font-weight: 600;
-            color: var(--danger);
+        .seg-btn.active {
+            background: white; color: var(--primary);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.10);
         }
-        /* Room Status Grid */
+
+        /* ═══════════════════════════ RENT PAGE ═══════════════════════════ */
+        .rent-year-card {
+            background: white; border-radius: var(--radius-md);
+            padding: 14px 12px; margin: 6px 12px;
+            box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);
+            touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+            user-select: none; -webkit-user-select: none;
+        }
+        .rent-year-card-header {
+            display: flex; justify-content: space-between;
+            align-items: flex-start; margin-bottom: 12px;
+        }
+        .rent-year-card-name { font-weight: 800; font-size: 15px; color: var(--text-primary); }
+        .rent-year-card-sub { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+        .rent-year-card-summary { font-size: 13px; text-align: right; white-space: nowrap; }
+        .rent-months-grid { display: grid; grid-template-columns: repeat(6,1fr); gap: 5px; }
+        .rent-month-cell {
+            text-align: center; min-height: 52px;
+            padding: 7px 2px 6px; border-radius: 8px; cursor: pointer;
+            border: 1px solid transparent;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: transform 0.1s ease, opacity 0.1s ease;
+            touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+            user-select: none; -webkit-user-select: none;
+        }
+        .rent-month-cell:active { transform: scale(0.92); opacity: 0.8; }
+        .rent-month-cell.paid    { background: #DCFCE7; border-color: #86EFAC; color: #166534; }
+        .rent-month-cell.pending { background: #FEE2E2; border-color: #FCA5A5; color: #991B1B; }
+        .rent-month-cell.partial { background: #FEF9C3; border-color: #FDE047; color: #713F12; }
+        .rent-month-cell.none    { background: #F8FAFC; border-color: var(--border-color); color: var(--text-tertiary); }
+        .rent-month-cell .m-label { font-size: 12px; font-weight: 700; margin-bottom: 2px; line-height: 1; }
+        .rent-month-cell .m-icon  { font-size: 13px; line-height: 1; font-weight: 700; }
+        .rent-month-cell .m-date  { font-size: 11px; margin-top: 2px; line-height: 1; opacity: 0.85; }
+
+        .rent-legend-bar {
+            display: flex; gap: 6px 10px; margin: 8px 12px; font-size: 13px;
+            align-items: center; flex-wrap: wrap;
+            touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+            user-select: none; -webkit-user-select: none;
+        }
+        .legend-item { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+        .legend-dot {
+            width: 11px; height: 11px; border-radius: 3px;
+            display: inline-block; flex-shrink: 0;
+        }
+        .rent-generate-btn {
+            margin-left: auto; padding: 0 14px; height: 40px;
+            font-size: 13px; font-weight: 600; border-radius: 10px;
+            white-space: nowrap; flex-shrink: 0;
+            touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+        }
+        #rentPage .month-selector button {
+            width: 44px; height: 44px; font-size: 18px;
+            touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+            user-select: none; -webkit-user-select: none;
+        }
+        #rentPage .month-selector span { font-size: 17px; }
+        #rentPage .btn { touch-action: manipulation; -webkit-tap-highlight-color: transparent; user-select: none; }
+
+        /* ═══════════════════════════ FILTER & SEARCH ═══════════════════════════ */
+        .search-bar { margin: 10px 12px 6px; position: relative; }
+        .search-bar input {
+            width: 100%; padding: 10px 14px 10px 40px;
+            border: 1.5px solid var(--border-color); border-radius: 12px;
+            font-size: 14px; background: var(--bg-card);
+            -webkit-user-select: text; user-select: text;
+        }
+        .search-bar input:focus { border-color: var(--primary); outline: none; }
+        .search-bar::before {
+            content: '🔍'; position: absolute;
+            left: 12px; top: 50%; transform: translateY(-50%);
+            font-size: 15px;
+        }
+
+        .filter-btn {
+            padding: 10px 16px; border-radius: 10px;
+            border: 1.5px solid var(--border-color); background: white;
+            font-size: 14px; font-weight: 700; cursor: pointer;
+            color: var(--text-secondary); white-space: nowrap;
+            touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+            min-height: 44px; flex: 1 1 auto; text-align: center;
+        }
+        .filter-btn.active {
+            background: var(--primary); border-color: var(--primary);
+            color: white; box-shadow: 0 2px 8px rgba(30,64,175,0.22);
+        }
+
+        .tab-buttons {
+            display: flex; gap: 0; margin: 8px 12px;
+            background: #F1F5F9; border-radius: 12px; padding: 3px;
+        }
+        .tab-btn {
+            flex: 1; padding: 10px 8px; border: none;
+            background: transparent; border-radius: 9px;
+            font-size: 14px; font-weight: 600; color: var(--text-secondary);
+            cursor: pointer; transition: all 0.15s;
+            touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+        }
+        .tab-btn.active {
+            background: white; color: var(--primary);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.10);
+        }
+
+        /* ═══════════════════════════ MONTH SELECTOR ═══════════════════════════ */
+        .month-selector {
+            display: flex; align-items: center; justify-content: space-between;
+            margin: 10px 12px 8px; padding: 10px 14px;
+            background: var(--bg-card); border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);
+        }
+        .month-selector button {
+            background: var(--primary-pale); border: none;
+            width: 36px; height: 36px; border-radius: 8px;
+            cursor: pointer; font-size: 16px; color: var(--primary);
+            display: flex; align-items: center; justify-content: center;
+            touch-action: manipulation;
+        }
+        .month-selector span { font-weight: 700; color: var(--primary); font-size: 16px; }
+
+        /* ═══════════════════════════ EMPTY STATE ═══════════════════════════ */
+        .empty-state {
+            text-align: center; padding: 52px 20px; color: var(--text-tertiary);
+        }
+        .empty-state-icon { font-size: 52px; margin-bottom: 14px; }
+        .empty-state p { font-size: 15px; font-weight: 500; }
+
+        /* ═══════════════════════════ BUILDING DETAIL ═══════════════════════════ */
+        .income-breakdown {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 8px 8px;
+        }
+        .income-item {
+            background: rgba(5,150,105,0.07); border-radius: var(--radius-sm);
+            padding: 14px 12px; text-align: center;
+        }
+        .income-item-label { font-size: 13px; color: var(--text-secondary); font-weight: 500; margin-bottom: 5px; }
+        .income-item-value { font-size: 17px; font-weight: 800; color: var(--success); letter-spacing: -0.5px; }
+
+        /* ═══════════════════════════ ROOM GRID ═══════════════════════════ */
         .room-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin: 8px;
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 8px;
         }
         .room-cell {
-            border-radius: 14px;
-            padding: 14px 8px 12px;
-            text-align: center;
-            cursor: pointer;
-            border: 2px solid transparent;
-            transition: all 0.15s;
-            touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent;
-            min-height: 80px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            border-radius: var(--radius-sm); padding: 14px 8px 12px;
+            text-align: center; cursor: pointer;
+            border: 2px solid transparent; transition: all 0.15s;
+            touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+            min-height: 80px; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
         }
-        .room-cell:active {
-            transform: scale(0.95);
+        .room-cell:active { transform: scale(0.95); }
+        .room-cell.occupied    { background: #DBEAFE; border-color: #93C5FD; }
+        .room-cell.vacant      { background: #DCFCE7; border-color: #86EFAC; }
+        .room-cell.maintenance { background: #FEF9C3; border-color: #FDE047; }
+        .room-cell-number  { font-size: 17px; font-weight: 800; margin-bottom: 5px; color: #1E3A8A; }
+        .room-cell-status  { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+        .room-cell-tenant  { font-size: 12px; font-weight: 700; color: var(--primary); margin-top: 3px; }
+
+        /* ═══════════════════════════ EXPENSE PAGE ═══════════════════════════ */
+        .category-summary { padding: 10px 12px; }
+        .category-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 9px 0; border-bottom: 1px solid var(--border-light);
         }
-        .room-cell.occupied {
-            background: #dbeafe;
-            border-color: #93c5fd;
-        }
-        .room-cell.vacant {
-            background: #dcfce7;
-            border-color: #86efac;
-        }
-        .room-cell.maintenance {
-            background: #fef9c3;
-            border-color: #fde047;
-        }
-        .room-cell-number {
-            font-size: 18px;
-            font-weight: 800;
-            margin-bottom: 6px;
-            color: #1e3a8a;
-        }
-        .room-cell-status {
-            font-size: 14px;
-            font-weight: 600;
-            color: #374151;
-        }
-        .room-cell-tenant {
-            font-size: 13px;
-            font-weight: 700;
-            color: #1e40af;
-            margin-top: 4px;
-        }
-        /* Scrollable horizontal list */
-        .horizontal-scroll {
-            display: flex;
-            gap: 8px;
-            padding: 8px;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            margin: 0 8px;
-        }
-        .horizontal-scroll::-webkit-scrollbar {
-            height: 4px;
-        }
-        .horizontal-scroll::-webkit-scrollbar-track {
-            background: var(--neutral-light);
-        }
-        .horizontal-scroll::-webkit-scrollbar-thumb {
-            background: var(--border-color);
-            border-radius: 2px;
-        }
-        /* Loading spinner */
-        .spinner {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid rgba(59, 130, 246, 0.3);
-            border-top-color: var(--info);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        /* ── Receipt / Attachment feature ── */
+        .category-item:last-child { border-bottom: none; }
+        .category-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+        .category-amount { font-weight: 700; color: var(--danger); font-size: 14px; }
+
+        /* ═══════════════════════════ RECEIPT ═══════════════════════════ */
         .receipt-upload-btn {
             display: inline-flex; align-items: center; gap: 6px;
-            padding: 9px 14px; background: #f0f4ff; border: 1.5px dashed #93c5fd;
-            border-radius: 10px; font-size: 14px; font-weight: 600; color: #1e40af;
+            padding: 10px 14px; background: #EEF2FF;
+            border: 1.5px dashed #93C5FD; border-radius: 10px;
+            font-size: 14px; font-weight: 600; color: var(--primary);
             cursor: pointer; width: 100%; justify-content: center; margin-bottom: 8px;
             touch-action: manipulation;
         }
-        .receipt-preview-wrap {
-            display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px;
-        }
+        .receipt-preview-wrap { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
         .receipt-thumb {
-            position: relative; width: 72px; height: 72px; border-radius: 8px;
-            overflow: hidden; border: 1.5px solid #e2e8f0; cursor: pointer;
+            position: relative; width: 72px; height: 72px;
+            border-radius: 8px; overflow: hidden;
+            border: 1.5px solid var(--border-color); cursor: pointer;
         }
         .receipt-thumb img { width: 100%; height: 100%; object-fit: cover; }
         .receipt-thumb-del {
-            position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.55);
-            color: white; border-radius: 50%; width: 18px; height: 18px;
-            font-size: 11px; display: flex; align-items: center; justify-content: center;
+            position: absolute; top: 2px; right: 2px;
+            background: rgba(0,0,0,0.55); color: white; border-radius: 50%;
+            width: 18px; height: 18px; font-size: 11px;
+            display: flex; align-items: center; justify-content: center;
             cursor: pointer; z-index: 2;
         }
         .expense-check {
-            width: 22px; height: 22px; border-radius: 6px; border: 2px solid #cbd5e1;
-            background: white; display: flex; align-items: center; justify-content: center;
+            width: 22px; height: 22px; border-radius: 6px;
+            border: 2px solid #CBD5E1; background: white;
+            display: flex; align-items: center; justify-content: center;
             flex-shrink: 0; cursor: pointer; transition: all 0.15s;
         }
-        .expense-check.checked {
-            background: #1e40af; border-color: #1e40af; color: white; font-size: 13px;
-        }
-        .receipt-badge {
-            display: inline-flex; align-items: center; gap: 3px;
-            font-size: 11px; color: #6b7280; margin-top: 2px;
-        }
+        .expense-check.checked { background: var(--primary); border-color: var(--primary); color: white; font-size: 13px; }
+        .receipt-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
         .expense-action-bar {
             position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%);
-            background: #1e293b; color: white; border-radius: 16px;
+            background: #1E293B; color: white; border-radius: 16px;
             padding: 10px 14px; display: flex; align-items: center; gap: 10px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.35); z-index: 900;
             max-width: 380px; width: calc(100% - 32px);
@@ -1005,106 +660,390 @@
             padding: 7px 12px; border-radius: 10px; border: none;
             font-size: 13px; font-weight: 600; cursor: pointer; touch-action: manipulation;
         }
-        .btn-print { background: #3b82f6; color: white; }
-        .btn-share { background: #fde047; color: #1e293b; }
+        .btn-print    { background: #3B82F6; color: white; }
+        .btn-share    { background: #FDE047; color: #1E293B; }
         .btn-cancel-sel { background: rgba(255,255,255,0.15); color: white; padding: 7px 9px !important; }
-        /* Receipt viewer modal */
+
+        /* ═══════════════════════════ RECEIPT VIEWER ═══════════════════════════ */
         .receipt-viewer-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.88);
+            position: fixed; inset: 0; background: rgba(0,0,0,0.90);
             z-index: 2000; display: flex; flex-direction: column;
             align-items: center; justify-content: center; padding: 16px;
         }
-        .receipt-viewer-overlay img {
-            max-width: 100%; max-height: 80vh; object-fit: contain; border-radius: 8px;
-        }
-        .receipt-viewer-nav {
-            display: flex; gap: 16px; margin-top: 12px; align-items: center;
-        }
+        .receipt-viewer-overlay img { max-width: 100%; max-height: 80vh; object-fit: contain; border-radius: 8px; }
+        .receipt-viewer-nav { display: flex; gap: 16px; margin-top: 12px; align-items: center; }
         .receipt-viewer-nav button {
             background: rgba(255,255,255,0.2); border: none; color: white;
             border-radius: 8px; padding: 8px 16px; font-size: 16px; cursor: pointer;
         }
-        /* Responsive adjustments */
+
+        /* ═══════════════════════════ SETTINGS ═══════════════════════════ */
+        .settings-section-title {
+            font-size: 13px; font-weight: 700; color: var(--text-tertiary);
+            letter-spacing: 0.5px; text-transform: uppercase;
+            padding: 18px 16px 6px;
+        }
+
+        /* ═══════════════════════════ SYNC PILL ═══════════════════════════ */
+        .sync-indicator { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; padding: 4px 8px; background: rgba(5,150,105,0.10); color: var(--success); border-radius: 4px; }
+        .sync-indicator.syncing { background: rgba(59,130,246,0.10); color: var(--info); animation: pulse 1s infinite; }
+        .sync-indicator.error { background: rgba(220,38,38,0.10); color: var(--danger); }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(59,130,246,0.3); border-top-color: var(--info); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ═══════════════════════════ HORIZONTAL SCROLL ═══════════════════════════ */
+        .horizontal-scroll {
+            display: flex; gap: 8px; padding: 8px; overflow-x: auto;
+            -webkit-overflow-scrolling: touch; margin: 0 4px;
+        }
+        .horizontal-scroll::-webkit-scrollbar { height: 3px; }
+        .horizontal-scroll::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 2px; }
+
+        /* ═══════════════════════════ RESPONSIVE ═══════════════════════════ */
         @media (min-width: 768px) {
-            .dashboard-actions {
-                grid-template-columns: repeat(4, 1fr);
-            }
-            .room-grid {
-                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-            }
+            .dashboard-actions { grid-template-columns: repeat(4, 1fr); }
+            .room-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
         }
-        /* Safe area support */
         @supports (padding: max(0px)) {
-            body {
-                padding-left: env(safe-area-inset-left);
-                padding-right: env(safe-area-inset-right);
-            }
+            body { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
         }
+
+        /* ═══════════════════════════ NEW DASHBOARD ═══════════════════════════ */
+
+        /* 듀얼 도넛 */
+        .dash-donut-row {
+            display: flex; margin: 12px 12px 0;
+            background: white; border-radius: var(--radius-md);
+            border: 1px solid var(--border-color); box-shadow: var(--shadow-md);
+            overflow: hidden;
+        }
+        .dash-donut-half {
+            flex: 1; padding: 16px 10px 14px;
+            display: flex; flex-direction: column;
+            align-items: center; gap: 8px;
+        }
+        .dash-donut-half:first-child {
+            border-right: 1px solid var(--border-color);
+            background: #F8FAFC;
+        }
+        .dash-donut-half.dash-donut-curr {
+            background: #EEF2FF;
+        }
+        .dash-donut-month {
+            font-size: 12px; font-weight: 700;
+            color: var(--text-secondary); letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+        .dash-donut-curr .dash-donut-month {
+            color: var(--primary);
+        }
+        .dash-donut-detail {
+            width: 100%; display: flex; flex-direction: column; gap: 4px;
+        }
+        .ddd-row {
+            display: flex; justify-content: space-between;
+            align-items: center; font-size: 12px; padding: 0 2px;
+        }
+        .ddd-label { color: var(--text-tertiary); font-weight: 500; }
+        .ddd-val { font-weight: 700; color: var(--text-primary); font-size: 12px; }
+        .ddd-val-primary { color: var(--primary); }
+        .ddd-val-danger { color: var(--danger); }
+        .ddd-val-success { color: var(--success); }
+
+        /* 미납 현황 멀티월 칩 */
+        .unpaid-history-scroll {
+            display: flex; gap: 8px;
+            padding: 0 12px 4px; overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        .unpaid-history-scroll::-webkit-scrollbar { display: none; }
+        .unpaid-chip {
+            flex-shrink: 0; min-width: 82px;
+            padding: 10px 12px; border-radius: 12px;
+            text-align: center; border: 1.5px solid transparent;
+        }
+        .unpaid-chip.chip-all-paid {
+            background: var(--success-light); border-color: #86EFAC;
+        }
+        .unpaid-chip.chip-has-unpaid {
+            background: var(--danger-light); border-color: #FCA5A5;
+        }
+        .unpaid-chip.chip-partial {
+            background: var(--warning-light); border-color: #FCD34D;
+        }
+        .unpaid-chip.chip-current {
+            background: #EEF2FF; border-color: #93C5FD;
+        }
+        .chip-month-label {
+            font-size: 13px; font-weight: 800; display: block; margin-bottom: 4px;
+        }
+        .chip-all-paid .chip-month-label { color: var(--success); }
+        .chip-has-unpaid .chip-month-label { color: var(--danger); }
+        .chip-partial .chip-month-label { color: var(--warning); }
+        .chip-current .chip-month-label { color: var(--primary); }
+        .chip-status-text {
+            font-size: 11px; font-weight: 600; display: block; line-height: 1.3;
+        }
+        .chip-all-paid .chip-status-text { color: #059669; }
+        .chip-has-unpaid .chip-status-text { color: #DC2626; }
+        .chip-partial .chip-status-text { color: #D97706; }
+        .chip-current .chip-status-text { color: #1D4ED8; }
+
+        /* 계약만료 / 수리 카드 리스트 행 */
+        .info-card-wrap {
+            background: white; border-radius: var(--radius-md);
+            margin: 0 12px; border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm); overflow: hidden;
+        }
+        .info-row {
+            display: flex; align-items: center;
+            padding: 13px 14px; gap: 10px;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .info-row:last-child { border-bottom: none; }
+        .info-row-left { flex: 1; min-width: 0; }
+        .info-row-room {
+            font-size: 14px; font-weight: 800; color: var(--text-primary);
+            display: inline-block; margin-right: 4px;
+        }
+        .info-row-name {
+            font-size: 13px; color: var(--text-secondary); font-weight: 500;
+        }
+        .info-row-desc {
+            font-size: 12px; color: var(--text-secondary);
+            margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .info-row-right {
+            display: flex; flex-direction: column;
+            align-items: flex-end; gap: 3px; flex-shrink: 0;
+        }
+        .info-row-date {
+            font-size: 12px; font-weight: 700; color: var(--text-primary);
+            white-space: nowrap;
+        }
+        .info-row-badge {
+            font-size: 11px; font-weight: 700;
+            padding: 2px 8px; border-radius: 20px;
+        }
+        .ibadge-danger  { background: var(--danger-light); color: var(--danger); }
+        .ibadge-warning { background: var(--warning-light); color: var(--warning); }
+        .ibadge-info    { background: var(--info-light); color: var(--info); }
+        .ibadge-yellow  { background: #FEF9C3; color: #92400E; }
+
+        /* 빠른 메뉴 (새 버튼 그리드) */
+        .dashboard-actions-new {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 8px; margin: 0 12px 16px;
+        }
+        .quick-btn {
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 6px;
+            padding: 14px 8px; border-radius: var(--radius-md);
+            background: white; border: 1.5px solid var(--border-color);
+            cursor: pointer; transition: all 0.15s;
+            touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+            box-shadow: var(--shadow-sm);
+        }
+        .quick-btn:active { background: #EEF2FF; border-color: var(--primary); transform: scale(0.96); }
+        .quick-btn span:first-child { font-size: 24px; line-height: 1; }
+        .quick-btn span:last-child { font-size: 12px; font-weight: 700; color: var(--text-primary); }
+        /* ── 변경 이력 (Changelog) ── */
+        .changelog-entry {
+            background: #F8FAFC; border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm); padding: 12px; margin-bottom: 8px;
+        }
+        .changelog-entry:last-child { margin-bottom: 0; }
+        .changelog-meta {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 5px;
+        }
+        .changelog-device { font-size: 12px; font-weight: 700; color: var(--primary); }
+        .changelog-time { font-size: 11px; color: var(--text-tertiary); }
+        .changelog-summary { font-size: 13px; color: var(--text-primary); line-height: 1.55; }
+        .changelog-rollback-btn {
+            margin-top: 9px; font-size: 12px; padding: 5px 12px;
+            background: #FFF7ED; border: 1px solid #FED7AA;
+            color: #C2410C; border-radius: var(--radius-sm);
+            cursor: pointer; touch-action: manipulation;
+        }
+        .changelog-rollback-btn:active { background: #FFEDD5; }
+        .changelog-empty { font-size: 13px; color: var(--text-secondary); padding: 8px 0; }
     </style>
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#1e40af">
 </head>
 <body>
     <!-- Firebase 동기화 상태 pill -->
     <div id="fbSyncPill" style="display:none;position:fixed;top:max(10px,env(safe-area-inset-top));right:12px;z-index:999;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;color:white;align-items:center;gap:4px;box-shadow:0 2px 8px rgba(0,0,0,0.2);pointer-events:none;"></div>
+
     <div class="app-container">
-        <div class="content-area">
-            <div class="page active" id="dashboardPage">
-                <div id="monthlyTilesContainer" style="display:none;grid-template-columns:1fr 1fr;gap:8px;margin:8px;">
-                    <div id="monthlyIncomeTile" style="background:linear-gradient(135deg,#1e40af,#3b82f6);border-radius:14px;padding:16px 18px;color:white;box-shadow:0 4px 14px rgba(30,64,175,0.25);min-width:0;">
-                        <div id="monthlyIncomeLabel" style="font-size:13px;opacity:0.88;margin-bottom:5px;font-weight:500;white-space:nowrap;">이번달 받은 금액</div>
-                        <div id="monthlyIncomeDisplay" style="font-size:22px;font-weight:bold;letter-spacing:-0.5px;"></div>
-                    </div>
-                    <div id="monthlyExpectedTile" style="background:linear-gradient(135deg,#047857,#10b981);border-radius:14px;padding:16px 18px;color:white;box-shadow:0 4px 14px rgba(4,120,87,0.25);min-width:0;">
-                        <div id="monthlyExpectedLabel" style="font-size:13px;opacity:0.88;margin-bottom:5px;font-weight:500;white-space:nowrap;">이번달 받을 금액</div>
-                        <div id="monthlyExpectedDisplay" style="font-size:22px;font-weight:bold;letter-spacing:-0.5px;"></div>
-                    </div>
-                </div>
-                <div id="unpaidAlert" style="display: none;" onclick="showUnpaidDetail()">
-                    <div class="alert" style="cursor:pointer; touch-action:manipulation; -webkit-tap-highlight-color:transparent;">
-                        <div class="alert-title">⚠️ 미납 현황</div>
-                        <div id="unpaidCount">미납 건수를 확인하세요</div>
-                    </div>
-                </div>
-                <div id="expiringAlert" style="display: none;" onclick="showExpiringDetail()">
-                    <div class="alert" style="background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.3); color: #92400e; cursor:pointer; touch-action:manipulation; -webkit-tap-highlight-color:transparent;">
-                        <div class="alert-title">📋 계약만료 임박</div>
-                        <div id="expiringCount">만료 임박 계약을 확인하세요</div>
-                    </div>
-                </div>
-                <div id="vacantAlert" style="display: none;">
-                    <div class="alert" style="background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.3); color: #1e40af;">
-                        <div class="alert-title">🏠 공실 현황</div>
-                        <div id="vacantList"></div>
-                    </div>
-                </div>
-                <div class="dashboard-actions">
-                    <div class="quick-action" onclick="openModal('addTenantModal')">
-                        <div class="quick-action-icon">👤</div>
-                        <div>세입자 추가</div>
-                    </div>
-                    <div class="quick-action" onclick="switchPage('rentPage')">
-                        <div class="quick-action-icon">💰</div>
-                        <div>월세 기록</div>
-                    </div>
-                    <div class="quick-action" onclick="openModal('addExpenseModal')">
-                        <div class="quick-action-icon">🔧</div>
-                        <div>지출 기록</div>
-                    </div>
-                    <div class="quick-action" onclick="generateAllMonthlyRents()">
-                        <div class="quick-action-icon">📅</div>
-                        <div>월세 생성</div>
-                    </div>
-                </div>
+        <!-- ──────────── APP HEADER ──────────── -->
+        <header class="app-header">
+            <div class="header-left">
+                <div class="header-title">원룸관리</div>
+                <div class="header-subtitle" id="headerSubtitle">임대관리 대시보드</div>
             </div>
-            <div class="page" id="tenantsPage">
-                <button class="btn btn-primary btn-block" onclick="openModal('addTenantModal')" style="margin-top: 16px;">+ 세입자 추가</button>
-                <div class="search-bar">
-                    <input type="text" id="tenantSearch" placeholder="이름 또는 방번호로 검색">
+            <div class="header-actions">
+                <button class="icon-btn" onclick="openSmsModal()" title="입금문자 확인">📱</button>
+                <button class="icon-btn" onclick="openModal('addBuildingModal')" title="건물 추가">🏢</button>
+            </div>
+        </header>
+
+        <!-- ──────────── CONTENT AREA ──────────── -->
+        <div class="content-area">
+
+            <!-- ════════════ 대시보드 ════════════ -->
+            <div class="page active" id="dashboardPage">
+
+                <!-- ① 듀얼 도넛: 지난달(왼) / 이번달(오른) -->
+                <div class="dash-donut-row">
+                    <!-- 왼쪽: 지난달 -->
+                    <div class="dash-donut-half">
+                        <div class="dash-donut-month" id="prevMonthLabel">지난달</div>
+                        <svg width="88" height="88" viewBox="0 0 88 88" style="display:block;">
+                            <circle cx="44" cy="44" r="35" fill="none" stroke="#E2E8F0" stroke-width="8"/>
+                            <circle cx="44" cy="44" r="35" fill="none" stroke="#94A3B8" stroke-width="8"
+                                stroke-dasharray="219.9" stroke-dashoffset="219.9"
+                                stroke-linecap="round" transform="rotate(-90 44 44)"
+                                id="prevDonutArc"/>
+                            <text x="44" y="40" text-anchor="middle" fill="#1e40af" font-size="14" font-weight="900" id="prevDonutPct" style="font-family:inherit;">0%</text>
+                            <text x="44" y="53" text-anchor="middle" fill="#94A3B8" font-size="9" font-weight="600" style="font-family:inherit;">수납률</text>
+                        </svg>
+                        <div class="dash-donut-detail">
+                            <div class="ddd-row">
+                                <span class="ddd-label">받은금액</span>
+                                <span class="ddd-val" id="prevMonthIncome">-</span>
+                            </div>
+                            <div class="ddd-row">
+                                <span class="ddd-label">받을금액</span>
+                                <span class="ddd-val" id="prevMonthExpected">-</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 오른쪽: 이번달 + 진행사항 -->
+                    <div class="dash-donut-half dash-donut-curr">
+                        <div class="dash-donut-month" id="currMonthLabel">이번달</div>
+                        <svg width="88" height="88" viewBox="0 0 88 88" style="display:block;">
+                            <circle cx="44" cy="44" r="35" fill="none" stroke="rgba(30,64,175,0.15)" stroke-width="9"/>
+                            <circle cx="44" cy="44" r="35" fill="none" stroke="#1e40af" stroke-width="9"
+                                stroke-dasharray="219.9" stroke-dashoffset="219.9"
+                                stroke-linecap="round" transform="rotate(-90 44 44)"
+                                id="donutArc"/>
+                            <text x="44" y="40" text-anchor="middle" fill="#1e40af" font-size="15" font-weight="900" id="donutPct" style="font-family:inherit;">0%</text>
+                            <text x="44" y="53" text-anchor="middle" fill="#64748B" font-size="9" font-weight="600" style="font-family:inherit;">수납률</text>
+                        </svg>
+                        <div class="dash-donut-detail">
+                            <div class="ddd-row">
+                                <span class="ddd-label">받은금액</span>
+                                <span class="ddd-val ddd-val-primary" id="monthlyIncomeDisplay">-</span>
+                            </div>
+                            <div class="ddd-row">
+                                <span class="ddd-label">받을금액</span>
+                                <span class="ddd-val" id="monthlyExpectedDisplay">-</span>
+                            </div>
+                            <div class="ddd-row" id="currUnpaidRow" style="display:none;">
+                                <span class="ddd-label">⚠️ 미납</span>
+                                <span class="ddd-val ddd-val-danger" id="currUnpaidInfo">-</span>
+                            </div>
+                            <div class="ddd-row" id="currPaidRow" style="display:none;">
+                                <span class="ddd-label">✅ 완료</span>
+                                <span class="ddd-val ddd-val-success" id="currPaidInfo">-</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div style="display:flex;margin-bottom:12px;border-radius:10px;overflow:hidden;border:2px solid #e2e8f0;">
-                    <button id="tabCurrentTenant" style="flex:1;padding:12px;font-size:15px;font-weight:700;background:#1e40af;color:white;border:none;cursor:pointer;" onclick="showTenantSection('current')">현세입자</button>
-                    <button id="tabPastTenant" style="flex:1;padding:12px;font-size:15px;font-weight:700;background:#f3f4f6;color:#6b7280;border:none;cursor:pointer;" onclick="showTenantSection('past')">과거세입자</button>
+
+                <!-- ② 미납 현황 (다달 히스토리) -->
+                <div class="dash-section" style="margin-top:14px;">
+                    <div class="dash-section-header">
+                        <span class="dash-section-label">💸 미납 현황</span>
+                        <span class="dash-section-more" onclick="switchPage('rentPage')">수납현황 ›</span>
+                    </div>
+                    <div class="unpaid-history-scroll" id="unpaidHistoryRow">
+                        <!-- JS로 렌더링 -->
+                    </div>
+                </div>
+
+                <!-- ③ 계약만료 임박 -->
+                <div class="dash-section" id="expirySection" style="display:none;margin-top:14px;">
+                    <div class="dash-section-header">
+                        <span class="dash-section-label">🔔 계약만료 임박</span>
+                        <span class="dash-section-more" onclick="switchPage('tenantsPage')">전체 ›</span>
+                    </div>
+                    <div class="info-card-wrap">
+                        <div id="expiryListNew"></div>
+                    </div>
+                </div>
+
+                <!-- ④ 수리 요청 현황 -->
+                <div class="dash-section" id="maintenanceSectionNew" style="display:none;margin-top:14px;">
+                    <div class="dash-section-header">
+                        <span class="dash-section-label">🔧 수리요청 현황</span>
+                    </div>
+                    <div class="info-card-wrap">
+                        <div id="maintenanceListNew"></div>
+                    </div>
+                </div>
+
+                <!-- ⑤ 빠른 메뉴 -->
+                <div class="dash-section" style="margin-top:14px;">
+                    <div class="dash-section-header">
+                        <span class="dash-section-label">빠른 메뉴</span>
+                    </div>
+                    <div class="dashboard-actions-new">
+                        <button class="quick-btn" onclick="openModal('addTenantModal')">
+                            <span>👤</span><span>세입자 추가</span>
+                        </button>
+                        <button class="quick-btn" onclick="switchPage('rentPage')">
+                            <span>💰</span><span>월세기록</span>
+                        </button>
+                        <button class="quick-btn" onclick="openModal('addExpenseModal')">
+                            <span>📋</span><span>지출기록</span>
+                        </button>
+                        <button class="quick-btn" onclick="generateAllMonthlyRents()">
+                            <span>📅</span><span>월세생성</span>
+                        </button>
+                        <button class="quick-btn" onclick="switchPage('tenantsPage')">
+                            <span>👥</span><span>세입자 목록</span>
+                        </button>
+                        <button class="quick-btn" onclick="switchPage('expensesPage')">
+                            <span>📊</span><span>지출현황</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 숨김: JS 하위호환 IDs -->
+                <div style="display:none;height:0;overflow:hidden;pointer-events:none;" aria-hidden="true">
+                    <div id="monthlyTilesContainer"></div>
+                    <div id="collectionBar"></div>
+                    <span id="dashMonthNum"></span>
+                    <span id="dashYearNum"></span>
+                    <div id="collectionRateLabel"></div>
+                    <div id="dashSubtitleLine"></div>
+                    <div id="alertSection">
+                        <div id="unpaidAlert"><div id="unpaidCount"></div><div id="unpaidAmount"></div></div>
+                        <div id="expiringAlert"><div id="expiringCount"></div><div id="expiringValue"></div></div>
+                        <div id="vacantAlert"><div id="vacantList"></div></div>
+                        <div id="maintenanceAlert"><div id="maintenanceList"></div></div>
+                        <div id="renewalAlert"><div id="renewalCount"></div></div>
+                        <div id="depositAlert"><div id="depositAlertDesc"></div></div>
+                    </div>
+                    <div id="recentPaySection"><div id="recentPayList"></div></div>
+                </div>
+
+            </div>
+
+            <!-- ════════════ 세입자 ════════════ -->
+            <div class="page" id="tenantsPage">
+                <button class="btn btn-primary btn-block" onclick="openModal('addTenantModal')" style="margin-top:14px;">+ 세입자 추가</button>
+                <div class="search-bar">
+                    <input type="text" id="tenantSearch" placeholder="이름 또는 방번호로 검색" style="-webkit-user-select:text;user-select:text;">
+                </div>
+                <div class="segment-control">
+                    <button id="tabCurrentTenant" class="seg-btn active" onclick="showTenantSection('current')">현세입자</button>
+                    <button id="tabPastTenant" class="seg-btn" onclick="showTenantSection('past')">과거세입자</button>
                 </div>
                 <div id="currentTenantSection">
                     <div id="tenantsList"></div>
@@ -1113,41 +1052,44 @@
                     <div id="pastTenantsList" style="padding-bottom:16px;"></div>
                 </div>
             </div>
+
+            <!-- ════════════ 수납 ════════════ -->
             <div class="page" id="rentPage">
                 <div class="month-selector">
                     <button onclick="previousYear()">◀</button>
                     <span id="yearDisplay">2026년</span>
                     <button onclick="nextYear()">▶</button>
                 </div>
-                <div class="search-bar" style="margin: 0 8px 8px;">
+                <div class="search-bar">
                     <input type="text" id="rentSearch" placeholder="세입자 이름 또는 호수로 검색" oninput="renderRents()" style="-webkit-user-select:text;user-select:text;">
                 </div>
                 <div class="rent-legend-bar">
                     <span class="legend-item">
-                        <span class="legend-dot" style="background:#dcfce7;border:1px solid #86efac;"></span>납부
+                        <span class="legend-dot" style="background:#DCFCE7;border:1px solid #86EFAC;"></span>납부
                     </span>
                     <span class="legend-item">
-                        <span class="legend-dot" style="background:#fee2e2;border:1px solid #fca5a5;"></span>미납
+                        <span class="legend-dot" style="background:#FEE2E2;border:1px solid #FCA5A5;"></span>미납
                     </span>
                     <span class="legend-item">
-                        <span class="legend-dot" style="background:#f3f4f6;border:1px solid #e5e7eb;"></span>미생성
+                        <span class="legend-dot" style="background:#F8FAFC;border:1px solid #E2E8F0;"></span>미생성
                     </span>
                     <button class="btn btn-secondary rent-generate-btn" onclick="generateAllMonthlyRents()">📅 이번달 생성</button>
                 </div>
                 <div id="rentsList"></div>
             </div>
+
+            <!-- ════════════ 지출 ════════════ -->
             <div class="page" id="expensesPage">
-                <button class="btn btn-primary btn-block" onclick="openModal('addExpenseModal')" style="margin-top: 16px;">+ 지출 추가</button>
-                <div class="search-bar" style="margin: 8px 8px 0;">
+                <button class="btn btn-primary btn-block" onclick="openModal('addExpenseModal')" style="margin-top:14px;">+ 지출 추가</button>
+                <div class="search-bar">
                     <input type="text" id="expenseSearch" placeholder="지출 항목명 또는 메모로 검색" oninput="renderExpenses()" style="-webkit-user-select:text;user-select:text;">
                 </div>
-                <div style="margin: 8px;">
-                    <div id="expenseFilterRoom" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+                <div style="margin: 6px 12px 0;">
+                    <div id="expenseFilterRoom" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
                 </div>
-                <div id="expenseRoomChart" style="margin:8px 0;background:#fff;border-radius:14px;padding:14px;box-shadow:0 1px 4px rgba(0,0,0,0.08);display:none;"></div>
+                <div id="expenseRoomChart" style="margin:10px 12px 0;background:#fff;border-radius:var(--radius-md);padding:14px;box-shadow:var(--shadow-sm);border:1px solid var(--border-color);display:none;"></div>
                 <div class="category-summary" id="categorySummary"></div>
                 <div id="expensesList"></div>
-                <!-- floating action bar for selected expenses -->
                 <div id="expenseActionBar" class="expense-action-bar" style="display:none;">
                     <span id="expenseSelCount">0개 선택</span>
                     <button class="btn-print" onclick="printSelectedReceipts()">🖨️ 프린트</button>
@@ -1155,15 +1097,17 @@
                     <button class="btn-cancel-sel" onclick="clearExpenseSelection()">✕</button>
                 </div>
             </div>
+
+            <!-- ════════════ 설정 ════════════ -->
             <div class="page" id="settingsPage">
-                <h3 style="margin: 16px 8px 8px; font-size: 16px; font-weight: 700;">데이터 관리</h3>
+                <div class="settings-section-title">데이터 관리</div>
                 <button class="btn btn-secondary btn-block" onclick="exportToJSON()">📥 JSON으로 내보내기</button>
                 <button class="btn btn-secondary btn-block" onclick="importFromJSON()">📤 JSON에서 가져오기</button>
                 <button class="btn btn-secondary btn-block" onclick="exportToCSV()">📊 CSV로 내보내기 (Excel)</button>
-                <!-- ===== Firebase 실시간 동기화 섹션 ===== -->
-                <h3 style="margin: 16px 8px 8px; font-size: 16px; font-weight: 700;">🔥 가족 공유 · 실시간 동기화</h3>
-                <div class="card" style="margin-bottom:8px;background:linear-gradient(180deg,#eff6ff 0%,#fff 48%);border-color:#bfdbfe;">
-                    <p style="font-size:14px;color:#1e3a8a;line-height:1.65;margin:0 0 10px;font-weight:600;">엄마 폰 ↔ 내 폰</p>
+
+                <div class="settings-section-title">🔥 가족 공유 · 실시간 동기화</div>
+                <div class="card" style="margin-bottom:8px;background:linear-gradient(180deg,#EFF6FF 0%,#fff 60%);border-color:#BFDBFE;">
+                    <p style="font-size:14px;color:#1E3A8A;line-height:1.65;margin:0 0 10px;font-weight:600;">엄마 폰 ↔ 내 폰</p>
                     <p style="font-size:13px;color:#475569;line-height:1.65;margin:0;">둘 다 이 앱을 켜 두면 <strong>자동으로 같은 데이터</strong>를 봅니다. 따로 눌러서 맞출 필요 없어요. 수정한 쪽이 잠시 후 상대 화면에도 반영됩니다.</p>
                 </div>
                 <div class="card" style="margin-bottom:8px;">
@@ -1171,25 +1115,27 @@
                         <span style="font-weight:700;font-size:15px;">연동 상태</span>
                         <span id="firebaseConnStatus" style="font-size:14px;font-weight:600;">⚫ 비활성</span>
                     </div>
-                    <p id="fbStatusDesc" style="font-size:13px;color:#6b7280;margin-top:8px;line-height:1.6;"></p>
-                    <p id="fbLastSyncLine" style="font-size:12px;color:#64748b;margin-top:8px;display:none;"></p>
-                    <button type="button" class="btn btn-primary btn-block" style="margin-top:12px;" onclick="cloudSaveNow()">☁️ 지금 클라우드에 저장</button>
-                    <p style="font-size:11px;color:#9ca3af;margin-top:8px;line-height:1.5;">※ Wi-Fi가 불안하면 위 버튼으로 한 번 더 올릴 수 있어요.<br>※ 영수증 사진은 각 폰에만 남고, 클라우드에는 금액·날짜만 올라갑니다.</p>
+                    <p id="fbStatusDesc" style="font-size:13px;color:var(--text-secondary);margin-top:8px;line-height:1.6;"></p>
+                    <p id="fbLastSyncLine" style="font-size:12px;color:#64748B;margin-top:8px;display:none;"></p>
+                    <button type="button" class="btn btn-primary" style="margin-top:12px;" onclick="cloudSaveNow()">☁️ 지금 클라우드에 저장</button>
+                    <p style="font-size:11px;color:var(--text-tertiary);margin-top:8px;line-height:1.5;">※ Wi-Fi가 불안하면 위 버튼으로 한 번 더 올릴 수 있어요.<br>※ 영수증 사진은 각 폰에만 남고, 클라우드에는 금액·날짜만 올라갑니다.</p>
                 </div>
-                <h3 style="margin: 16px 8px 8px; font-size: 16px; font-weight: 700;">클라우드 동기화 (OneDrive)</h3>
+
+                <div class="settings-section-title">클라우드 동기화 (OneDrive)</div>
                 <div id="oneDriveSection">
                     <button class="btn btn-primary btn-block" id="loginBtn" onclick="loginToOneDrive()">로그인</button>
-                    <button class="btn btn-secondary btn-block" id="logoutBtn" onclick="logoutFromOneDrive()" style="display: none;">로그아웃</button>
-                    <button class="btn btn-secondary btn-block" id="syncBtn2" onclick="syncWithOneDrive()" style="display: none;">
+                    <button class="btn btn-secondary btn-block" id="logoutBtn" onclick="logoutFromOneDrive()" style="display:none;">로그아웃</button>
+                    <button class="btn btn-secondary btn-block" id="syncBtn2" onclick="syncWithOneDrive()" style="display:none;">
                         <span id="syncStatus">OneDrive 동기화</span>
                     </button>
-                    <div id="msalStatus" style="margin: 8px; font-size: 14px; color: var(--neutral-gray);">로그인하지 않음</div>
+                    <div id="msalStatus" style="margin:8px 12px;font-size:14px;color:var(--text-secondary);">로그인하지 않음</div>
                 </div>
-                <h3 style="margin: 16px 8px 8px; font-size: 16px; font-weight: 700;">Azure 설정</h3>
+
+                <div class="settings-section-title">Azure 설정</div>
                 <div class="card">
-                    <p style="font-size: 14px; line-height: 1.6; margin-bottom: 8px;">
+                    <p style="font-size:14px;line-height:1.6;margin-bottom:8px;">
                         <strong>OneDrive 동기화를 사용하려면:</strong><br>
-                        1. <a href="https://portal.azure.com" target="_blank" style="color: var(--primary); text-decoration: underline;">Azure Portal</a>에 접속<br>
+                        1. <a href="https://portal.azure.com" target="_blank" style="color:var(--primary);text-decoration:underline;">Azure Portal</a>에 접속<br>
                         2. "앱 등록"에서 새 앱 등록<br>
                         3. 리다이렉트 URI로 이 앱의 URL 등록<br>
                         4. 클라이언트 ID 발급<br>
@@ -1200,10 +1146,23 @@
                         <input type="text" id="azureClientId" placeholder="클라이언트 ID를 입력하세요" onchange="saveSettings()">
                     </div>
                 </div>
-                <h3 style="margin: 16px 8px 8px; font-size: 16px; font-weight: 700;">정보</h3>
-                <div class="card">
-                    <p style="font-size: 14px; color: var(--neutral-gray);">
-                        <strong>동거동락</strong><br>
+
+                <div class="settings-section-title">📋 변경 이력 &amp; 롤백</div>
+                <div class="card" style="margin-bottom:8px;">
+                    <p style="font-size:13px;color:var(--text-secondary);margin:0 0 10px;line-height:1.6;">
+                        엄마 폰·내 폰 어느 쪽에서 저장해도 여기에 기록됩니다.<br>
+                        최대 20개 보관 · 원하는 시점으로 되돌릴 수 있어요.
+                    </p>
+                    <button type="button" class="btn btn-secondary" style="width:100%;margin-bottom:12px;" onclick="loadChangelog()">🔄 이력 불러오기</button>
+                    <div id="changelogList">
+                        <p class="changelog-empty">「이력 불러오기」를 눌러 확인하세요.</p>
+                    </div>
+                </div>
+
+                <div class="settings-section-title">정보</div>
+                <div class="card" style="margin-bottom:24px;">
+                    <p style="font-size:14px;color:var(--text-secondary);">
+                        <strong style="color:var(--text-primary);">동거동락</strong><br>
                         엄마와 나 둘이 쓰기 좋은 임대관리앱<br>
                         <br>
                         데이터는 먼저 이 폰에 저장되고,<br>
@@ -1212,32 +1171,35 @@
                     </p>
                 </div>
             </div>
-        </div>
+
+        </div><!-- /content-area -->
+
+        <!-- ──────────── BOTTOM NAV ──────────── -->
         <nav class="bottom-nav">
             <button class="nav-item active" onclick="switchPage('dashboardPage')">
-                <span style="font-size: 24px;">🏠</span>
-                <span>대시보드</span>
-                <div class="nav-badge" id="dashboardBadge" style="display: none;">0</div>
+                <span class="nav-icon">🏠</span>
+                <span class="nav-label">홈</span>
+                <div class="nav-badge" id="dashboardBadge" style="display:none;">0</div>
             </button>
             <button class="nav-item" onclick="switchPage('tenantsPage')">
-                <span style="font-size: 24px;">👥</span>
-                <span>세입자</span>
+                <span class="nav-icon">👥</span>
+                <span class="nav-label">세입자</span>
             </button>
             <button class="nav-item" onclick="switchPage('rentPage')">
-                <span style="font-size: 24px;">💰</span>
-                <span>수납</span>
-                <div class="nav-badge" id="rentBadge" style="display: none;">0</div>
+                <span class="nav-icon">💰</span>
+                <span class="nav-label">수납</span>
+                <div class="nav-badge" id="rentBadge" style="display:none;">0</div>
             </button>
             <button class="nav-item" onclick="switchPage('expensesPage')">
-                <span style="font-size: 24px;">📄</span>
-                <span>지출</span>
+                <span class="nav-icon">📄</span>
+                <span class="nav-label">지출</span>
             </button>
             <button class="nav-item" onclick="switchPage('settingsPage')">
-                <span style="font-size: 24px;">⚙️</span>
-                <span>설정</span>
+                <span class="nav-icon">⚙️</span>
+                <span class="nav-label">설정</span>
             </button>
         </nav>
-    </div>
+    </div><!-- /app-container -->
     <div class="modal-overlay" id="addBuildingModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -1674,6 +1636,8 @@
             });
         }
         function saveData() {
+            // 변경 요약은 _syncPrevSaveSnapshot() 전에 생성해야 이전 상태와 비교 가능
+            var _clSummary = _generateChangeSummary();
             _stampChangedRecordsSinceLastSave();
             localStorage.setItem('appData', JSON.stringify(appData));
             if (_db) {
@@ -1685,6 +1649,15 @@
                 debounceSync(); // OneDrive 동기화 (기존)
             }
             _syncPrevSaveSnapshot();
+            // Changelog: 실제 변경이 있을 때만, 3초 디바운스로 연속 저장 묶기
+            if (_clSummary && _clSummary !== '변경 없음') {
+                _changelogPendingSummary = _clSummary;
+                clearTimeout(_changelogTimer);
+                _changelogTimer = setTimeout(function() {
+                    _saveChangelogEntry(_changelogPendingSummary);
+                    _changelogPendingSummary = null;
+                }, 3000);
+            }
         }
         // ============ MODAL MANAGEMENT ============
         let _modalZBase = 1000;
@@ -1758,7 +1731,15 @@
                 n.classList.toggle('active', !!isTarget);
             });
             currentPage = pageId;
-            if (pageId === 'tenantsPage') { currentTenantFilter = 'active'; renderTenants(); }
+            if (pageId === 'tenantsPage') {
+                currentTenantFilter = 'active';
+                // 세입자 탭 상태 초기화: 현세입자 탭 활성
+                var ct = document.getElementById('currentTenantSection');
+                var pt = document.getElementById('pastTenantSection');
+                if (ct) ct.style.display = 'block';
+                if (pt) pt.style.display = 'none';
+                renderTenants();
+            }
             else if (pageId === 'rentPage') renderRents();
             else if (pageId === 'expensesPage') { loadExpenseFilterRooms(); renderExpenses(); }
             else if (pageId === 'dashboardPage') renderDashboard();
@@ -1854,13 +1835,21 @@
             document.getElementById('buildingRoomsSection').style.display = 'none';
         }
         function deleteBuilding() {
-            if (confirm('정말 삭제하시겠습니까?')) {
+            if (confirm('건물을 삭제하면 해당 건물의 방, 세입자, 수납기록, 지출기록이 모두 삭제됩니다.\n정말 삭제하시겠습니까?')) {
+                const deletedRoomIds = appData.rooms
+                    .filter(r => r.buildingId === editingId)
+                    .map(r => r.id);
+                // 고아 데이터 일괄 삭제
+                appData.tenants  = appData.tenants.filter(t => !deletedRoomIds.includes(t.roomId));
+                appData.rents    = appData.rents.filter(r => !deletedRoomIds.includes(r.roomId));
+                appData.expenses = appData.expenses.filter(e => e.buildingId !== editingId);
+                appData.rooms    = appData.rooms.filter(r => r.buildingId !== editingId);
                 appData.buildings = appData.buildings.filter(b => b.id !== editingId);
-                appData.rooms = appData.rooms.filter(r => r.buildingId !== editingId);
                 saveData();
                 closeModal('addBuildingModal');
                 renderBuildings();
-                showToast('건물이 삭제되었습니다');
+                renderDashboard();
+                showToast('건물 및 관련 데이터가 모두 삭제되었습니다');
             }
         }
         function renderBuildings() {
@@ -2057,16 +2046,18 @@
             document.getElementById('deleteRoomBtn').style.display = 'block';
         }
         function deleteRoom() {
-            if (confirm('정말 삭제하시겠습니까?')) {
+            if (confirm('방을 삭제하면 해당 방의 세입자와 수납 기록도 모두 삭제됩니다.\n정말 삭제하시겠습니까?')) {
                 const deletedRoomId = editingId;
-                appData.rooms = appData.rooms.filter(r => r.id !== deletedRoomId);
-                appData.tenants = appData.tenants.filter(t => t.roomId !== deletedRoomId);
-                appData.rents = appData.rents.filter(r => r.roomId !== deletedRoomId);
+                appData.rooms    = appData.rooms.filter(r => r.id !== deletedRoomId);
+                appData.tenants  = appData.tenants.filter(t => t.roomId !== deletedRoomId);
+                appData.rents    = appData.rents.filter(r => r.roomId !== deletedRoomId);
+                appData.expenses = appData.expenses.filter(e => e.roomId !== deletedRoomId);
                 saveData();
                 closeModal('addRoomModal');
                 renderBuildings();
+                renderDashboard();
                 if (currentBuildingId) showBuildingDetail(currentBuildingId);
-                showToast('방이 삭제되었습니다');
+                showToast('방 및 관련 데이터가 삭제되었습니다');
             }
         }
         // ============ TENANTS ============
@@ -2211,8 +2202,17 @@
                 depositRefundDate: editingId ? (appData.tenants.find(t => t.id === editingId)?.depositRefundDate || '') : ''
             };
             if (editingId) {
+                const oldTenant = appData.tenants.find(t => t.id === editingId);
+                const oldRoomId = oldTenant ? oldTenant.roomId : null;
                 const index = appData.tenants.findIndex(t => t.id === editingId);
                 appData.tenants[index] = tenantData;
+                // 호실이 변경된 경우: 이전 방 → 공실, 새 방 → 입주중
+                if (oldRoomId && oldRoomId !== roomId) {
+                    const oldRoom = appData.rooms.find(r => r.id === oldRoomId);
+                    if (oldRoom && oldRoom.status === 'occupied') oldRoom.status = 'vacant';
+                    const newRoom = appData.rooms.find(r => r.id === roomId);
+                    if (newRoom) newRoom.status = 'occupied';
+                }
             } else {
                 appData.tenants.push(tenantData);
                 // Auto-set room status to occupied
@@ -2246,6 +2246,7 @@
         }
         function editTenant(id) {
             const tenant = appData.tenants.find(t => t.id === id);
+            if (!tenant) { showToast('⚠️ 세입자 정보를 찾을 수 없습니다'); return; }
             openModal('addTenantModal');
             editingId = id;
             loadAllRooms();
@@ -2396,6 +2397,7 @@
             showToast('✅ 보증금 반환 완료 처리되었습니다 (₩' + tenant.deposit.toLocaleString() + ')');
             closeModal('tenantDetailModal');
             renderTenants();
+            renderDashboard();
         }
         function addCleaningFeeRecord(tenantId) {
             const tenant = appData.tenants.find(t => t.id === tenantId);
@@ -2423,11 +2425,13 @@
                 memo: '청소비'
             });
             saveData();
+            renderDashboard();
             showTenantDetail(tenantId);
             showToast('청소비 수납 기록이 추가되었습니다');
         }
         function showTenantDetail(tenantId) {
             const tenant = appData.tenants.find(t => t.id === tenantId);
+            if (!tenant) { showToast('⚠️ 세입자 정보를 찾을 수 없습니다'); return; }
             const room = appData.rooms.find(r => r.id === tenant.roomId);
             const building = appData.buildings.find(b => b.id === tenant.buildingId);
             const tenantRents = appData.rents.filter(r => r.tenantId === tenantId)
@@ -2552,20 +2556,26 @@
                 if (!exists) { createMonthlyRentRecord(tenant, month); created++; }
             });
             if (created > 0) {
-                saveData(); renderRents();
+                saveData(); renderRents(); renderDashboard();
                 showToast(`${created}건의 월세 기록이 생성되었습니다`);
             } else {
                 showToast('이미 생성된 월세 기록이 있습니다');
             }
         }
+        let _markRentSourceTenantId = null; // 세입자 상세에서 열렸을 때 재오픈용
         function markRentPaid(rentId) {
             const rent = appData.rents.find(r => r.id === rentId);
+            if (!rent) { showToast('⚠️ 수납 기록을 찾을 수 없습니다'); return; }
             const tenant = appData.tenants.find(t => t.id === rent.tenantId);
+            // 세입자 상세 모달에서 열렸는지 기록 (저장 후 재오픈)
+            const tenantModal = document.getElementById('tenantDetailModal');
+            _markRentSourceTenantId = (tenantModal && tenantModal.classList.contains('active'))
+                ? rent.tenantId : null;
             openModal('markRentModal');
             editingId = rentId;
             document.getElementById('rentTenantName').value = tenant?.name || '';
             document.getElementById('rentAmount').value = rent.amount;
-            document.getElementById('rentPaidDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('rentPaidDate').value = rent.paidDate || new Date().toISOString().split('T')[0];
             document.getElementById('rentStatus').value = rent.status;
             document.getElementById('rentMemo').value = rent.memo || '';
         }
@@ -2574,24 +2584,32 @@
             let rent = appData.rents.find(r => r.tenantId === tenantId && r.month === month && (!r.type || r.type === 'monthly'));
             if (!rent) {
                 const tenant = appData.tenants.find(t => t.id === tenantId);
-                if (!tenant) return;
+                if (!tenant) { showToast('⚠️ 세입자 정보를 찾을 수 없습니다'); return; }
                 createMonthlyRentRecord(tenant, month);
                 saveData();
                 rent = appData.rents.find(r => r.tenantId === tenantId && r.month === month && (!r.type || r.type === 'monthly'));
             }
+            if (!rent) { showToast('⚠️ 수납 기록 생성에 실패했습니다'); return; }
             markRentPaid(rent.id);
         }
         function saveRent(e) {
             e.preventDefault();
             const rent = appData.rents.find(r => r.id === editingId);
             if (!rent) { showToast('오류: 수납 기록을 찾을 수 없습니다'); return; }
+            const fromTenantId = _markRentSourceTenantId; // 저장 전에 캡처
             rent.amount = parseInt(document.getElementById('rentAmount').value);
             rent.paidDate = document.getElementById('rentPaidDate').value;
             rent.status = document.getElementById('rentStatus').value;
             rent.memo = document.getElementById('rentMemo').value;
             saveData();
             closeModal('markRentModal');
+            // 세입자 상세에서 온 경우: 세입자 상세 모달 재오픈
+            if (fromTenantId) {
+                _markRentSourceTenantId = null;
+                showTenantDetail(fromTenantId);
+            }
             renderRents();
+            renderDashboard();
             showToast('수납 기록이 저장되었습니다');
         }
         function renderRents() {
@@ -3651,7 +3669,13 @@
             if (synced && prevSnap !== nextSnap && !meta.fromCache && !suppressToast) {
                 if (pullAt - _fbLastFamilyToastAt > 4500) {
                     _fbLastFamilyToastAt = pullAt;
-                    showToast('👋 다른 폰에서 바뀐 내용을 여기에 맞춰 두었어요.', 3200);
+                    // 어느 폰(한국/캐나다)에서 왔는지 힌트 표시
+                    var remoteDevice = '다른 폰';
+                    try {
+                        var remoteDoc = JSON.parse(nextSnap);
+                        if (remoteDoc && remoteDoc._deviceLabel) remoteDevice = remoteDoc._deviceLabel;
+                    } catch(e3) {}
+                    showToast('🔔 ' + remoteDevice + '에서 바뀐 내용이 반영됐어요!', 3500);
                 }
             }
 
@@ -3680,6 +3704,10 @@
                 delete copy.receipts;
                 return copy;
             });
+            // 기기 레이블 첨부 → 상대 폰 토스트에 표시용
+            try {
+                cloudData._deviceLabel = new Date().getTimezoneOffset() <= -480 ? '🇰🇷 한국 폰' : '🇨🇦 캐나다 폰';
+            } catch(e0) {}
             return _db.collection('rentalApp').doc('main').set(cloudData)
                 .then(function() {
                     try {
@@ -3704,6 +3732,154 @@
                     _showFbStatus('error');
                     showToast('⚠️ 클라우드 저장에 실패했어요. 인터넷 확인 후 「지금 클라우드에 저장」을 눌러 주세요.', 3800);
                     throw err;
+                });
+        }
+
+        // ============ CHANGELOG / ROLLBACK ============
+        var _changelogMax = 20;
+        var _changelogTimer = null;
+        var _changelogPendingSummary = null;
+
+        /** 이전 스냅샷과 비교해 변경 내용을 한 줄로 요약 */
+        function _generateChangeSummary() {
+            if (!_prevSaveSnapshot) return '데이터 변경';
+            var prev;
+            try { prev = JSON.parse(_prevSaveSnapshot); } catch(e) { return '데이터 변경'; }
+            var labelMap = { buildings:'건물', rooms:'호실', tenants:'세입자', rents:'수납', expenses:'지출' };
+            var parts = [];
+            Object.keys(labelMap).forEach(function(k) {
+                var prevList = prev[k] || [];
+                var currList = appData[k] || [];
+                var prevIds = {}; prevList.forEach(function(i) { if (i && i.id) prevIds[i.id] = i; });
+                var currIds = {}; currList.forEach(function(i) { if (i && i.id) currIds[i.id] = i; });
+                var added   = currList.filter(function(i) { return i && i.id && !prevIds[i.id]; });
+                var deleted = prevList.filter(function(i) { return i && i.id && !currIds[i.id]; });
+                var changed = currList.filter(function(i) {
+                    if (!i || !i.id || !prevIds[i.id]) return false;
+                    return JSON.stringify(_stripUpdatedAtForCompare(i)) !== JSON.stringify(_stripUpdatedAtForCompare(prevIds[i.id]));
+                });
+                var _name = function(i) { return i.name || i.roomNumber || i.month || i.date || ''; };
+                if (added.length) {
+                    var ns = added.map(_name).filter(Boolean).slice(0,2).join(', ');
+                    parts.push(labelMap[k]+' 추가'+(ns?': '+ns:'')+(added.length>2?' 외 '+(added.length-2)+'건':''));
+                }
+                if (deleted.length) parts.push(labelMap[k]+' 삭제 '+deleted.length+'건');
+                if (changed.length) {
+                    var ns2 = changed.map(_name).filter(Boolean).slice(0,2).join(', ');
+                    parts.push(labelMap[k]+' 수정'+(ns2?': '+ns2:''));
+                }
+            });
+            return parts.length ? parts.join(' / ') : '변경 없음';
+        }
+
+        /** Firestore rentalAppChangelog 컬렉션에 스냅샷 저장 */
+        function _saveChangelogEntry(summary) {
+            if (!_db || !summary || summary === '변경 없음') return;
+            var cloudData = JSON.parse(JSON.stringify(appData));
+            cloudData.expenses = (cloudData.expenses || []).map(function(e) {
+                var c = Object.assign({}, e); delete c.receipts; return c;
+            });
+            var tz = new Date().getTimezoneOffset(); // 한국: -540, 캐나다: +240~+300
+            var deviceLabel = tz <= -480 ? '🇰🇷 한국' : '🇨🇦 캐나다';
+            _db.collection('rentalAppChangelog').add({
+                ts: Date.now(),
+                summary: summary,
+                device: deviceLabel,
+                snapshot: cloudData
+            }).then(function() {
+                _trimChangelog();
+            }).catch(function(e) {
+                console.warn('Changelog save failed:', e);
+            });
+        }
+
+        /** 20개 초과 시 오래된 항목 삭제 */
+        function _trimChangelog() {
+            if (!_db) return;
+            _db.collection('rentalAppChangelog').orderBy('ts','asc').get().then(function(snap) {
+                if (snap.size > _changelogMax) {
+                    snap.docs.slice(0, snap.size - _changelogMax).forEach(function(d) {
+                        d.ref.delete().catch(function(){});
+                    });
+                }
+            }).catch(function(){});
+        }
+
+        /** 설정 페이지에서 이력 목록 로드 */
+        function loadChangelog() {
+            var container = document.getElementById('changelogList');
+            if (!container) return;
+            if (!_db) {
+                container.innerHTML = '<p class="changelog-empty">Firebase가 연결되어 있지 않습니다.</p>';
+                return;
+            }
+            container.innerHTML = '<p class="changelog-empty"><span class="spinner" style="width:14px;height:14px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:6px;"></span> 불러오는 중...</p>';
+            _db.collection('rentalAppChangelog').orderBy('ts','desc').limit(_changelogMax).get()
+                .then(function(snap) {
+                    if (snap.empty) {
+                        container.innerHTML = '<p class="changelog-empty">변경 이력이 없습니다.<br>데이터를 수정하면 자동으로 기록됩니다.</p>';
+                        return;
+                    }
+                    var html = snap.docs.map(function(doc) {
+                        var d = doc.data();
+                        var dt = '-';
+                        try { dt = new Date(d.ts).toLocaleString('ko-KR',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}); } catch(e2){}
+                        return '<div class="changelog-entry">'
+                            + '<div class="changelog-meta">'
+                            +   '<span class="changelog-device">' + (d.device||'알 수 없음') + '</span>'
+                            +   '<span class="changelog-time">' + dt + '</span>'
+                            + '</div>'
+                            + '<div class="changelog-summary">' + (d.summary||'') + '</div>'
+                            + '<button class="changelog-rollback-btn" onclick="rollbackToSnapshot(\'' + doc.id + '\',\'' + dt + '\')">'
+                            +   '⏪ 이 시점으로 복원'
+                            + '</button>'
+                            + '</div>';
+                    }).join('');
+                    container.innerHTML = html;
+                })
+                .catch(function(e) {
+                    container.innerHTML = '<p class="changelog-empty" style="color:var(--danger);">불러오기 실패: ' + e.message + '</p>';
+                });
+        }
+
+        /** 선택한 스냅샷으로 appData 복원 */
+        function rollbackToSnapshot(docId, label) {
+            if (!_db) { showToast('⚠️ Firebase 연결 필요'); return; }
+            var msg = (label ? label + ' 시점' : '선택한 시점') + '의 데이터로 복원할까요?\n현재 상태는 이력에 자동 저장됩니다.';
+            if (!confirm(msg)) return;
+            _db.collection('rentalAppChangelog').doc(docId).get()
+                .then(function(doc) {
+                    if (!doc.exists) { showToast('⚠️ 해당 이력을 찾을 수 없습니다'); return; }
+                    var snap = doc.data() && doc.data().snapshot;
+                    if (!snap) { showToast('⚠️ 스냅샷 데이터가 없습니다'); return; }
+                    // 복원 전 현재 상태를 이력에 백업
+                    var cloudNow = JSON.parse(JSON.stringify(appData));
+                    cloudNow.expenses = (cloudNow.expenses || []).map(function(e) {
+                        var c = Object.assign({}, e); delete c.receipts; return c;
+                    });
+                    var tzNow = new Date().getTimezoneOffset();
+                    _db.collection('rentalAppChangelog').add({
+                        ts: Date.now(),
+                        summary: '복원 전 자동 백업',
+                        device: tzNow <= -480 ? '🇰🇷 한국' : '🇨🇦 캐나다',
+                        snapshot: cloudNow
+                    }).catch(function(){});
+                    // 영수증 사진은 로컬에서 이어받기
+                    var local;
+                    try { local = JSON.parse(localStorage.getItem('appData') || '{}'); } catch(e) { local = {}; }
+                    snap.expenses = (snap.expenses || []).map(function(e) {
+                        var le = (local.expenses || []).find(function(x) { return x.id === e.id; });
+                        if (le && le.receipts && le.receipts.length) e.receipts = le.receipts;
+                        return e;
+                    });
+                    appData = snap;
+                    saveData();
+                    updateUI();
+                    showToast('✅ 복원 완료! 데이터를 되돌렸습니다.', 3000);
+                    setTimeout(loadChangelog, 800); // 목록 갱신
+                })
+                .catch(function(e) {
+                    showToast('⚠️ 복원 실패: ' + e.message);
                 });
         }
 
@@ -4021,22 +4197,23 @@
                 listEl.innerHTML = '<p style="text-align:center;color:#9ca3af;padding:20px;">과거 세입자가 없습니다</p>';
                 return;
             }
-            // Group by roomNumber
+            // Group by buildingId+roomNumber key
             const groups = {};
             pastTenants.forEach(t => {
                 const room = (data.rooms || []).find(r => r.id === t.roomId);
-                const roomNum = room ? room.roomNumber : ('미상 ' + t.roomId);
-                if (!groups[roomNum]) groups[roomNum] = [];
-                groups[roomNum].push(t);
+                const bld  = room ? (data.buildings || []).find(b => b.id === room.buildingId) : null;
+                const roomNum = room ? room.roomNumber : ('미상');
+                const bldName = bld ? bld.name : '';
+                const key = (bldName ? bldName + ' ' : '') + roomNum + '호';
+                if (!groups[key]) groups[key] = [];
+                groups[key].push(t);
             });
-            // Sort by room number
-            const sortedRooms = Object.keys(groups).sort((a, b) => {
-                return parseInt(a) - parseInt(b) || a.localeCompare(b);
-            });
+            // Sort by key
+            const sortedRooms = Object.keys(groups).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
             let html = '';
             sortedRooms.forEach(roomNum => {
                 html += '<div style="margin-bottom:16px;">';
-                html += '<div style="background:#374151;color:white;padding:8px 12px;border-radius:8px 8px 0 0;font-weight:700;font-size:14px;">' + roomNum + '호</div>';
+                html += '<div style="background:#374151;color:white;padding:8px 12px;border-radius:8px 8px 0 0;font-weight:700;font-size:14px;">' + roomNum + '</div>';
                 groups[roomNum].forEach(t => {
                     const start = t.contractStart ? t.contractStart.substring(0,10) : '-';
                     const end = t.contractEnd ? t.contractEnd.substring(0,10) : '-';
@@ -4248,7 +4425,7 @@
           const month = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
           const paidDate = now.toISOString().split('T')[0];
           const existing = (appData.rents || []).find(function(r) {
-            return r.tenantId === tenantId && r.month === month && r.status === 'paid' && r.type === 'monthly';
+            return r.tenantId === tenantId && r.month === month && r.status === 'paid' && (!r.type || r.type === 'monthly');
           });
           if (existing) {
             if (!confirm(tenant.name + '님의 ' + month + ' 수납이 이미 처리되어 있습니다.\n그래도 추가하시겠습니까?')) return;
@@ -4272,7 +4449,8 @@
           saveData();
           closeSmsModal();
           if (typeof renderRents === 'function') renderRents();
-          alert('✅ ' + tenant.name + '님 ' + month + ' 수납 완료!\n금액: ' + newRent.amount.toLocaleString() + '원');
+          if (typeof renderDashboard === 'function') renderDashboard();
+          showToast('✅ ' + tenant.name + '님 ' + month + ' 수납 완료! ₩' + newRent.amount.toLocaleString());
         }
         // ===== SMS 기능 끝 =====
         // 대시보드 월 라벨 동적 업데이트
@@ -4303,5 +4481,313 @@
             });
         }
     </script>
+    <!-- ═══════ UI PATCH: new dashboard elements + nav updates ═══════ -->
+    <script>
+    (function() {
+        /* ── 1. header subtitle map ── */
+        var PAGE_TITLES = {
+            dashboardPage:  '임대관리 대시보드',
+            tenantsPage:    '세입자 관리',
+            rentPage:       '월세 수납 현황',
+            expensesPage:   '지출 내역',
+            settingsPage:   '설정'
+        };
+        /* Patch switchPage to update header subtitle */
+        var _origSwitchPage = typeof switchPage === 'function' ? switchPage : null;
+        if (_origSwitchPage) {
+            switchPage = function(pageId) {
+                _origSwitchPage.apply(this, arguments);
+                var sub = document.getElementById('headerSubtitle');
+                if (sub) sub.textContent = PAGE_TITLES[pageId] || '';
+            };
+        }
+
+        /* ── 2. showTenantSection: update seg-btn classes ── */
+        var _origShowTenantSection = typeof showTenantSection === 'function' ? showTenantSection : null;
+        if (_origShowTenantSection) {
+            showTenantSection = function(section) {
+                /* call original to handle show/hide of sections */
+                _origShowTenantSection.apply(this, arguments);
+                /* override inline styles set by original with class-based approach */
+                var btnCurrent = document.getElementById('tabCurrentTenant');
+                var btnPast    = document.getElementById('tabPastTenant');
+                if (!btnCurrent || !btnPast) return;
+                if (section === 'current') {
+                    btnCurrent.classList.add('active');    btnPast.classList.remove('active');
+                    btnCurrent.style.background = ''; btnCurrent.style.color = '';
+                    btnPast.style.background    = ''; btnPast.style.color    = '';
+                } else {
+                    btnPast.classList.add('active');       btnCurrent.classList.remove('active');
+                    btnCurrent.style.background = ''; btnCurrent.style.color = '';
+                    btnPast.style.background    = ''; btnPast.style.color    = '';
+                }
+            };
+        }
+
+        /* ── 3. Extend renderDashboard for new elements ── */
+        var _origRD2 = typeof renderDashboard === 'function' ? renderDashboard : null;
+        if (_origRD2) {
+            renderDashboard = function() {
+                _origRD2.apply(this, arguments);
+
+                var today = new Date();
+                var m = today.getMonth() + 1;
+                var y = today.getFullYear();
+
+                /* month/year labels */
+                var mnEl = document.getElementById('dashMonthNum');
+                var yrEl = document.getElementById('dashYearNum');
+                if (mnEl) mnEl.textContent = m + '월';
+                if (yrEl) yrEl.textContent = y + '년';
+
+                /* ────────────────────────────────────────────────
+                   ① 이번달 데이터 계산
+                ──────────────────────────────────────────────── */
+                var monthStr = y + '-' + String(m).padStart(2, '0');
+                var mm = String(m).padStart(2, '0');
+                var monthRents = (appData.rents || []).filter(function(r) { return r.month === monthStr; });
+                var paidRents  = monthRents.filter(function(r) { return r.status === 'paid'; });
+                var paidAmt    = paidRents.reduce(function(s, r) { return s + r.amount; }, 0);
+
+                var expectedAmt = (appData.tenants || [])
+                    .filter(function(t) { return t.status === 'active'; })
+                    .reduce(function(sum, t) {
+                        if ((t.rentType || 'monthly') === 'annual') {
+                            var renewMM = (t.contractStart || '').slice(5, 7);
+                            return renewMM === mm ? sum + (t.monthlyRent || 0) : sum;
+                        }
+                        return sum + (t.monthlyRent || 0) + (t.managementFee || 0);
+                    }, 0);
+
+                var unpaidRents = monthRents.filter(function(r) { return r.status === 'pending' || r.status === 'overdue'; });
+                var rate = expectedAmt > 0 ? Math.round(paidAmt / expectedAmt * 100) : 0;
+                var totalThisMonth = monthRents.length;
+
+                /* ────────────────────────────────────────────────
+                   ② 이번달 도넛 (오른쪽) 업데이트  r=35 → circ≈219.9
+                ──────────────────────────────────────────────── */
+                var circ = 2 * Math.PI * 35;
+                var donutArc = document.getElementById('donutArc');
+                var donutPct = document.getElementById('donutPct');
+                if (donutArc) {
+                    var dashOffset = circ - (Math.min(rate, 100) / 100) * circ;
+                    donutArc.setAttribute('stroke-dasharray', circ.toFixed(1));
+                    donutArc.setAttribute('stroke-dashoffset', dashOffset.toFixed(1));
+                    donutArc.setAttribute('stroke', rate >= 100 ? '#22C55E' : '#1e40af');
+                }
+                if (donutPct) donutPct.textContent = rate + '%';
+
+                /* KPI 텍스트 */
+                var incomeEl   = document.getElementById('monthlyIncomeDisplay');
+                var expectedEl = document.getElementById('monthlyExpectedDisplay');
+                if (incomeEl)   incomeEl.textContent   = paidAmt.toLocaleString() + '원';
+                if (expectedEl) expectedEl.textContent = expectedAmt.toLocaleString() + '원';
+
+                /* 미납/완료 뱃지 */
+                var currUnpaidRow = document.getElementById('currUnpaidRow');
+                var currUnpaidInfo = document.getElementById('currUnpaidInfo');
+                var currPaidRow  = document.getElementById('currPaidRow');
+                var currPaidInfo = document.getElementById('currPaidInfo');
+                if (unpaidRents.length > 0) {
+                    if (currUnpaidRow) currUnpaidRow.style.display = '';
+                    if (currUnpaidInfo) currUnpaidInfo.textContent = unpaidRents.length + '건';
+                    if (currPaidRow) currPaidRow.style.display = 'none';
+                } else if (rate >= 100 && totalThisMonth > 0) {
+                    if (currUnpaidRow) currUnpaidRow.style.display = 'none';
+                    if (currPaidRow) currPaidRow.style.display = '';
+                    if (currPaidInfo) currPaidInfo.textContent = '전체 완료!';
+                } else {
+                    if (currUnpaidRow) currUnpaidRow.style.display = 'none';
+                    if (currPaidRow) currPaidRow.style.display = 'none';
+                }
+
+                /* 이번달 라벨 */
+                var currMonthLabel = document.getElementById('currMonthLabel');
+                if (currMonthLabel) currMonthLabel.textContent = m + '월 (이번달)';
+
+                /* ────────────────────────────────────────────────
+                   ③ 지난달 도넛 (왼쪽) 계산 및 업데이트
+                ──────────────────────────────────────────────── */
+                var pm = m - 1, py = y;
+                if (pm < 1) { pm = 12; py -= 1; }
+                var prevMonthStr = py + '-' + String(pm).padStart(2, '0');
+                var pmm = String(pm).padStart(2, '0');
+                var prevRents  = (appData.rents || []).filter(function(r) { return r.month === prevMonthStr; });
+                var prevPaid   = prevRents.filter(function(r) { return r.status === 'paid'; });
+                var prevPaidAmt = prevPaid.reduce(function(s, r) { return s + r.amount; }, 0);
+                var prevExpected = (appData.tenants || [])
+                    .reduce(function(sum, t) {
+                        // 지난달(py-pm) 기준으로 해당 세입자가 활성이었는지 판단
+                        // 계약 시작일 ≤ 지난달 말 AND (계약 종료일 없거나 ≥ 지난달 초)
+                        var csStr = (t.contractStart || '').slice(0, 7); // YYYY-MM
+                        var ceStr = (t.contractEnd   || '').slice(0, 7); // YYYY-MM
+                        var prevMonthStr2 = py + '-' + pmm;
+                        var wasActive = csStr && csStr <= prevMonthStr2 &&
+                            (!ceStr || ceStr >= prevMonthStr2);
+                        if (!wasActive) return sum;
+                        if ((t.rentType || 'monthly') === 'annual') {
+                            var renewMM2 = (t.contractStart || '').slice(5, 7);
+                            return renewMM2 === pmm ? sum + (t.monthlyRent || 0) : sum;
+                        }
+                        return sum + (t.monthlyRent || 0) + (t.managementFee || 0);
+                    }, 0);
+                var prevRate = prevExpected > 0 ? Math.round(prevPaidAmt / prevExpected * 100) : 0;
+
+                var prevDonutArc = document.getElementById('prevDonutArc');
+                var prevDonutPct = document.getElementById('prevDonutPct');
+                if (prevDonutArc) {
+                    var prevOffset = circ - (Math.min(prevRate, 100) / 100) * circ;
+                    prevDonutArc.setAttribute('stroke-dasharray', circ.toFixed(1));
+                    prevDonutArc.setAttribute('stroke-dashoffset', prevOffset.toFixed(1));
+                    prevDonutArc.setAttribute('stroke', prevRate >= 100 ? '#22C55E' : '#94A3B8');
+                }
+                if (prevDonutPct) prevDonutPct.textContent = prevRate + '%';
+
+                var prevMonthLabel = document.getElementById('prevMonthLabel');
+                if (prevMonthLabel) prevMonthLabel.textContent = pm + '월 (지난달)';
+
+                var prevMonthIncome = document.getElementById('prevMonthIncome');
+                var prevMonthExpected = document.getElementById('prevMonthExpected');
+                if (prevMonthIncome)   prevMonthIncome.textContent   = prevPaidAmt.toLocaleString() + '원';
+                if (prevMonthExpected) prevMonthExpected.textContent = prevExpected > 0 ? prevExpected.toLocaleString() + '원' : '-';
+
+                /* ────────────────────────────────────────────────
+                   ④ 미납 현황 멀티월 칩 (최근 4개월 + 이번달)
+                ──────────────────────────────────────────────── */
+                var histRow = document.getElementById('unpaidHistoryRow');
+                if (histRow) {
+                    var chips = [];
+                    // 최근 4개월치 생성 (이번달 포함 4개월)
+                    for (var mi = 3; mi >= 0; mi--) {
+                        var hm = m - mi, hy = y;
+                        while (hm < 1) { hm += 12; hy -= 1; }
+                        var hStr = hy + '-' + String(hm).padStart(2, '0');
+                        var hRents = (appData.rents || []).filter(function(r) { return r.month === hStr; });
+                        var hPaid  = hRents.filter(function(r) { return r.status === 'paid'; }).length;
+                        var hUnpaid = hRents.filter(function(r) { return r.status === 'pending' || r.status === 'overdue'; }).length;
+                        var hTotal = hRents.length;
+                        var isCurr = (mi === 0);
+
+                        var chipClass, statusText;
+                        if (hTotal === 0) {
+                            chipClass = 'chip-current';
+                            statusText = '기록없음';
+                        } else if (isCurr) {
+                            chipClass = hUnpaid > 0 ? 'chip-has-unpaid' : 'chip-all-paid';
+                            statusText = hPaid + '/' + hTotal + ' 완료' + (hUnpaid > 0 ? '<br>미납 ' + hUnpaid + '건' : '');
+                        } else if (hUnpaid === 0 && hPaid > 0) {
+                            chipClass = 'chip-all-paid';
+                            statusText = '전체 완료';
+                        } else if (hUnpaid > 0) {
+                            chipClass = 'chip-has-unpaid';
+                            statusText = '미납 ' + hUnpaid + '건';
+                        } else {
+                            chipClass = 'chip-partial';
+                            statusText = hPaid + '/' + hTotal;
+                        }
+
+                        chips.push(
+                            '<div class="unpaid-chip ' + chipClass + '">' +
+                            '<span class="chip-month-label">' + hm + '월</span>' +
+                            '<span class="chip-status-text">' + statusText + '</span>' +
+                            '</div>'
+                        );
+                    }
+                    histRow.innerHTML = chips.join('');
+                }
+
+                /* ────────────────────────────────────────────────
+                   ⑤ 계약만료 임박 카드 (30일 이내)
+                ──────────────────────────────────────────────── */
+                var expirySection = document.getElementById('expirySection');
+                var expiryListNew = document.getElementById('expiryListNew');
+                var expiringList = (appData.tenants || []).filter(function(t) {
+                    if (t.status !== 'active') return false;
+                    var d = Math.floor((new Date(t.contractEnd) - today) / 86400000);
+                    return d >= 0 && d <= 60;
+                }).sort(function(a, b) {
+                    return new Date(a.contractEnd) - new Date(b.contractEnd);
+                });
+
+                if (expirySection) {
+                    if (expiringList.length > 0) {
+                        expirySection.style.display = '';
+                        if (expiryListNew) {
+                            expiryListNew.innerHTML = expiringList.map(function(t) {
+                                var d = Math.floor((new Date(t.contractEnd) - today) / 86400000);
+                                var rm = (appData.rooms || []).find(function(r) { return r.id === t.roomId; });
+                                var roomNo = rm ? rm.roomNumber + '호' : '?호';
+                                var endStr = (t.contractEnd || '').slice(0, 10).replace(/-/g, '.');
+                                var urgency = d <= 14 ? 'ibadge-danger' : d <= 30 ? 'ibadge-warning' : 'ibadge-info';
+                                var urgencyLabel = d <= 14 ? '긴급' : d <= 30 ? '임박' : '예정';
+                                return '<div class="info-row">' +
+                                    '<div class="info-row-left">' +
+                                    '<span class="info-row-room">' + roomNo + '</span>' +
+                                    '<span class="info-row-name">(' + t.name + ')</span>' +
+                                    '</div>' +
+                                    '<div class="info-row-right">' +
+                                    '<span class="info-row-date">' + endStr + '</span>' +
+                                    '<span class="info-row-badge ' + urgency + '">' + d + '일 후 · ' + urgencyLabel + '</span>' +
+                                    '</div></div>';
+                            }).join('');
+                        }
+                    } else {
+                        expirySection.style.display = 'none';
+                    }
+                }
+
+                /* ────────────────────────────────────────────────
+                   ⑥ 수리 요청 현황 카드
+                ──────────────────────────────────────────────── */
+                var mainSectionNew = document.getElementById('maintenanceSectionNew');
+                var mainListNew    = document.getElementById('maintenanceListNew');
+                var mainRoomsNew = (appData.rooms || []).filter(function(r) { return r.status === 'maintenance'; });
+
+                if (mainSectionNew) {
+                    if (mainRoomsNew.length > 0) {
+                        mainSectionNew.style.display = '';
+                        if (mainListNew) {
+                            mainListNew.innerHTML = mainRoomsNew.map(function(r) {
+                                var b = (appData.buildings || []).find(function(bl) { return bl.id === r.buildingId; });
+                                var bName = b ? b.name + ' ' : '';
+                                var memo = r.memo || '수리 내용 미기재';
+                                return '<div class="info-row">' +
+                                    '<div class="info-row-left">' +
+                                    '<span class="info-row-room">' + bName + r.roomNumber + '호</span>' +
+                                    '<div class="info-row-desc">' + memo + '</div>' +
+                                    '</div>' +
+                                    '<div class="info-row-right">' +
+                                    '<span class="info-row-badge ibadge-yellow">🔧 수리중</span>' +
+                                    '</div></div>';
+                            }).join('');
+                        }
+                    } else {
+                        mainSectionNew.style.display = 'none';
+                    }
+                }
+
+                /* ── 하위호환: subtitle, 배지 업데이트 ── */
+                var sub = document.getElementById('dashSubtitleLine');
+                if (sub) {
+                    sub.textContent = unpaidRents.length > 0
+                        ? '⚠️ 미납 ' + unpaidRents.length + '건이 있습니다'
+                        : rate >= 100 ? '✅ 이번달 수납 완료!' : m + '월 수납 현황입니다';
+                }
+                var mnEl = document.getElementById('dashMonthNum');
+                var yrEl = document.getElementById('dashYearNum');
+                if (mnEl) mnEl.textContent = m + '월';
+                if (yrEl) yrEl.textContent = y + '년';
+            };
+        }
+
+        /* ── 4. initial call after DOM ready (in case DOMContentLoaded already fired) ── */
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            setTimeout(function() {
+                if (typeof renderDashboard === 'function') renderDashboard();
+            }, 100);
+        }
+    })();
+    </script>
+
 </body>
 </html>
