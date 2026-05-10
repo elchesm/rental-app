@@ -744,9 +744,61 @@
         }
 
         /* ═══════════════════════════ RENT PAGE ═══════════════════════════ */
+        .page-toolbar {
+            margin: 12px 12px 8px;
+            display: flex; gap: 8px; align-items: center;
+        }
+        .page-toolbar .btn { flex: 1; margin: 0; }
+        .summary-panel {
+            margin: 10px 12px 12px;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+        }
+        .summary-panel-head {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 13px 14px 10px;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .summary-panel-title {
+            font-size: 14px; font-weight: 800; color: var(--text-primary);
+        }
+        .summary-panel-sub {
+            font-size: 12px; color: var(--text-tertiary); font-weight: 600;
+        }
+        .summary-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 1px; background: var(--border-light);
+        }
+        .summary-cell {
+            background: white; padding: 13px 10px;
+            min-width: 0;
+        }
+        .summary-label {
+            font-size: 11px; color: var(--text-tertiary);
+            font-weight: 700; margin-bottom: 4px; white-space: nowrap;
+        }
+        .summary-value {
+            font-size: 15px; color: var(--text-primary);
+            font-weight: 900; letter-spacing: 0; overflow-wrap: anywhere;
+        }
+        .summary-value.primary { color: var(--primary); }
+        .summary-value.success { color: var(--success); }
+        .summary-value.danger { color: var(--danger); }
+        .summary-actions {
+            display: flex; gap: 8px; padding: 10px 12px 12px;
+        }
+        .summary-mini-btn {
+            flex: 1; min-height: 42px; border-radius: 8px;
+            border: 1px solid var(--border-color); background: #F8FAFC;
+            color: var(--primary); font-size: 13px; font-weight: 800;
+            cursor: pointer; touch-action: manipulation;
+        }
         .rent-year-card {
             background: white; border-radius: var(--radius-md);
-            padding: 14px 12px; margin: 6px 12px;
+            padding: 14px 12px; margin: 8px 12px;
             box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);
             touch-action: manipulation; -webkit-tap-highlight-color: transparent;
             user-select: none; -webkit-user-select: none;
@@ -755,12 +807,22 @@
             display: flex; justify-content: space-between;
             align-items: flex-start; margin-bottom: 12px;
         }
-        .rent-year-card-name { font-weight: 800; font-size: 15px; color: var(--text-primary); }
+        .rent-year-card-name { font-weight: 900; font-size: 16px; color: var(--text-primary); }
         .rent-year-card-sub { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
-        .rent-year-card-summary { font-size: 13px; text-align: right; white-space: nowrap; }
-        .rent-months-grid { display: grid; grid-template-columns: repeat(6,1fr); gap: 5px; }
+        .rent-year-card-summary {
+            display: flex; align-items: center; gap: 6px;
+            font-size: 12px; text-align: right; white-space: nowrap; flex-shrink: 0;
+        }
+        .rent-summary-pill {
+            display: inline-flex; align-items: center; gap: 3px;
+            padding: 4px 7px; border-radius: 999px;
+            background: #F8FAFC; font-weight: 800;
+        }
+        .rent-summary-pill.ok { color: var(--success); background: var(--success-light); }
+        .rent-summary-pill.bad { color: var(--danger); background: var(--danger-light); }
+        .rent-months-grid { display: grid; grid-template-columns: repeat(6,1fr); gap: 6px; }
         .rent-month-cell {
-            text-align: center; min-height: 52px;
+            text-align: center; min-height: 56px;
             padding: 7px 2px 6px; border-radius: 8px; cursor: pointer;
             border: 1px solid transparent;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -774,11 +836,13 @@
         .rent-month-cell.partial { background: #FEF9C3; border-color: #FDE047; color: #713F12; }
         .rent-month-cell.none    { background: #F8FAFC; border-color: var(--border-color); color: var(--text-tertiary); }
         .rent-month-cell .m-label { font-size: 12px; font-weight: 700; margin-bottom: 2px; line-height: 1; }
-        .rent-month-cell .m-icon  { font-size: 13px; line-height: 1; font-weight: 700; }
+        .rent-month-cell .m-icon  { font-size: 15px; line-height: 1; font-weight: 900; }
         .rent-month-cell .m-date  { font-size: 11px; margin-top: 2px; line-height: 1; opacity: 0.85; }
 
         .rent-legend-bar {
-            display: flex; gap: 6px 10px; margin: 8px 12px; font-size: 13px;
+            display: flex; gap: 6px 10px; margin: 8px 12px; padding: 10px 12px;
+            background: white; border: 1px solid var(--border-color); border-radius: var(--radius-sm);
+            font-size: 12px; font-weight: 700;
             align-items: center; flex-wrap: wrap;
             touch-action: manipulation; -webkit-tap-highlight-color: transparent;
             user-select: none; -webkit-user-select: none;
@@ -901,14 +965,41 @@
         .room-cell-tenant  { font-size: 12px; font-weight: 700; color: var(--primary); margin-top: 3px; }
 
         /* ═══════════════════════════ EXPENSE PAGE ═══════════════════════════ */
-        .category-summary { padding: 10px 12px; }
-        .category-item {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 9px 0; border-bottom: 1px solid var(--border-light);
+        .category-summary {
+            display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px; padding: 0 12px 4px;
         }
-        .category-item:last-child { border-bottom: none; }
-        .category-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
-        .category-amount { font-weight: 700; color: var(--danger); font-size: 14px; }
+        .category-summary-title {
+            grid-column: 1 / -1;
+            font-size: 13px; font-weight: 800; color: var(--text-secondary);
+            margin: 4px 0 0;
+        }
+        .category-item {
+            display: flex; justify-content: space-between; align-items: center; gap: 8px;
+            padding: 12px; border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm); background: white; box-shadow: var(--shadow-sm);
+            min-width: 0;
+        }
+        .category-name { font-size: 13px; font-weight: 800; color: var(--text-primary); overflow-wrap: anywhere; }
+        .category-amount { font-weight: 900; color: var(--danger); font-size: 13px; white-space: nowrap; }
+        .expense-list-card {
+            margin: 8px 12px; border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color); background: white;
+            box-shadow: var(--shadow-sm); overflow: hidden;
+        }
+        .expense-list-card .list-item {
+            border-bottom: none; min-height: 74px;
+        }
+        .expense-list-card:active { background: #F8FAFC; }
+        .expense-meta-line {
+            display: flex; flex-wrap: wrap; align-items: center; gap: 5px;
+            margin-top: 4px; font-size: 12px; color: var(--text-secondary);
+        }
+        .expense-meta-chip {
+            display: inline-flex; align-items: center;
+            padding: 2px 7px; border-radius: 999px;
+            background: #F1F5F9; color: #475569; font-weight: 700;
+        }
 
         /* ═══════════════════════════ RECEIPT ═══════════════════════════ */
         .receipt-upload-btn {
@@ -1223,7 +1314,12 @@
             .dashboard-actions-new { grid-template-columns: repeat(2, 1fr); margin-left: 8px; margin-right: 8px; }
             .rent-months-grid { grid-template-columns: repeat(4, 1fr); }
             .rent-year-card-header { gap: 10px; }
-            .rent-year-card-summary { white-space: normal; }
+            .rent-year-card-summary { flex-direction: column; align-items: flex-end; white-space: normal; gap: 4px; }
+            .summary-grid { grid-template-columns: 1fr; }
+            .summary-cell { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+            .summary-label { margin-bottom: 0; }
+            .summary-actions { flex-direction: column; }
+            .category-summary { grid-template-columns: 1fr; }
             .tc-card-body, .td-hero-main { gap: 10px; }
             .tc-avatar, .td-avatar { width: 46px; height: 46px; font-size: 20px; }
             .tc-rent-col, .td-hero-rent-col { text-align: left; width: 100%; padding-top: 6px; }
@@ -1449,6 +1545,7 @@
                         <span class="legend-dot" style="background:#F8FAFC;border:1px solid #E2E8F0;"></span>미생성
                     </span>
                 </div>
+                <div id="rentSummaryPanel" class="summary-panel"></div>
                 <div id="rentsList"></div>
             </div>
 
@@ -1458,6 +1555,7 @@
                 <div class="search-bar">
                     <input type="text" id="expenseSearch" placeholder="지출 항목명 또는 메모로 검색" oninput="renderExpenses()" style="-webkit-user-select:text;user-select:text;">
                 </div>
+                <div id="expenseSummaryPanel" class="summary-panel"></div>
                 <div style="margin: 6px 12px 0;">
                     <div id="expenseFilterRoom" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
                 </div>
@@ -3206,6 +3304,52 @@
             renderDashboard();
             showToast('수납 기록이 저장되었습니다');
         }
+        function renderRentSummary(activeTenants, year) {
+            const panel = document.getElementById('rentSummaryPanel');
+            if (!panel) return;
+            const yearPrefix = String(year) + '-';
+            const tenantIds = new Set((activeTenants || []).map(t => t.id));
+            const yearRents = (appData.rents || []).filter(r =>
+                tenantIds.has(r.tenantId) &&
+                r.month &&
+                r.month.startsWith(yearPrefix) &&
+                (!r.type || r.type === 'monthly')
+            );
+            const paidAmount = yearRents
+                .filter(r => r.status === 'paid')
+                .reduce((sum, r) => sum + (r.amount || 0), 0);
+            const dueRents = yearRents.filter(r => r.status === 'pending' || r.status === 'overdue' || r.status === 'partial');
+            const dueAmount = dueRents.reduce((sum, r) => sum + (r.amount || 0), 0);
+            const totalAmount = paidAmount + dueAmount;
+            const rate = totalAmount > 0 ? Math.round((paidAmount / totalAmount) * 100) : 0;
+            panel.innerHTML = `
+                <div class="summary-panel-head">
+                    <div>
+                        <div class="summary-panel-title">${year}년 수납 요약</div>
+                        <div class="summary-panel-sub">생성된 수납 기록 기준</div>
+                    </div>
+                    <div class="summary-panel-sub">${yearRents.length}건</div>
+                </div>
+                <div class="summary-grid">
+                    <div class="summary-cell">
+                        <div class="summary-label">수납률</div>
+                        <div class="summary-value primary">${rate}%</div>
+                    </div>
+                    <div class="summary-cell">
+                        <div class="summary-label">받은 금액</div>
+                        <div class="summary-value success">${paidAmount.toLocaleString()}원</div>
+                    </div>
+                    <div class="summary-cell">
+                        <div class="summary-label">미납</div>
+                        <div class="summary-value danger">${dueRents.length}건 · ${dueAmount.toLocaleString()}원</div>
+                    </div>
+                </div>
+                <div class="summary-actions">
+                    <button type="button" class="summary-mini-btn" onclick="generateAllMonthlyRents()">이번달 기록 생성</button>
+                    <button type="button" class="summary-mini-btn" onclick="switchPage('dashboardPage')">대시보드 보기</button>
+                </div>
+            `;
+        }
         function renderRents() {
             const container = document.getElementById('rentsList');
             container.innerHTML = '';
@@ -3220,11 +3364,13 @@
                 return t.name.toLowerCase().includes(rentSearchQuery) || roomNum.includes(rentSearchQuery);
             });
             if (activeTenants.length === 0) {
+                renderRentSummary([], currentYear);
                 container.innerHTML = rentSearchQuery
                     ? '<div class="empty-state"><div class="empty-state-icon">🔍</div><p>검색 결과가 없습니다</p></div>'
                     : '<div class="empty-state"><div class="empty-state-icon">💰</div><p>입주 중인 세입자가 없습니다</p></div>';
                 return;
             }
+            renderRentSummary(activeTenants, currentYear);
             // 월세/연세 분리
             const monthlyTenants = activeTenants.filter(t => (t.rentType || 'monthly') === 'monthly');
             const annualTenants = activeTenants.filter(t => t.rentType === 'annual');
@@ -3285,7 +3431,7 @@
                 });
                 // 건물 헤더
                 const buildingHeader = document.createElement('div');
-                buildingHeader.style.cssText = 'font-size:15px;font-weight:700;color:#1e3a5f;background:#e8f0fe;padding:10px 14px;border-radius:10px;margin:12px 0 4px;';
+                buildingHeader.style.cssText = 'font-size:14px;font-weight:800;color:#1e3a5f;background:#e8f0fe;padding:10px 14px;border-radius:8px;margin:14px 12px 6px;';
                 buildingHeader.textContent = '🏢 ' + (building?.name || '건물');
                 container.appendChild(buildingHeader);
                 roomIds.forEach(rid => {
@@ -3293,7 +3439,7 @@
                     const tenants = grouped[bid][rid];
                     // 호실 헤더
                     const roomHeader = document.createElement('div');
-                    roomHeader.style.cssText = 'font-size: 14px;font-weight:600;color:#374151;background:#f3f4f6;padding:6px 14px;border-radius:8px;margin:6px 0 2px;';
+                    roomHeader.style.cssText = 'font-size:13px;font-weight:800;color:#475569;padding:4px 14px;margin:6px 12px 0;';
                     roomHeader.textContent = '🚪 ' + (room?.roomNumber ? room.roomNumber + '호' : '호실');
                     container.appendChild(roomHeader);
                     tenants.forEach(tenant => {
@@ -3390,8 +3536,8 @@
                                     <div class="rent-year-card-sub">₩${monthlyAmount.toLocaleString()}/월</div>
                                 </div>
                                 <div class="rent-year-card-summary">
-                                    <span style="color:#166534;">납부 ${paidCount}</span> /
-                                    <span style="color:#991b1b;">미납 ${pendingCount}</span>
+                                    <span class="rent-summary-pill ok">납부 ${paidCount}</span>
+                                    <span class="rent-summary-pill bad">미납 ${pendingCount}</span>
                                     <span style="font-size:16px;color:#94A3B8;margin-left:4px;">›</span>
                                 </div>
                             </div>
@@ -3662,7 +3808,7 @@
                 var color = colors[i % colors.length];
                 rows += '<div style="margin-bottom:12px;">'
                     + '<div style="display:flex;justify-content:space-between;margin-bottom:3px;">'
-                    + '<span style="font-size:13px;font-weight:600;color:#374151;">' + entry.label + '</span>'
+                    + '<span style="font-size:13px;font-weight:600;color:#374151;">' + escapeHTML(entry.label) + '</span>'
                     + '<span style="font-size:12px;color:#6b7280;">' + share + '%&nbsp;'
                     + '<strong style="color:#111827;">&#8361;' + entry.amount.toLocaleString() + '</strong></span>'
                     + '</div>'
@@ -3676,6 +3822,42 @@
                 + '<span style="font-size:12px;font-weight:400;color:#6b7280;margin-left:8px;">'
                 + '\ud569\uacc4 &#8361;' + total.toLocaleString() + '</span></div>'
                 + rows;
+        }
+
+        function renderExpenseSummary(filtered) {
+            const panel = document.getElementById('expenseSummaryPanel');
+            if (!panel) return;
+            const list = filtered || [];
+            const today = new Date();
+            const monthStr = getMonthStr(today);
+            const total = list.reduce((sum, e) => sum + (e.amount || 0), 0);
+            const thisMonth = list
+                .filter(e => (e.date || '').startsWith(monthStr))
+                .reduce((sum, e) => sum + (e.amount || 0), 0);
+            const receiptCount = list.reduce((sum, e) => sum + ((e.receipts || []).length), 0);
+            panel.innerHTML = `
+                <div class="summary-panel-head">
+                    <div>
+                        <div class="summary-panel-title">지출 요약</div>
+                        <div class="summary-panel-sub">현재 필터 기준</div>
+                    </div>
+                    <div class="summary-panel-sub">${list.length}건</div>
+                </div>
+                <div class="summary-grid">
+                    <div class="summary-cell">
+                        <div class="summary-label">총 지출</div>
+                        <div class="summary-value danger">${total.toLocaleString()}원</div>
+                    </div>
+                    <div class="summary-cell">
+                        <div class="summary-label">이번달</div>
+                        <div class="summary-value primary">${thisMonth.toLocaleString()}원</div>
+                    </div>
+                    <div class="summary-cell">
+                        <div class="summary-label">영수증</div>
+                        <div class="summary-value">${receiptCount}장</div>
+                    </div>
+                </div>
+            `;
         }
 
         function renderExpenses() {
@@ -3694,6 +3876,7 @@
                     (e.category || '').toLowerCase().includes(expSearchQuery)
                 );
             }
+            renderExpenseSummary(filtered);
             // 호실별 차트
             renderExpenseRoomChart(filtered || []);
             // Render category summary
@@ -3702,15 +3885,16 @@
                 categorySummary[e.category] = (categorySummary[e.category] || 0) + e.amount;
             });
             const summaryContainer = document.getElementById('categorySummary');
-            summaryContainer.innerHTML = '<h4 style="font-size: 16px; font-weight: 700; margin-bottom: 8px;">카테고리별</h4>';
-            Object.entries(categorySummary).forEach(([cat, amount]) => {
-                summaryContainer.innerHTML += `
-                    <div class="category-item">
-                        <div class="category-name">${escapeHTML(cat)}</div>
-                        <div class="category-amount">₩${amount.toLocaleString()}</div>
-                    </div>
-                `;
-            });
+            const categoryEntries = Object.entries(categorySummary).sort((a, b) => b[1] - a[1]);
+            summaryContainer.innerHTML = categoryEntries.length
+                ? '<div class="category-summary-title">카테고리별</div>' +
+                    categoryEntries.map(([cat, amount]) => `
+                        <div class="category-item">
+                            <div class="category-name">${escapeHTML(cat)}</div>
+                            <div class="category-amount">₩${amount.toLocaleString()}</div>
+                        </div>
+                    `).join('')
+                : '';
             // Render list
             container.innerHTML = '';
             if (filtered.length === 0) {
@@ -3722,24 +3906,30 @@
                 const building = appData.buildings.find(b => b.id === expense.buildingId);
                 const room = expense.roomId ? appData.rooms.find(r => r.id === expense.roomId) : null;
                 const item = document.createElement('div');
-                item.className = 'list-item';
+                item.className = 'expense-list-card';
                 item.style.cursor = 'pointer';
                 item.style.touchAction = 'manipulation';
                 const roomDisplay = room ? ` ${room.roomNumber}호` : '전체';
                 const hasReceipts = expense.receipts && expense.receipts.length > 0;
                 const receiptBadge = hasReceipts
-                    ? `<div class="receipt-badge">📎 ${expense.receipts.length}장</div>` : '';
+                    ? `<span class="expense-meta-chip">📎 ${expense.receipts.length}장</span>` : '';
                 const isChecked = _selectedExpenses.has(expense.id);
                 item.innerHTML = `
-                    <div class="expense-check${isChecked ? ' checked' : ''}" data-eid="${expense.id}">${isChecked ? '✓' : ''}</div>
-                    <div class="list-item-avatar" style="background: linear-gradient(135deg, #f59e0b, #fbbf24); font-size: 20px;">🔧</div>
-                    <div class="list-item-content">
-                        <div class="list-item-title">${escapeHTML(expense.title)}</div>
-                        <div class="list-item-subtitle">${escapeHTML(building?.name ?? '')} <strong style="color:#1e3a5f;">${escapeHTML(roomDisplay)}</strong> · ${escapeHTML(expense.category)} · ${escapeHTML(expense.date)}</div>
-                        ${receiptBadge}
-                    </div>
-                    <div class="list-item-right">
-                        <div class="list-item-amount" style="color: var(--danger);">-₩${expense.amount.toLocaleString()}</div>
+                    <div class="list-item">
+                        <div class="expense-check${isChecked ? ' checked' : ''}" data-eid="${expense.id}">${isChecked ? '✓' : ''}</div>
+                        <div class="list-item-avatar" style="background: linear-gradient(135deg, #f59e0b, #fbbf24); font-size: 20px;">🔧</div>
+                        <div class="list-item-content">
+                            <div class="list-item-title">${escapeHTML(expense.title)}</div>
+                            <div class="expense-meta-line">
+                                <span class="expense-meta-chip">${escapeHTML(expense.category)}</span>
+                                <span>${escapeHTML(building?.name ?? '')} <strong style="color:#1e3a5f;">${escapeHTML(roomDisplay)}</strong></span>
+                                <span>${escapeHTML(expense.date)}</span>
+                                ${receiptBadge}
+                            </div>
+                        </div>
+                        <div class="list-item-right">
+                            <div class="list-item-amount" style="color: var(--danger);">-₩${expense.amount.toLocaleString()}</div>
+                        </div>
                     </div>
                 `;
                 // 체크박스: toggleExpenseSelect / 나머지 영역: editExpense
