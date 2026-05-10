@@ -4068,8 +4068,16 @@
 
         function _startFirestoreListener() {
             if (_fbUnsubscribe) _fbUnsubscribe();
-            _showFbStatus('connecting');
+            // 1초 후에도 연결 중이면 배지 표시, 5초 후 자동 숨김
+            var _connectingTimer = setTimeout(function() {
+                _showFbStatus('connecting');
+                setTimeout(function() {
+                    var el = document.getElementById('fbSyncPill');
+                    if (el && el.textContent.indexOf('연결 중') !== -1) el.style.display = 'none';
+                }, 5000);
+            }, 1000);
             _fbUnsubscribe = _db.collection('rentalApp').doc('main').onSnapshot(function(doc) {
+                clearTimeout(_connectingTimer);
                 // hasPendingWrites=true → 방금 우리가 쓴 것, 화면 업데이트 불필요
                 if (doc.metadata.hasPendingWrites) return;
 
