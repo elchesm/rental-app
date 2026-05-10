@@ -366,27 +366,35 @@
         .tc-header-building { font-size: 13px; font-weight: 700; color: #1E293B; }
         .tc-status-badge { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px; }
         .tc-card-body {
-            display: flex; align-items: center; gap: 12px;
-            padding: 14px 14px 10px;
+            display: flex; align-items: flex-start; gap: 12px;
+            padding: 14px 14px 12px;
         }
         .tc-avatar {
-            width: 48px; height: 48px; border-radius: 50%;
+            width: 52px; height: 52px; border-radius: 50%;
             background: linear-gradient(135deg, #3B82F6, #1D4ED8);
-            color: white; font-size: 20px; font-weight: 900;
+            color: white; font-size: 22px; font-weight: 900;
             display: flex; align-items: center; justify-content: center;
-            flex-shrink: 0;
+            flex-shrink: 0; margin-top: 2px;
         }
         .tc-info { flex: 1; min-width: 0; }
-        .tc-name { font-size: 17px; font-weight: 800; color: #1E293B; margin-bottom: 4px; }
-        .tc-detail { font-size: 12px; color: #64748B; display: flex; align-items: center; gap: 5px; margin-top: 2px; }
-        .tc-rent-col { text-align: right; flex-shrink: 0; }
-        .tc-rent-label { font-size: 10px; color: #94A3B8; font-weight: 600; margin-bottom: 2px; }
-        .tc-rent-amount { font-size: 15px; font-weight: 800; color: #2563EB; }
-        .tc-memo {
-            margin: 0 14px 10px; padding: 8px 10px;
-            background: #F8FAFC; border-radius: 8px;
-            font-size: 12px; color: #64748B;
+        .tc-name { font-size: 18px; font-weight: 900; color: #1E293B; margin-bottom: 5px; }
+        .tc-detail { font-size: 12.5px; color: #64748B; display: flex; align-items: center; gap: 5px; margin-top: 3px; line-height: 1.4; }
+        .tc-rent-col { text-align: right; flex-shrink: 0; padding-top: 2px; }
+        .tc-rent-label { font-size: 10px; color: #94A3B8; font-weight: 600; margin-bottom: 3px; white-space: nowrap; }
+        .tc-rent-amount { font-size: 16px; font-weight: 900; color: #2563EB; white-space: nowrap; }
+        .tc-rent-chevron { font-size: 13px; color: #94A3B8; margin-left: 2px; }
+        /* 생년월일 + 직업 행 */
+        .tc-meta-row {
+            display: flex; align-items: center;
+            padding: 9px 14px; border-top: 1px solid #F1F5F9;
+            font-size: 12.5px; color: #64748B;
+        }
+        .tc-meta-cell { display: flex; align-items: center; gap: 5px; flex: 1; }
+        .tc-meta-divider { width: 1px; height: 14px; background: #E2E8F0; margin: 0 10px; flex-shrink: 0; }
+        /* 메모 행 */
+        .tc-memo-row {
             display: flex; align-items: flex-start; gap: 6px;
+            padding: 0 14px 10px; font-size: 12.5px; color: #64748B;
         }
         .tc-actions { display: flex; gap: 8px; padding: 0 14px 14px; }
         .tc-btn-outline {
@@ -1631,6 +1639,20 @@
                     <label>전화</label>
                     <input type="tel" id="tenantPhone">
                 </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                    <div class="form-group">
+                        <label>생년월일 <span style="font-size:13px;color:var(--neutral-gray);">(선택)</span></label>
+                        <input type="date" id="tenantBirthday">
+                    </div>
+                    <div class="form-group">
+                        <label>직업 <span style="font-size:13px;color:var(--neutral-gray);">(선택)</span></label>
+                        <input type="text" id="tenantOccupation" placeholder="직장인, 학생 등">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>이메일 <span style="font-size:13px;color:var(--neutral-gray);">(선택)</span></label>
+                    <input type="email" id="tenantEmail" placeholder="example@email.com">
+                </div>
                 <div class="form-group">
                     <label>계약 시작일</label>
                     <input type="date" id="tenantContractStart" required>
@@ -2493,6 +2515,9 @@
                 name: tenantName,
                 residentId: document.getElementById('tenantResidentId').value,
                 phone: document.getElementById('tenantPhone').value,
+                birthday: document.getElementById('tenantBirthday').value || '',
+                occupation: document.getElementById('tenantOccupation').value.trim() || '',
+                email: document.getElementById('tenantEmail').value.trim() || '',
                 contractStart: document.getElementById('tenantContractStart').value,
                 contractEnd: document.getElementById('tenantContractEnd').value,
                 rentType: rentType,
@@ -2562,6 +2587,9 @@
             document.getElementById('tenantName').value = tenant.name;
             document.getElementById('tenantResidentId').value = tenant.residentId || '';
             document.getElementById('tenantPhone').value = tenant.phone;
+            document.getElementById('tenantBirthday').value = tenant.birthday || '';
+            document.getElementById('tenantOccupation').value = tenant.occupation || '';
+            document.getElementById('tenantEmail').value = tenant.email || '';
             document.getElementById('tenantContractStart').value = tenant.contractStart;
             document.getElementById('tenantContractEnd').value = tenant.contractEnd;
             document.getElementById('tenantRent').value = tenant.monthlyRent;
@@ -2590,17 +2618,37 @@
                 showToast('세입자가 삭제되었습니다');
             }
         }
+        function _calcAge(birthday) {
+            if (!birthday) return null;
+            var today = new Date();
+            var bd = new Date(birthday);
+            var age = today.getFullYear() - bd.getFullYear();
+            var m = today.getMonth() - bd.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < bd.getDate())) age--;
+            return age;
+        }
+        function _fmtDate(d) {
+            if (!d) return '-';
+            return d.replace(/-/g, '.'); // YYYY-MM-DD → YYYY.MM.DD
+        }
+        function _contractDur(s, e) {
+            if (!s || !e) return '';
+            var ms = new Date(e) - new Date(s);
+            var months = Math.round(ms / (1000*60*60*24*30.44));
+            var y = Math.floor(months/12); var m = months%12;
+            return (y>0?y+'년 ':'') + m+'개월';
+        }
         function renderTenants() {
-            const container = document.getElementById('tenantsList');
-            const searchText = (document.getElementById('tenantSearch')?.value || '').toLowerCase();
+            var container = document.getElementById('tenantsList');
+            var searchText = (document.getElementById('tenantSearch') ? document.getElementById('tenantSearch').value : '').toLowerCase();
             container.innerHTML = '';
-            const _td = new Date().toISOString().split('T')[0];
-            let allTenants = (appData.tenants || []).filter(function(t) {
+            var _td = new Date().toISOString().split('T')[0];
+            var allTenants = (appData.tenants || []).filter(function(t) {
                 return t.status === 'active' && (!t.contractEnd || t.contractEnd >= _td);
             });
             if (searchText) {
                 allTenants = allTenants.filter(function(t) {
-                    const room = appData.rooms.find(function(r) { return r.id === t.roomId; });
+                    var room = appData.rooms.find(function(r) { return r.id === t.roomId; });
                     return t.name.toLowerCase().includes(searchText) ||
                            (room ? room.roomNumber : '').toLowerCase().includes(searchText);
                 });
@@ -2609,70 +2657,79 @@
                 container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">👥</div><p>현재 세입자가 없습니다</p></div>';
                 return;
             }
-            // Sort by building name then room number
             allTenants.sort(function(a, b) {
-                const bA = (appData.buildings.find(function(x) { return x.id === a.buildingId; }) || {}).name || '';
-                const bB = (appData.buildings.find(function(x) { return x.id === b.buildingId; }) || {}).name || '';
+                var bA = (appData.buildings.find(function(x){return x.id===a.buildingId;})||{}).name||'';
+                var bB = (appData.buildings.find(function(x){return x.id===b.buildingId;})||{}).name||'';
                 if (bA !== bB) return bA.localeCompare(bB);
-                const rA = (appData.rooms.find(function(x) { return x.id === a.roomId; }) || {}).roomNumber || '';
-                const rB = (appData.rooms.find(function(x) { return x.id === b.roomId; }) || {}).roomNumber || '';
-                return rA.localeCompare(rB, undefined, { numeric: true });
+                var rA = (appData.rooms.find(function(x){return x.id===a.roomId;})||{}).roomNumber||'';
+                var rB = (appData.rooms.find(function(x){return x.id===b.roomId;})||{}).roomNumber||'';
+                return rA.localeCompare(rB, undefined, {numeric:true});
             });
             allTenants.forEach(function(tenant) {
-                const building = appData.buildings.find(function(b) { return b.id === tenant.buildingId; });
-                const room = appData.rooms.find(function(r) { return r.id === tenant.roomId; });
-                const bName = building ? building.name : '미지정';
-                const rNum = room ? room.roomNumber : '?';
-                const today = new Date();
-                const endDate = new Date(tenant.contractEnd);
-                const daysUntilEnd = Math.floor((endDate - today) / (1000 * 60 * 60 * 24));
-                let badgeText, badgeBg, badgeColor;
-                if (daysUntilEnd < 0) {
-                    badgeText = '계약만료'; badgeBg = '#FEE2E2'; badgeColor = '#DC2626';
-                } else if (daysUntilEnd < 30) {
-                    badgeText = 'D-' + daysUntilEnd; badgeBg = '#FEF3C7'; badgeColor = '#D97706';
-                } else {
-                    badgeText = '입주중'; badgeBg = '#DCFCE7'; badgeColor = '#16A34A';
-                }
-                const rentAmt = (tenant.monthlyRent || 0) + (tenant.managementFee || 0);
-                const rentLabel = tenant.rentType === 'annual' ? '연세' : (tenant.managementFee > 0 ? '월세+관리비' : '월세');
-                const cStart = tenant.contractStart || '-';
-                const cEnd = tenant.contractEnd || '-';
-                const avatarChar = tenant.name.charAt(0);
-                const tid = tenant.id;
-                const card = document.createElement('div');
+                var building = appData.buildings.find(function(b){return b.id===tenant.buildingId;});
+                var room = appData.rooms.find(function(r){return r.id===tenant.roomId;});
+                var bName = building ? building.name : '미지정';
+                var rNum = room ? room.roomNumber : '?';
+                var today = new Date();
+                var endDate = new Date(tenant.contractEnd);
+                var daysLeft = Math.floor((endDate - today) / 86400000);
+                var badgeText, badgeBg, badgeColor;
+                if (daysLeft < 0)      { badgeText='계약만료'; badgeBg='#FEE2E2'; badgeColor='#DC2626'; }
+                else if (daysLeft < 30){ badgeText='D-'+daysLeft; badgeBg='#FEF3C7'; badgeColor='#D97706'; }
+                else                   { badgeText='입주중'; badgeBg='#DCFCE7'; badgeColor='#16A34A'; }
+                var rentAmt = (tenant.monthlyRent||0)+(tenant.managementFee||0);
+                var rentLabel = tenant.rentType==='annual' ? '연세' : (tenant.managementFee>0 ? '월세 + 관리비' : '월세');
+                var cStart = _fmtDate(tenant.contractStart);
+                var cEnd = _fmtDate(tenant.contractEnd);
+                var dur = _contractDur(tenant.contractStart, tenant.contractEnd);
+                var contractStr = cStart + ' ~ ' + cEnd + (dur ? ' (' + dur + ')' : '');
+                var age = _calcAge(tenant.birthday);
+                var bdStr = tenant.birthday ? _fmtDate(tenant.birthday) + (age!==null ? ' (만 '+age+'세)' : '') : '';
+                var tid = tenant.id;
+                var card = document.createElement('div');
                 card.className = 'tc-card';
-                card.innerHTML =
-                    '<div class="tc-card-header">' +
-                        '<div class="tc-header-left">' +
-                            '<span class="tc-header-icon">🏢</span>' +
-                            '<span class="tc-header-building">' + bName + ' ' + rNum + '호</span>' +
-                        '</div>' +
-                        '<span class="tc-status-badge" style="background:' + badgeBg + ';color:' + badgeColor + ';">' + badgeText + '</span>' +
-                    '</div>' +
-                    '<div class="tc-card-body">' +
-                        '<div class="tc-avatar">' + avatarChar + '</div>' +
-                        '<div class="tc-info">' +
-                            '<div class="tc-name">' + tenant.name + '</div>' +
-                            (tenant.phone ? '<div class="tc-detail"><span>📱</span>' + tenant.phone + '</div>' : '') +
-                            '<div class="tc-detail"><span>📅</span>' + cStart + ' ~ ' + cEnd + '</div>' +
-                        '</div>' +
-                        '<div class="tc-rent-col">' +
-                            '<div class="tc-rent-label">' + rentLabel + '</div>' +
-                            '<div class="tc-rent-amount">₩' + rentAmt.toLocaleString() + '</div>' +
-                        '</div>' +
-                    '</div>' +
-                    (tenant.memo ? '<div class="tc-memo"><span>📝</span><span>' + tenant.memo + '</span></div>' : '') +
-                    '<div class="tc-actions">' +
-                        '<button class="tc-btn-outline" data-tid="' + tid + '" data-action="renew">계약 갱신</button>' +
-                        '<button class="tc-btn-fill" data-tid="' + tid + '" data-action="detail">상세보기</button>' +
+                // Header
+                var html = '<div class="tc-card-header">' +
+                    '<div class="tc-header-left"><span class="tc-header-icon">🏢</span>' +
+                    '<span class="tc-header-building">' + bName + ' ' + rNum + '호</span></div>' +
+                    '<span class="tc-status-badge" style="background:'+badgeBg+';color:'+badgeColor+';">'+badgeText+'</span>' +
                     '</div>';
-                card.querySelector('[data-action="renew"]').addEventListener('click', function(e) {
-                    e.stopPropagation(); openRenewModal(tid);
-                });
-                card.querySelector('[data-action="detail"]').addEventListener('click', function(e) {
-                    e.stopPropagation(); showTenantDetail(tid);
-                });
+                // Body
+                html += '<div class="tc-card-body">' +
+                    '<div class="tc-avatar">' + tenant.name.charAt(0) + '</div>' +
+                    '<div class="tc-info">' +
+                        '<div class="tc-name">' + tenant.name + '</div>' +
+                        (tenant.phone ? '<div class="tc-detail"><span style="font-size:13px;">📱</span>' + tenant.phone + '</div>' : '') +
+                        '<div class="tc-detail"><span style="font-size:13px;">📅</span>' + contractStr + '</div>' +
+                    '</div>' +
+                    '<div class="tc-rent-col">' +
+                        '<div class="tc-rent-label">' + rentLabel + '</div>' +
+                        '<div style="display:flex;align-items:center;gap:2px;">' +
+                            '<div class="tc-rent-amount">₩' + rentAmt.toLocaleString() + '</div>' +
+                            '<span class="tc-rent-chevron">›</span>' +
+                        '</div>' +
+                    '</div>' +
+                    '</div>';
+                // 생년월일 + 직업 행 (둘 중 하나라도 있으면 표시)
+                if (bdStr || tenant.occupation) {
+                    html += '<div class="tc-meta-row">' +
+                        '<div class="tc-meta-cell"><span style="font-size:13px;">👤</span>' + (bdStr||'-') + '</div>' +
+                        '<div class="tc-meta-divider"></div>' +
+                        '<div class="tc-meta-cell"><span style="font-size:13px;">📋</span>' + (tenant.occupation||'-') + '</div>' +
+                        '</div>';
+                }
+                // 메모 행 (항상 표시)
+                html += '<div class="tc-memo-row"><span style="font-size:13px;flex-shrink:0;">📝</span>' +
+                    '<span style="color:'+(tenant.memo?'#374151':'#94A3B8')+';">' + (tenant.memo||'메모 없음') + '</span>' +
+                    '</div>';
+                // 버튼
+                html += '<div class="tc-actions">' +
+                    '<button class="tc-btn-outline" data-action="renew">계약 갱신</button>' +
+                    '<button class="tc-btn-fill" data-action="detail">상세보기</button>' +
+                    '</div>';
+                card.innerHTML = html;
+                card.querySelector('[data-action="renew"]').addEventListener('click', function(e){e.stopPropagation();openRenewModal(tid);});
+                card.querySelector('[data-action="detail"]').addEventListener('click', function(e){e.stopPropagation();showTenantDetail(tid);});
                 container.appendChild(card);
             });
         }
@@ -2788,6 +2845,8 @@
             html += '<div class="td-hero-name">'+tenant.name+'</div>';
             if (tenant.phone) html += '<div class="td-hero-contact"><span>📱</span>'+tenant.phone+'</div>';
             if (tenant.email) html += '<div class="td-hero-contact"><span>✉️</span>'+tenant.email+'</div>';
+            if (tenant.birthday) { var _age=_calcAge(tenant.birthday); html += '<div class="td-hero-contact"><span>👤</span>'+_fmtDate(tenant.birthday)+(_age!==null?' (만 '+_age+'세)':'')+'</div>'; }
+            if (tenant.occupation) html += '<div class="td-hero-contact"><span>📋</span>'+tenant.occupation+'</div>';
             html += '</div>';
             html += '<div class="td-hero-rent-col">';
             html += '<div class="td-hero-rent-label">'+rentLabel+'</div>';
