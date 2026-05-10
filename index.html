@@ -2720,6 +2720,7 @@
                             const mStr = currentYear + '-' + String(m).padStart(2, '0');
                             if (tenantStartForCount && mStr < tenantStartForCount) return; // 입주 전 제외
                             if (tenantEndForCount && mStr > tenantEndForCount) return; // 퇴실 후 제외
+                            if (mStr > todayStr) return; // 미래 월은 미납 집계 제외
                             const r = rentMap[mStr];
                             if (r?.status === 'paid') paidCount++;
                             else if (r?.status === 'pending' || r?.status === 'partial') pendingCount++;
@@ -2769,13 +2770,18 @@
                                         const d = new Date(r.paidDate);
                                         dateStr = `${d.getMonth()+1}/${d.getDate()}`;
                                     }
+                                } else if (isFuture) {
+                                    // 미래 월: 미납 기록 있어도 점으로 표시 (아직 납부 기간 아님)
+                                    icon = '·';
                                 } else {
                                     cellClass = 'pending'; icon = '✕';
                                 }
                             } else if (isFuture) {
                                 icon = '·';
                             }
-                            return `<div class="rent-month-cell ${cellClass}" onclick="markMonthCell('${tenant.id}','${mStr}')">
+                            // 미래 월은 클릭 비활성화 (실수로 기록 생성 방지)
+                            const onClickAttr = isFuture ? '' : `onclick="markMonthCell('${tenant.id}','${mStr}')"`;
+                            return `<div class="rent-month-cell ${cellClass}${isFuture ? ' future-cell' : ''}" ${onClickAttr} style="${isFuture ? 'cursor:default;' : ''}">
                                 <div class="m-label">${m}월</div>
                                 <div class="m-icon">${icon}</div>
                                 ${dateStr ? `<div class="m-date">${dateStr}</div>` : ''}
