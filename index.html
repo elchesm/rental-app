@@ -36,6 +36,7 @@
             --radius-sm:      8px;
             --radius-md:      14px;
             --radius-lg:      20px;
+            --neutral-gray:   var(--text-secondary);
             --safe-bottom:    max(0px, env(safe-area-inset-bottom));
         }
         html, body {
@@ -1170,6 +1171,73 @@
         }
         .changelog-rollback-btn:active { background: #FFEDD5; }
         .changelog-empty { font-size: 13px; color: var(--text-secondary); padding: 8px 0; }
+
+        /* ═══════════════════════════ POLISH & SMALL SCREENS ═══════════════════════════ */
+        button, input, select, textarea { font: inherit; }
+        button:focus-visible,
+        input:focus-visible,
+        select:focus-visible,
+        textarea:focus-visible {
+            outline: 3px solid rgba(37,99,235,0.20);
+            outline-offset: 2px;
+        }
+        .header-left { min-width: 0; }
+        .header-title,
+        .header-subtitle,
+        .list-item-title,
+        .list-item-subtitle,
+        .tc-name,
+        .tc-detail,
+        .td-hero-name,
+        .td-hero-contact {
+            overflow-wrap: anywhere;
+        }
+        .bottom-nav { min-height: calc(68px + var(--safe-bottom)); }
+        .nav-item { min-width: 0; }
+        .nav-label { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+        .future-cell { opacity: 0.55; }
+        .form-group input,
+        .form-group select,
+        .form-group textarea,
+        .search-bar input,
+        .tc-search-wrap input {
+            min-height: 44px;
+        }
+        .tc-card,
+        .td-hero-card,
+        .td-section-card,
+        .rent-year-card,
+        .info-card-wrap {
+            border-radius: var(--radius-sm);
+        }
+        @media (max-width: 430px) {
+            .app-header { padding-left: 12px; padding-right: 12px; gap: 10px; }
+            .header-title { font-size: 24px; letter-spacing: 0; }
+            .header-subtitle { font-size: 12px; }
+            .icon-btn { width: 50px; height: 50px; border-radius: 12px; }
+            .icon-btn .btn-label { font-size: 9px; }
+            .dash-donut-row { margin-left: 8px; margin-right: 8px; border-radius: 14px; }
+            .dash-donut-half { padding: 14px 7px 12px; gap: 8px; }
+            .dash-donut-half svg { width: 126px; height: 126px; }
+            .ddd-label, .ddd-val { font-size: 12px; }
+            .dashboard-actions-new { grid-template-columns: repeat(2, 1fr); margin-left: 8px; margin-right: 8px; }
+            .rent-months-grid { grid-template-columns: repeat(4, 1fr); }
+            .rent-year-card-header { gap: 10px; }
+            .rent-year-card-summary { white-space: normal; }
+            .tc-card-body, .td-hero-main { gap: 10px; }
+            .tc-avatar, .td-avatar { width: 46px; height: 46px; font-size: 20px; }
+            .tc-rent-col, .td-hero-rent-col { text-align: left; width: 100%; padding-top: 6px; }
+            .tc-card-body, .td-hero-main { flex-wrap: wrap; }
+            .tc-info, .td-hero-info { flex: 1 1 calc(100% - 58px); }
+            .tc-meta-row { align-items: flex-start; }
+            .tc-actions, .td-hero-btns, .td-bottom-bar { gap: 6px; }
+            .modal-content { padding-left: 12px; padding-right: 12px; }
+            #buildingRoomsSection > div:nth-child(2),
+            #buildingRoomsList .room-entry-row {
+                grid-template-columns: 1fr 0.8fr 1fr;
+            }
+            #buildingRoomsSection > div:nth-child(2) span:nth-child(n+4):not(:last-child) { margin-top: 4px; }
+        }
     </style>
     <link rel="manifest" href="manifest.json">
 </head>
@@ -2395,6 +2463,9 @@
             document.getElementById('tenantName').value = '';
             document.getElementById('tenantResidentId').value = '';
             document.getElementById('tenantPhone').value = '';
+            document.getElementById('tenantBirthday').value = '';
+            document.getElementById('tenantOccupation').value = '';
+            document.getElementById('tenantEmail').value = '';
             document.getElementById('tenantContractStart').value = '';
             document.getElementById('tenantContractEnd').value = '';
             document.getElementById('tenantRent').value = '';
@@ -2677,6 +2748,11 @@
                 if (daysLeft < 0)      { badgeText='계약만료'; badgeBg='#FEE2E2'; badgeColor='#DC2626'; }
                 else if (daysLeft < 30){ badgeText='D-'+daysLeft; badgeBg='#FEF3C7'; badgeColor='#D97706'; }
                 else                   { badgeText='입주중'; badgeBg='#DCFCE7'; badgeColor='#16A34A'; }
+                var safeTenantName = escapeHTML(tenant.name || '');
+                var safePhone = escapeHTML(tenant.phone || '');
+                var safeOccupation = escapeHTML(tenant.occupation || '');
+                var safeMemo = escapeHTML(tenant.memo || '');
+                var safeBuildingRoom = escapeHTML(bName + ' ' + rNum + '호');
                 var rentAmt = (tenant.monthlyRent||0)+(tenant.managementFee||0);
                 var rentLabel = tenant.rentType==='annual' ? '연세' : (tenant.managementFee>0 ? '월세 + 관리비' : '월세');
                 var cStart = _fmtDate(tenant.contractStart);
@@ -2691,19 +2767,19 @@
                 // Header
                 var html = '<div class="tc-card-header">' +
                     '<div class="tc-header-left"><span class="tc-header-icon">🏢</span>' +
-                    '<span class="tc-header-building">' + bName + ' ' + rNum + '호</span></div>' +
+                    '<span class="tc-header-building">' + safeBuildingRoom + '</span></div>' +
                     '<span class="tc-status-badge" style="background:'+badgeBg+';color:'+badgeColor+';">'+badgeText+'</span>' +
                     '</div>';
                 // Body
                 html += '<div class="tc-card-body">' +
-                    '<div class="tc-avatar">' + tenant.name.charAt(0) + '</div>' +
+                    '<div class="tc-avatar">' + safeInitial(tenant.name) + '</div>' +
                     '<div class="tc-info">' +
-                        '<div class="tc-name">' + tenant.name + '</div>' +
-                        (tenant.phone ? '<div class="tc-detail"><span style="font-size:13px;">📱</span>' + tenant.phone + '</div>' : '') +
-                        '<div class="tc-detail"><span style="font-size:13px;">📅</span>' + contractStr + '</div>' +
+                        '<div class="tc-name">' + safeTenantName + '</div>' +
+                        (tenant.phone ? '<div class="tc-detail"><span style="font-size:13px;">📱</span>' + safePhone + '</div>' : '') +
+                        '<div class="tc-detail"><span style="font-size:13px;">📅</span>' + escapeHTML(contractStr) + '</div>' +
                     '</div>' +
                     '<div class="tc-rent-col">' +
-                        '<div class="tc-rent-label">' + rentLabel + '</div>' +
+                        '<div class="tc-rent-label">' + escapeHTML(rentLabel) + '</div>' +
                         '<div style="display:flex;align-items:center;gap:2px;">' +
                             '<div class="tc-rent-amount">₩' + rentAmt.toLocaleString() + '</div>' +
                             '<span class="tc-rent-chevron">›</span>' +
@@ -2713,14 +2789,14 @@
                 // 생년월일 + 직업 행 (둘 중 하나라도 있으면 표시)
                 if (bdStr || tenant.occupation) {
                     html += '<div class="tc-meta-row">' +
-                        '<div class="tc-meta-cell"><span style="font-size:13px;">👤</span>' + (bdStr||'-') + '</div>' +
+                        '<div class="tc-meta-cell"><span style="font-size:13px;">👤</span>' + escapeHTML(bdStr||'-') + '</div>' +
                         '<div class="tc-meta-divider"></div>' +
-                        '<div class="tc-meta-cell"><span style="font-size:13px;">📋</span>' + (tenant.occupation||'-') + '</div>' +
+                        '<div class="tc-meta-cell"><span style="font-size:13px;">📋</span>' + (safeOccupation||'-') + '</div>' +
                         '</div>';
                 }
                 // 메모 행 (항상 표시)
                 html += '<div class="tc-memo-row"><span style="font-size:13px;flex-shrink:0;">📝</span>' +
-                    '<span style="color:'+(tenant.memo?'#374151':'#94A3B8')+';">' + (tenant.memo||'메모 없음') + '</span>' +
+                    '<span style="color:'+(tenant.memo?'#374151':'#94A3B8')+';">' + (safeMemo||'메모 없음') + '</span>' +
                     '</div>';
                 // 버튼
                 html += '<div class="tc-actions">' +
@@ -2813,6 +2889,15 @@
             // Rent info
             const totalRent = (tenant.monthlyRent||0) + (tenant.managementFee||0);
             const rentLabel = tenant.rentType==='annual' ? '연세' : (tenant.managementFee>0 ? '월세+관리비' : '월세');
+            const safeTenantName = escapeHTML(tenant.name || '');
+            const safeBName = escapeHTML(bName);
+            const safeRNum = escapeHTML(rNum);
+            const safePhone = escapeHTML(tenant.phone || '');
+            const safeEmail = escapeHTML(tenant.email || '');
+            const safeOccupation = escapeHTML(tenant.occupation || '');
+            const safeMemo = escapeHTML(tenant.memo || '');
+            const telHref = safePhoneHref(tenant.phone, 'tel');
+            const smsHref = safePhoneHref(tenant.phone, 'sms');
 
             // Contract duration
             function contractDuration(s, e) {
@@ -2836,17 +2921,17 @@
             // ─── Hero card ───
             let html = '<div class="td-hero-card">';
             html += '<div class="td-hero-top">';
-            html += '<div class="td-hero-building">🏢 '+bName+' '+rNum+'호</div>';
+            html += '<div class="td-hero-building">🏢 '+safeBName+' '+safeRNum+'호</div>';
             html += '<span class="td-hero-badge" style="background:'+badgeBg+';color:'+badgeColor+';">'+badgeText+'</span>';
             html += '</div>';
             html += '<div class="td-hero-main">';
-            html += '<div class="td-avatar">'+tenant.name.charAt(0)+'</div>';
+            html += '<div class="td-avatar">'+safeInitial(tenant.name)+'</div>';
             html += '<div class="td-hero-info">';
-            html += '<div class="td-hero-name">'+tenant.name+'</div>';
-            if (tenant.phone) html += '<div class="td-hero-contact"><span>📱</span>'+tenant.phone+'</div>';
-            if (tenant.email) html += '<div class="td-hero-contact"><span>✉️</span>'+tenant.email+'</div>';
+            html += '<div class="td-hero-name">'+safeTenantName+'</div>';
+            if (tenant.phone) html += '<div class="td-hero-contact"><span>📱</span>'+safePhone+'</div>';
+            if (tenant.email) html += '<div class="td-hero-contact"><span>✉️</span>'+safeEmail+'</div>';
             if (tenant.birthday) { var _age=_calcAge(tenant.birthday); html += '<div class="td-hero-contact"><span>👤</span>'+_fmtDate(tenant.birthday)+(_age!==null?' (만 '+_age+'세)':'')+'</div>'; }
-            if (tenant.occupation) html += '<div class="td-hero-contact"><span>📋</span>'+tenant.occupation+'</div>';
+            if (tenant.occupation) html += '<div class="td-hero-contact"><span>📋</span>'+safeOccupation+'</div>';
             html += '</div>';
             html += '<div class="td-hero-rent-col">';
             html += '<div class="td-hero-rent-label">'+rentLabel+'</div>';
@@ -2857,13 +2942,13 @@
             html += '<div class="td-hero-row"><span class="td-hero-row-label">📅 계약기간</span><span class="td-hero-row-value">'+cPeriod+'</span></div>';
             if (tenant.moveInDate) html += '<div class="td-hero-row"><span class="td-hero-row-label">🏠 입주일</span><span class="td-hero-row-value">'+tenant.moveInDate+'</span></div>';
             if (tenant.payDay) html += '<div class="td-hero-row"><span class="td-hero-row-label">💳 납부일</span><span class="td-hero-row-value">매월 '+tenant.payDay+'일</span></div>';
-            html += '<div class="td-hero-row"><span class="td-hero-row-label">📝 메모</span><span class="td-hero-row-value">'+(tenant.memo||'없음')+'</span></div>';
+            html += '<div class="td-hero-row"><span class="td-hero-row-label">📝 메모</span><span class="td-hero-row-value">'+(safeMemo||'없음')+'</span></div>';
             html += '</div>';
             // action buttons
             html += '<div class="td-hero-btns">';
             if (tenant.phone) {
-                html += '<button class="td-hero-btn-outline" onclick="window.location.href=\'tel:'+tenant.phone+'\'">📞 전화하기</button>';
-                html += '<button class="td-hero-btn-fill" onclick="window.location.href=\'sms:'+tenant.phone+'\'">💬 문자하기</button>';
+                html += '<button class="td-hero-btn-outline" onclick="window.location.href=\''+telHref+'\'">📞 전화하기</button>';
+                html += '<button class="td-hero-btn-fill" onclick="window.location.href=\''+smsHref+'\'">💬 문자하기</button>';
             } else {
                 html += '<button class="td-hero-btn-outline" onclick="editCurrentTenant()">✏️ 정보 수정</button>';
             }
@@ -2928,9 +3013,9 @@
             html += '<div class="td-info-row"><span class="td-info-label">💰 월세</span><span class="td-info-value">₩'+(tenant.monthlyRent||0).toLocaleString()+(tenant.rentType==='annual'?' (연 1회)':'')+'</span></div>';
             if (tenant.managementFee>0) html += '<div class="td-info-row"><span class="td-info-label">🏠 관리비</span><span class="td-info-value">₩'+(tenant.managementFee||0).toLocaleString()+'</span></div>';
             if ((tenant.cleaningFee||0)>0) html += '<div class="td-info-row"><span class="td-info-label">🧹 청소비</span><span class="td-info-value">₩'+(tenant.cleaningFee||0).toLocaleString()+'</span></div>';
-            if (tenant.residentId) html += '<div class="td-info-row"><span class="td-info-label">🪪 주민번호</span><span class="td-info-value">'+tenant.residentId+'</span></div>';
+            if (tenant.residentId) html += '<div class="td-info-row"><span class="td-info-label">🪪 주민번호</span><span class="td-info-value">'+escapeHTML(tenant.residentId)+'</span></div>';
             if (tenant.depositRefunded) {
-                html += '<div class="td-deposit-ok">✅ 보증금 반환 완료 ('+(tenant.depositRefundDate||'날짜 미기록')+')</div>';
+                html += '<div class="td-deposit-ok">✅ 보증금 반환 완료 '+escapeHTML('('+(tenant.depositRefundDate||'날짜 미기록')+')')+'</div>';
             }
             html += '</div></div>';
 
@@ -2990,6 +3075,28 @@
             }
         }
         // ============ UTILS ============
+        function escapeHTML(value) {
+            return String(value == null ? '' : value).replace(/[&<>"']/g, function(ch) {
+                return {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;'
+                }[ch];
+            });
+        }
+        function escapeAttr(value) {
+            return escapeHTML(value).replace(/`/g, '&#96;');
+        }
+        function safeInitial(value) {
+            var txt = String(value || '').trim();
+            return txt ? escapeHTML(Array.from(txt)[0]) : '?';
+        }
+        function safePhoneHref(value, scheme) {
+            var phone = String(value || '').replace(/[^0-9+*#-]/g, '');
+            return scheme + ':' + encodeURIComponent(phone);
+        }
         function getMonthStr(date) {
             return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0');
         }
@@ -3145,8 +3252,8 @@
                     card.innerHTML = `
                         <div class="rent-year-card-header">
                             <div>
-                                <div class="rent-year-card-name">${tenant.name}</div>
-                                <div class="rent-year-card-sub">${building?.name ?? '-'} ${room?.roomNumber ?? '-'}호 · ₩${tenant.monthlyRent.toLocaleString()}/년 · 납부월: ${renewalMM}월</div>
+                                <div class="rent-year-card-name">${escapeHTML(tenant.name)}</div>
+                                <div class="rent-year-card-sub">${escapeHTML(building?.name ?? '-')} ${escapeHTML(room?.roomNumber ?? '-')}호 · ₩${tenant.monthlyRent.toLocaleString()}/년 · 납부월: ${renewalMM}월</div>
                             </div>
                             <div>
                                 ${isPaid
@@ -3279,7 +3386,7 @@
                         card.innerHTML = `
                             <div class="rent-year-card-header" onclick="showTenantDetail('${tenant.id}')" style="cursor:pointer;">
                                 <div>
-                                    <div class="rent-year-card-name">${tenant.name}</div>
+                                    <div class="rent-year-card-name">${escapeHTML(tenant.name)}</div>
                                     <div class="rent-year-card-sub">₩${monthlyAmount.toLocaleString()}/월</div>
                                 </div>
                                 <div class="rent-year-card-summary">
@@ -3588,7 +3695,7 @@
                 );
             }
             // 호실별 차트
-            renderExpenseRoomChart(appData.expenses || []);
+            renderExpenseRoomChart(filtered || []);
             // Render category summary
             const categorySummary = {};
             filtered.forEach(e => {
@@ -3599,7 +3706,7 @@
             Object.entries(categorySummary).forEach(([cat, amount]) => {
                 summaryContainer.innerHTML += `
                     <div class="category-item">
-                        <div class="category-name">${cat}</div>
+                        <div class="category-name">${escapeHTML(cat)}</div>
                         <div class="category-amount">₩${amount.toLocaleString()}</div>
                     </div>
                 `;
@@ -3627,8 +3734,8 @@
                     <div class="expense-check${isChecked ? ' checked' : ''}" data-eid="${expense.id}">${isChecked ? '✓' : ''}</div>
                     <div class="list-item-avatar" style="background: linear-gradient(135deg, #f59e0b, #fbbf24); font-size: 20px;">🔧</div>
                     <div class="list-item-content">
-                        <div class="list-item-title">${expense.title}</div>
-                        <div class="list-item-subtitle">${building?.name ?? ''} <strong style="color:#1e3a5f;">${roomDisplay}</strong> · ${expense.category} · ${expense.date}</div>
+                        <div class="list-item-title">${escapeHTML(expense.title)}</div>
+                        <div class="list-item-subtitle">${escapeHTML(building?.name ?? '')} <strong style="color:#1e3a5f;">${escapeHTML(roomDisplay)}</strong> · ${escapeHTML(expense.category)} · ${escapeHTML(expense.date)}</div>
                         ${receiptBadge}
                     </div>
                     <div class="list-item-right">
@@ -4716,12 +4823,12 @@
                 card.innerHTML =
                     '<div class="tc-past-header">' +
                         '<div>' +
-                            '<div class="tc-past-name">' + t.name + '</div>' +
-                            '<div class="tc-past-room">🏢 ' + (bldName ? bldName + ' ' : '') + roomNum + '</div>' +
+                            '<div class="tc-past-name">' + escapeHTML(t.name) + '</div>' +
+                            '<div class="tc-past-room">🏢 ' + escapeHTML((bldName ? bldName + ' ' : '') + roomNum) + '</div>' +
                         '</div>' +
                         '<span class="tc-past-badge">' + badgeText + '</span>' +
                     '</div>' +
-                    '<div class="tc-past-dates">📅 ' + start + ' ~ ' + end + '</div>' +
+                    '<div class="tc-past-dates">📅 ' + escapeHTML(start) + ' ~ ' + escapeHTML(end) + '</div>' +
                     (t.deposit > 0 ? '<div style="margin-top:8px;font-size:12px;color:#6B7280;">🏦 보증금 ₩' + t.deposit.toLocaleString() + (t.depositRefunded ? ' <span style="color:#16A34A;font-weight:700;">반환완료</span>' : ' <span style="color:#DC2626;font-weight:700;">미반환</span>') + '</div>' : '') +
                     (isExpiredActive ? '<div style="margin-top:10px;"><button class="tc-btn-outline" style="width:100%;" data-tid="' + t.id + '">계약 갱신</button></div>' : '');
                 if (isExpiredActive) {
@@ -4753,7 +4860,7 @@
             modal.innerHTML = `
                 <div style="background:white;border-radius:16px;padding:24px;width:100%;max-width:380px;max-height:85vh;overflow-y:auto;">
                     <h3 style="margin:0 0 4px;font-size:18px;font-weight:700;">계약 갱신</h3>
-                    <p style="margin:0 0 20px;color:#6b7280;font-size:14px;">${tenant.name}</p>
+                    <p style="margin:0 0 20px;color:#6b7280;font-size:14px;">${escapeHTML(tenant.name)}</p>
                     <div style="margin-bottom:14px;">
                         <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">신규 시작일</label>
                         <input type="date" id="renewStart" value="${newStart}" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;box-sizing:border-box;">
