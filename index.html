@@ -908,10 +908,6 @@
                 <div class="header-subtitle" id="headerSubtitle">임대관리 대시보드</div>
             </div>
             <div class="header-actions">
-                <button class="icon-btn" onclick="openSmsModal()" title="입금문자 확인">
-                    <span class="btn-icon">📱</span>
-                    <span class="btn-label">모바일</span>
-                </button>
                 <button class="icon-btn" onclick="openModal('addBuildingModal')" title="건물 추가">
                     <span class="btn-icon">🏢</span>
                     <span class="btn-label">건물관리</span>
@@ -930,14 +926,14 @@
                     <!-- 왼쪽: 지난달 -->
                     <div class="dash-donut-half">
                         <div class="dash-donut-month" id="prevMonthLabel">지난달</div>
-                        <svg width="104" height="104" viewBox="0 0 104 104" style="display:block;flex-shrink:0;">
-                            <circle cx="52" cy="52" r="40" fill="none" stroke="rgba(99,102,241,0.12)" stroke-width="9"/>
-                            <circle cx="52" cy="52" r="40" fill="none" stroke="#6366F1" stroke-width="9"
-                                stroke-dasharray="251.3" stroke-dashoffset="251.3"
-                                stroke-linecap="round" transform="rotate(-90 52 52)"
+                        <svg width="150" height="150" viewBox="0 0 150 150" style="display:block;flex-shrink:0;max-width:100%;">
+                            <circle cx="75" cy="75" r="60" fill="none" stroke="rgba(99,102,241,0.12)" stroke-width="11"/>
+                            <circle cx="75" cy="75" r="60" fill="none" stroke="#6366F1" stroke-width="11"
+                                stroke-dasharray="376.9" stroke-dashoffset="376.9"
+                                stroke-linecap="round" transform="rotate(-90 75 75)"
                                 id="prevDonutArc"/>
-                            <text x="52" y="50" text-anchor="middle" dominant-baseline="middle" fill="#4338CA" font-size="18" font-weight="900" id="prevDonutPct" style="font-family:inherit;">0%</text>
-                            <text x="52" y="64" text-anchor="middle" dominant-baseline="middle" fill="#A5B4FC" font-size="10" font-weight="600" style="font-family:inherit;">수납률</text>
+                            <text x="75" y="72" text-anchor="middle" dominant-baseline="middle" fill="#4338CA" font-size="28" font-weight="900" id="prevDonutPct" style="font-family:inherit;">0%</text>
+                            <text x="75" y="93" text-anchor="middle" dominant-baseline="middle" fill="#A5B4FC" font-size="12" font-weight="600" style="font-family:inherit;">수납률</text>
                         </svg>
                         <div class="dash-donut-detail">
                             <div class="ddd-row">
@@ -961,14 +957,14 @@
                     <!-- 오른쪽: 이번달 + 진행사항 -->
                     <div class="dash-donut-half dash-donut-curr">
                         <div class="dash-donut-month" id="currMonthLabel">이번달</div>
-                        <svg width="104" height="104" viewBox="0 0 104 104" style="display:block;flex-shrink:0;">
-                            <circle cx="52" cy="52" r="40" fill="none" stroke="rgba(59,130,246,0.12)" stroke-width="9"/>
-                            <circle cx="52" cy="52" r="40" fill="none" stroke="#3B82F6" stroke-width="9"
-                                stroke-dasharray="251.3" stroke-dashoffset="251.3"
-                                stroke-linecap="round" transform="rotate(-90 52 52)"
+                        <svg width="150" height="150" viewBox="0 0 150 150" style="display:block;flex-shrink:0;max-width:100%;">
+                            <circle cx="75" cy="75" r="60" fill="none" stroke="rgba(59,130,246,0.12)" stroke-width="11"/>
+                            <circle cx="75" cy="75" r="60" fill="none" stroke="#3B82F6" stroke-width="11"
+                                stroke-dasharray="376.9" stroke-dashoffset="376.9"
+                                stroke-linecap="round" transform="rotate(-90 75 75)"
                                 id="donutArc"/>
-                            <text x="52" y="50" text-anchor="middle" dominant-baseline="middle" fill="#1D4ED8" font-size="18" font-weight="900" id="donutPct" style="font-family:inherit;">0%</text>
-                            <text x="52" y="64" text-anchor="middle" dominant-baseline="middle" fill="#93C5FD" font-size="10" font-weight="600" style="font-family:inherit;">수납률</text>
+                            <text x="75" y="72" text-anchor="middle" dominant-baseline="middle" fill="#1D4ED8" font-size="28" font-weight="900" id="donutPct" style="font-family:inherit;">0%</text>
+                            <text x="75" y="93" text-anchor="middle" dominant-baseline="middle" fill="#93C5FD" font-size="12" font-weight="600" style="font-family:inherit;">수납률</text>
                         </svg>
                         <div class="dash-donut-detail">
                             <div class="ddd-row">
@@ -4607,7 +4603,7 @@
                 /* ────────────────────────────────────────────────
                    ② 이번달 도넛 (오른쪽) 업데이트  r=35 → circ≈219.9
                 ──────────────────────────────────────────────── */
-                var circ = 2 * Math.PI * 40; // r=40 → 251.3
+                var circ = 2 * Math.PI * 60; // r=60 → 376.9
                 var donutArc = document.getElementById('donutArc');
                 var donutPct = document.getElementById('donutPct');
                 if (donutArc) {
