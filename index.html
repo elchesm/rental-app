@@ -5465,6 +5465,7 @@
                    ④ 미납 현황 멀티월 칩 (최근 4개월 + 이번달)
                 ──────────────────────────────────────────────── */
                 var histRow = document.getElementById('unpaidHistoryRow');
+                var historyUnpaidTotal = 0;
                 if (histRow) {
                     var chips = [];
                     // 최근 4개월치 생성 (이번달 포함 4개월)
@@ -5475,6 +5476,7 @@
                         var hRents = (appData.rents || []).filter(function(r) { return r.month === hStr; });
                         var hPaid  = hRents.filter(function(r) { return r.status === 'paid'; }).length;
                         var hUnpaid = hRents.filter(function(r) { return (r.status === 'pending' || r.status === 'overdue') && (!r.type || r.type === 'monthly'); }).length;
+                        historyUnpaidTotal += hUnpaid;
                         var hTotal = hRents.length;
                         var isCurr = (mi === 0);
 
@@ -5511,6 +5513,17 @@
                     }
                     histRow.innerHTML = chips.join('');
                 }
+                var dashboardBadge = document.getElementById('dashboardBadge');
+                var rentBadge = document.getElementById('rentBadge');
+                [dashboardBadge, rentBadge].forEach(function(badge) {
+                    if (!badge) return;
+                    if (historyUnpaidTotal > 0) {
+                        badge.textContent = historyUnpaidTotal;
+                        badge.style.display = 'block';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                });
 
                 /* ────────────────────────────────────────────────
                    ⑤ 계약만료 임박 카드 (30일 이내)
@@ -5587,8 +5600,8 @@
                 /* ── 하위호환: subtitle, 배지 업데이트 ── */
                 var sub = document.getElementById('dashSubtitleLine');
                 if (sub) {
-                    sub.textContent = unpaidRents.length > 0
-                        ? '⚠️ 미납 ' + unpaidRents.length + '건이 있습니다'
+                    sub.textContent = historyUnpaidTotal > 0
+                        ? '⚠️ 미납 ' + historyUnpaidTotal + '건이 있습니다'
                         : rate >= 100 ? '✅ 이번달 수납 완료!' : m + '월 수납 현황입니다';
                 }
                 var mnEl = document.getElementById('dashMonthNum');
