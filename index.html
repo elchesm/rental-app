@@ -1148,7 +1148,13 @@
             text-align: center; border: none;
             display: flex; flex-direction: column;
             align-items: center; gap: 5px;
+            cursor: pointer;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
         }
+        .unpaid-chip:hover { transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+        .unpaid-chip:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
         .chip-icon-circle {
             width: 26px; height: 26px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
@@ -3943,25 +3949,31 @@
             });
         }
         // ============ DASHBOARD ============
-        function showUnpaidDetail() {
-            const monthStr = getMonthStr(new Date());
+        function showUnpaidDetail(monthStr) {
+            monthStr = monthStr || getMonthStr(new Date());
             const unpaidRents = appData.rents.filter(r => r.month === monthStr && (r.status === 'pending' || r.status === 'overdue') && (!r.type || r.type === 'monthly'));
             const { tenantMap, roomMap, buildingMap } = buildLookupMaps();
             let html = '';
             if (unpaidRents.length === 0) {
-                html = '<div class="empty-state"><p>미납 내역이 없습니다</p></div>';
+                html = '<div class="empty-state"><p>이 달의 미납 내역이 없습니다</p></div>';
             } else {
+                const totalUnpaid = unpaidRents.reduce((sum, rent) => sum + (rent.amount || 0), 0);
+                html = `
+                    <div style="padding:14px 16px;border-bottom:1px solid var(--border-color);background:#fff7f7;">
+                        <div style="font-size:13px;color:#991b1b;font-weight:700;margin-bottom:4px;">미납 요약</div>
+                        <div style="font-size:22px;font-weight:900;color:var(--danger);">₩${totalUnpaid.toLocaleString()}</div>
+                        <div style="font-size:13px;color:#6b7280;margin-top:4px;">총 ${unpaidRents.length}건의 미납이 있습니다</div>
+                    </div>`;
                 unpaidRents.forEach(rent => {
                     const tenant = tenantMap[rent.tenantId];
                     const room = roomMap[rent.roomId];
                     const building = buildingMap[rent.buildingId];
                     html += `
-                        <div class="list-item" style="border-bottom:1px solid var(--border-color);cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;" onclick="markRentPaid('${rent.id}')">
+                        <div class="list-item" style="border-bottom:1px solid var(--border-color);">
                             <div class="list-item-avatar" style="background:#fee2e2;color:#991b1b;font-size:18px;">✕</div>
                             <div class="list-item-content">
-                                <div class="list-item-title">${tenant?.name || '?'}</div>
+                                <div class="list-item-title">${tenant?.name || '세입자 미상'}</div>
                                 <div class="list-item-subtitle">${building?.name || ''} ${room?.roomNumber || ''}호 · ${rent.month}</div>
-                                <div style="font-size:13px;color:#9ca3af;margin-top:3px;">탭하여 납부 처리</div>
                             </div>
                             <div class="list-item-right">
                                 <div class="list-item-amount" style="color:var(--danger);">₩${rent.amount.toLocaleString()}</div>
@@ -3969,7 +3981,8 @@
                         </div>`;
                 });
             }
-            document.getElementById('dashboardDetailTitle').textContent = `⚠️ 미납 현황 (${unpaidRents.length}건)`;
+            const [detailYear, detailMonth] = monthStr.split('-');
+            document.getElementById('dashboardDetailTitle').textContent = `⚠️ ${detailYear}년 ${parseInt(detailMonth, 10)}월 미납 현황`;
             document.getElementById('dashboardDetailContent').innerHTML = html;
             openModal('dashboardDetailModal');
         }
@@ -5489,7 +5502,7 @@
                             ? '<div class="chip-icon-circle chip-icon-warn">!</div>'
                             : '';
                         chips.push(
-                            '<div class="unpaid-chip ' + chipClass + '">' +
+                            '<div class="unpaid-chip ' + chipClass + '" role="button" tabindex="0" aria-label="' + hStr + ' 미납 현황 보기" onclick="showUnpaidDetail(\'' + hStr + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();showUnpaidDetail(\'' + hStr + '\');}">' +
                             '<span class="chip-month-label">' + hm + '월</span>' +
                             '<span class="chip-status-text">' + statusText + '</span>' +
                             chipIcon +
