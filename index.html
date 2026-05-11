@@ -2846,14 +2846,11 @@
                 if (daysLeft < 0)      { badgeText='계약만료'; badgeBg='#FEE2E2'; badgeColor='#DC2626'; }
                 else if (daysLeft < 30){ badgeText='D-'+daysLeft; badgeBg='#FEF3C7'; badgeColor='#D97706'; }
                 else                   { badgeText='입주중'; badgeBg='#DCFCE7'; badgeColor='#16A34A'; }
-<<<<<<< Updated upstream
                 var safeTenantName = escapeHTML(tenant.name || '');
                 var safePhone = escapeHTML(tenant.phone || '');
                 var safeOccupation = escapeHTML(tenant.occupation || '');
                 var safeMemo = escapeHTML(tenant.memo || '');
                 var safeBuildingRoom = escapeHTML(bName + ' ' + rNum + '호');
-=======
->>>>>>> Stashed changes
                 var rentAmt = (tenant.monthlyRent||0)+(tenant.managementFee||0);
                 var rentLabel = tenant.rentType==='annual' ? '연세' : (tenant.managementFee>0 ? '월세 + 관리비' : '월세');
                 var cStart = _fmtDate(tenant.contractStart);
@@ -2868,16 +2865,11 @@
                 // Header
                 var html = '<div class="tc-card-header">' +
                     '<div class="tc-header-left"><span class="tc-header-icon">🏢</span>' +
-<<<<<<< Updated upstream
                     '<span class="tc-header-building">' + safeBuildingRoom + '</span></div>' +
-=======
-                    '<span class="tc-header-building">' + bName + ' ' + rNum + '호</span></div>' +
->>>>>>> Stashed changes
                     '<span class="tc-status-badge" style="background:'+badgeBg+';color:'+badgeColor+';">'+badgeText+'</span>' +
                     '</div>';
                 // Body
                 html += '<div class="tc-card-body">' +
-<<<<<<< Updated upstream
                     '<div class="tc-avatar">' + safeInitial(tenant.name) + '</div>' +
                     '<div class="tc-info">' +
                         '<div class="tc-name">' + safeTenantName + '</div>' +
@@ -2886,16 +2878,6 @@
                     '</div>' +
                     '<div class="tc-rent-col">' +
                         '<div class="tc-rent-label">' + escapeHTML(rentLabel) + '</div>' +
-=======
-                    '<div class="tc-avatar">' + tenant.name.charAt(0) + '</div>' +
-                    '<div class="tc-info">' +
-                        '<div class="tc-name">' + tenant.name + '</div>' +
-                        (tenant.phone ? '<div class="tc-detail"><span style="font-size:13px;">📱</span>' + tenant.phone + '</div>' : '') +
-                        '<div class="tc-detail"><span style="font-size:13px;">📅</span>' + contractStr + '</div>' +
-                    '</div>' +
-                    '<div class="tc-rent-col">' +
-                        '<div class="tc-rent-label">' + rentLabel + '</div>' +
->>>>>>> Stashed changes
                         '<div style="display:flex;align-items:center;gap:2px;">' +
                             '<div class="tc-rent-amount">₩' + rentAmt.toLocaleString() + '</div>' +
                             '<span class="tc-rent-chevron">›</span>' +
@@ -2905,24 +2887,14 @@
                 // 생년월일 + 직업 행 (둘 중 하나라도 있으면 표시)
                 if (bdStr || tenant.occupation) {
                     html += '<div class="tc-meta-row">' +
-<<<<<<< Updated upstream
                         '<div class="tc-meta-cell"><span style="font-size:13px;">👤</span>' + escapeHTML(bdStr||'-') + '</div>' +
                         '<div class="tc-meta-divider"></div>' +
                         '<div class="tc-meta-cell"><span style="font-size:13px;">📋</span>' + (safeOccupation||'-') + '</div>' +
-=======
-                        '<div class="tc-meta-cell"><span style="font-size:13px;">👤</span>' + (bdStr||'-') + '</div>' +
-                        '<div class="tc-meta-divider"></div>' +
-                        '<div class="tc-meta-cell"><span style="font-size:13px;">📋</span>' + (tenant.occupation||'-') + '</div>' +
->>>>>>> Stashed changes
                         '</div>';
                 }
                 // 메모 행 (항상 표시)
                 html += '<div class="tc-memo-row"><span style="font-size:13px;flex-shrink:0;">📝</span>' +
-<<<<<<< Updated upstream
                     '<span style="color:'+(tenant.memo?'#374151':'#94A3B8')+';">' + (safeMemo||'메모 없음') + '</span>' +
-=======
-                    '<span style="color:'+(tenant.memo?'#374151':'#94A3B8')+';">' + (tenant.memo||'메모 없음') + '</span>' +
->>>>>>> Stashed changes
                     '</div>';
                 // 버튼
                 html += '<div class="tc-actions">' +
@@ -3015,7 +2987,6 @@
             // Rent info
             const totalRent = (tenant.monthlyRent||0) + (tenant.managementFee||0);
             const rentLabel = tenant.rentType==='annual' ? '연세' : (tenant.managementFee>0 ? '월세+관리비' : '월세');
-<<<<<<< Updated upstream
             const safeTenantName = escapeHTML(tenant.name || '');
             const safeBName = escapeHTML(bName);
             const safeRNum = escapeHTML(rNum);
@@ -3025,8 +2996,6 @@
             const safeMemo = escapeHTML(tenant.memo || '');
             const telHref = safePhoneHref(tenant.phone, 'tel');
             const smsHref = safePhoneHref(tenant.phone, 'sms');
-=======
->>>>>>> Stashed changes
 
             // Contract duration
             function contractDuration(s, e) {
@@ -3050,7 +3019,6 @@
             // ─── Hero card ───
             let html = '<div class="td-hero-card">';
             html += '<div class="td-hero-top">';
-<<<<<<< Updated upstream
             html += '<div class="td-hero-building">🏢 '+safeBName+' '+safeRNum+'호</div>';
             html += '<span class="td-hero-badge" style="background:'+badgeBg+';color:'+badgeColor+';">'+badgeText+'</span>';
             html += '</div>';
@@ -3062,19 +3030,6 @@
             if (tenant.email) html += '<div class="td-hero-contact"><span>✉️</span>'+safeEmail+'</div>';
             if (tenant.birthday) { var _age=_calcAge(tenant.birthday); html += '<div class="td-hero-contact"><span>👤</span>'+_fmtDate(tenant.birthday)+(_age!==null?' (만 '+_age+'세)':'')+'</div>'; }
             if (tenant.occupation) html += '<div class="td-hero-contact"><span>📋</span>'+safeOccupation+'</div>';
-=======
-            html += '<div class="td-hero-building">🏢 '+bName+' '+rNum+'호</div>';
-            html += '<span class="td-hero-badge" style="background:'+badgeBg+';color:'+badgeColor+';">'+badgeText+'</span>';
-            html += '</div>';
-            html += '<div class="td-hero-main">';
-            html += '<div class="td-avatar">'+tenant.name.charAt(0)+'</div>';
-            html += '<div class="td-hero-info">';
-            html += '<div class="td-hero-name">'+tenant.name+'</div>';
-            if (tenant.phone) html += '<div class="td-hero-contact"><span>📱</span>'+tenant.phone+'</div>';
-            if (tenant.email) html += '<div class="td-hero-contact"><span>✉️</span>'+tenant.email+'</div>';
-            if (tenant.birthday) { var _age=_calcAge(tenant.birthday); html += '<div class="td-hero-contact"><span>👤</span>'+_fmtDate(tenant.birthday)+(_age!==null?' (만 '+_age+'세)':'')+'</div>'; }
-            if (tenant.occupation) html += '<div class="td-hero-contact"><span>📋</span>'+tenant.occupation+'</div>';
->>>>>>> Stashed changes
             html += '</div>';
             html += '<div class="td-hero-rent-col">';
             html += '<div class="td-hero-rent-label">'+rentLabel+'</div>';
@@ -3085,22 +3040,13 @@
             html += '<div class="td-hero-row"><span class="td-hero-row-label">📅 계약기간</span><span class="td-hero-row-value">'+cPeriod+'</span></div>';
             if (tenant.moveInDate) html += '<div class="td-hero-row"><span class="td-hero-row-label">🏠 입주일</span><span class="td-hero-row-value">'+tenant.moveInDate+'</span></div>';
             if (tenant.payDay) html += '<div class="td-hero-row"><span class="td-hero-row-label">💳 납부일</span><span class="td-hero-row-value">매월 '+tenant.payDay+'일</span></div>';
-<<<<<<< Updated upstream
             html += '<div class="td-hero-row"><span class="td-hero-row-label">📝 메모</span><span class="td-hero-row-value">'+(safeMemo||'없음')+'</span></div>';
-=======
-            html += '<div class="td-hero-row"><span class="td-hero-row-label">📝 메모</span><span class="td-hero-row-value">'+(tenant.memo||'없음')+'</span></div>';
->>>>>>> Stashed changes
             html += '</div>';
             // action buttons
             html += '<div class="td-hero-btns">';
             if (tenant.phone) {
-<<<<<<< Updated upstream
                 html += '<button class="td-hero-btn-outline" onclick="window.location.href=\''+telHref+'\'">📞 전화하기</button>';
                 html += '<button class="td-hero-btn-fill" onclick="window.location.href=\''+smsHref+'\'">💬 문자하기</button>';
-=======
-                html += '<button class="td-hero-btn-outline" onclick="window.location.href=\'tel:'+tenant.phone+'\'">📞 전화하기</button>';
-                html += '<button class="td-hero-btn-fill" onclick="window.location.href=\'sms:'+tenant.phone+'\'">💬 문자하기</button>';
->>>>>>> Stashed changes
             } else {
                 html += '<button class="td-hero-btn-outline" onclick="editCurrentTenant()">✏️ 정보 수정</button>';
             }
@@ -3165,15 +3111,9 @@
             html += '<div class="td-info-row"><span class="td-info-label">💰 월세</span><span class="td-info-value">₩'+(tenant.monthlyRent||0).toLocaleString()+(tenant.rentType==='annual'?' (연 1회)':'')+'</span></div>';
             if (tenant.managementFee>0) html += '<div class="td-info-row"><span class="td-info-label">🏠 관리비</span><span class="td-info-value">₩'+(tenant.managementFee||0).toLocaleString()+'</span></div>';
             if ((tenant.cleaningFee||0)>0) html += '<div class="td-info-row"><span class="td-info-label">🧹 청소비</span><span class="td-info-value">₩'+(tenant.cleaningFee||0).toLocaleString()+'</span></div>';
-<<<<<<< Updated upstream
             if (tenant.residentId) html += '<div class="td-info-row"><span class="td-info-label">🪪 주민번호</span><span class="td-info-value">'+escapeHTML(tenant.residentId)+'</span></div>';
             if (tenant.depositRefunded) {
                 html += '<div class="td-deposit-ok">✅ 보증금 반환 완료 '+escapeHTML('('+(tenant.depositRefundDate||'날짜 미기록')+')')+'</div>';
-=======
-            if (tenant.residentId) html += '<div class="td-info-row"><span class="td-info-label">🪪 주민번호</span><span class="td-info-value">'+tenant.residentId+'</span></div>';
-            if (tenant.depositRefunded) {
-                html += '<div class="td-deposit-ok">✅ 보증금 반환 완료 ('+(tenant.depositRefundDate||'날짜 미기록')+')</div>';
->>>>>>> Stashed changes
             }
             html += '</div></div>';
 
@@ -5073,21 +5013,12 @@
                 card.innerHTML =
                     '<div class="tc-past-header">' +
                         '<div>' +
-<<<<<<< Updated upstream
                             '<div class="tc-past-name">' + escapeHTML(t.name) + '</div>' +
                             '<div class="tc-past-room">🏢 ' + escapeHTML((bldName ? bldName + ' ' : '') + roomNum) + '</div>' +
                         '</div>' +
                         '<span class="tc-past-badge">' + badgeText + '</span>' +
                     '</div>' +
                     '<div class="tc-past-dates">📅 ' + escapeHTML(start) + ' ~ ' + escapeHTML(end) + '</div>' +
-=======
-                            '<div class="tc-past-name">' + t.name + '</div>' +
-                            '<div class="tc-past-room">🏢 ' + (bldName ? bldName + ' ' : '') + roomNum + '</div>' +
-                        '</div>' +
-                        '<span class="tc-past-badge">' + badgeText + '</span>' +
-                    '</div>' +
-                    '<div class="tc-past-dates">📅 ' + start + ' ~ ' + end + '</div>' +
->>>>>>> Stashed changes
                     (t.deposit > 0 ? '<div style="margin-top:8px;font-size:12px;color:#6B7280;">🏦 보증금 ₩' + t.deposit.toLocaleString() + (t.depositRefunded ? ' <span style="color:#16A34A;font-weight:700;">반환완료</span>' : ' <span style="color:#DC2626;font-weight:700;">미반환</span>') + '</div>' : '') +
                     (isExpiredActive ? '<div style="margin-top:10px;"><button class="tc-btn-outline" style="width:100%;" data-tid="' + t.id + '">계약 갱신</button></div>' : '');
                 if (isExpiredActive) {
