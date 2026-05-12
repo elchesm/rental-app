@@ -3949,6 +3949,12 @@
             });
         }
         // ============ DASHBOARD ============
+        function openRentTenantDetailFromUnpaid(tenantId) {
+            if (!tenantId) { showToast('⚠️ 세입자 정보를 찾을 수 없습니다'); return; }
+            closeModal('dashboardDetailModal');
+            switchPage('rentPage');
+            showTenantDetail(tenantId);
+        }
         function showUnpaidDetail(monthStr) {
             monthStr = monthStr || getMonthStr(new Date());
             const unpaidRents = appData.rents.filter(r => r.month === monthStr && (r.status === 'pending' || r.status === 'overdue') && (!r.type || r.type === 'monthly'));
@@ -3972,7 +3978,7 @@
                         <div class="list-item" style="border-bottom:1px solid var(--border-color);">
                             <div class="list-item-avatar" style="background:#fee2e2;color:#991b1b;font-size:18px;">✕</div>
                             <div class="list-item-content">
-                                <div class="list-item-title">${tenant?.name || '세입자 미상'}</div>
+                                <button type="button" class="list-item-title" onclick="openRentTenantDetailFromUnpaid('${rent.tenantId}')" style="display:inline;padding:0;border:none;background:none;color:var(--primary);font:inherit;font-weight:800;text-align:left;cursor:pointer;text-decoration:underline;text-underline-offset:3px;">${tenant?.name || '세입자 미상'}</button>
                                 <div class="list-item-subtitle">${building?.name || ''} ${room?.roomNumber || ''}호 · ${rent.month}</div>
                             </div>
                             <div class="list-item-right">
