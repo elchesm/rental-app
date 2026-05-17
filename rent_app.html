@@ -1537,7 +1537,18 @@
                     </div>
                 </div>
 
-                <!-- ④ 공실 현황 -->
+                <!-- ④ 보증금 미반환 -->
+                <div class="dash-section" id="depositPendingSection" style="display:none;margin-top:14px;">
+                    <div class="dash-section-header">
+                        <span class="dash-section-label">🏦 보증금 미반환</span>
+                        <span class="dash-section-more" onclick="switchPage('tenantsPage')">세입자 목록 ›</span>
+                    </div>
+                    <div class="info-card-wrap">
+                        <div id="depositPendingList"></div>
+                    </div>
+                </div>
+
+                <!-- ⑤ 공실 현황 -->
                 <div class="dash-section" id="vacantSectionNew" style="display:none;margin-top:14px;">
                     <div class="dash-section-header">
                         <span class="dash-section-label">🏠 공실 현황</span>
@@ -1612,9 +1623,17 @@
                     <span class="tc-search-icon">🔍</span>
                     <input type="text" id="tenantSearch" placeholder="이름 또는 방번호로 검색" oninput="renderTenants()" style="-webkit-user-select:text;user-select:text;">
                 </div>
-                <div class="tc-tab-bar">
-                    <button id="tabCurrentTenant" class="tc-tab-btn active" onclick="showTenantSection('current')">현재 세입자</button>
-                    <button id="tabPastTenant" class="tc-tab-btn" onclick="showTenantSection('past')">과거 세입자</button>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:0 12px;margin-bottom:4px;">
+                    <div class="tc-tab-bar" style="margin:0;flex:1;">
+                        <button id="tabCurrentTenant" class="tc-tab-btn active" onclick="showTenantSection('current')">현재 세입자</button>
+                        <button id="tabPastTenant" class="tc-tab-btn" onclick="showTenantSection('past')">과거 세입자</button>
+                    </div>
+                    <select id="tenantSortSel" onchange="renderTenants()" style="margin-left:8px;padding:5px 8px;font-size:12px;border:1px solid var(--border-color);border-radius:8px;background:white;color:var(--text-secondary);cursor:pointer;flex-shrink:0;">
+                        <option value="name">이름순</option>
+                        <option value="rent_desc">월세↓</option>
+                        <option value="rent_asc">월세↑</option>
+                        <option value="end_asc">만료임박순</option>
+                    </select>
                 </div>
                 <div id="currentTenantSection">
                     <div id="tenantsList"></div>
@@ -3023,7 +3042,16 @@
                 container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">👥</div><p>현재 세입자가 없습니다</p><button class="btn btn-primary" style="margin-top:16px;" onclick="openModal(\'addTenantModal\')">+ 세입자 추가</button></div>';
                 return;
             }
+            var _sortSel = document.getElementById('tenantSortSel');
+            var _sortMode = _sortSel ? _sortSel.value : 'name';
             allTenants.sort(function(a, b) {
+                if (_sortMode === 'rent_desc') return ((b.monthlyRent||0)+(b.managementFee||0)) - ((a.monthlyRent||0)+(a.managementFee||0));
+                if (_sortMode === 'rent_asc')  return ((a.monthlyRent||0)+(a.managementFee||0)) - ((b.monthlyRent||0)+(b.managementFee||0));
+                if (_sortMode === 'end_asc') {
+                    var ea = a.contractEnd || '9999-99', eb = b.contractEnd || '9999-99';
+                    return ea.localeCompare(eb);
+                }
+                // 기본: 건물명 → 호수순
                 var bA = (appData.buildings.find(function(x){return x.id===a.buildingId;})||{}).name||'';
                 var bB = (appData.buildings.find(function(x){return x.id===b.buildingId;})||{}).name||'';
                 if (bA !== bB) return bA.localeCompare(bB);
@@ -5887,7 +5915,42 @@
                 }
 
                 /* ────────────────────────────────────────────────
-                   ⑦ 공실 현황 카드
+                   ⑦ 보증금 미반환 카드
+                ──────────────────────────────────────────────── */
+                var todayStr = today.toISOString().split('T')[0];
+                var depositPendingSection = document.getElementById('depositPendingSection');
+                var depositPendingList    = document.getElementById('depositPendingList');
+                var depositPendingTenants = (appData.tenants || []).filter(function(t) {
+                    if (!t.deposit || t.deposit <= 0) return false;
+                    if (t.depositRefunded) return false;
+                    // 계약 종료일이 오늘 이전인 세입자만
+                    return t.contractEnd && t.contractEnd < todayStr;
+                });
+                if (depositPendingSection) {
+                    if (depositPendingTenants.length > 0) {
+                        depositPendingSection.style.display = '';
+                        if (depositPendingList) {
+                            depositPendingList.innerHTML = depositPendingTenants.map(function(t) {
+                                var room = (appData.rooms || []).find(function(r) { return r.id === t.roomId; });
+                                var b    = (appData.buildings || []).find(function(bl) { return bl.id === t.buildingId; });
+                                var loc  = (b ? b.name + ' ' : '') + (room ? room.roomNumber + '호 ' : '');
+                                return '<div class="info-row" onclick="showTenantDetail(\'' + t.id + '\')" style="cursor:pointer;">' +
+                                    '<div class="info-row-left">' +
+                                    '<span class="info-row-room">' + t.name + '</span>' +
+                                    '<div class="info-row-desc">' + loc + '· ₩' + (t.deposit || 0).toLocaleString() + '</div>' +
+                                    '</div>' +
+                                    '<div class="info-row-right">' +
+                                    '<span class="info-row-badge ibadge-warning">미반환</span>' +
+                                    '</div></div>';
+                            }).join('');
+                        }
+                    } else {
+                        depositPendingSection.style.display = 'none';
+                    }
+                }
+
+                /* ────────────────────────────────────────────────
+                   ⑧ 공실 현황 카드
                 ──────────────────────────────────────────────── */
                 var vacantSectionNew = document.getElementById('vacantSectionNew');
                 var vacantListNew    = document.getElementById('vacantListNew');
