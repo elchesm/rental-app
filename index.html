@@ -1161,7 +1161,6 @@
             font-size: 13px; font-weight: 900; margin-top: 2px;
         }
         .chip-icon-ok  { background: #16A34A; color: white; }
-        .chip-icon-warn { background: #DC2626; color: white; }
         .unpaid-chip.chip-all-paid {
             background: var(--success-light); border-color: #86EFAC;
         }
@@ -1183,6 +1182,15 @@
         .chip-current .chip-month-label { color: var(--primary); }
         .chip-status-text {
             font-size: 11px; font-weight: 600; display: block; line-height: 1.3;
+        }
+        .chip-unpaid-names {
+            width: 100%; display: flex; flex-direction: column; gap: 2px;
+            margin-top: 1px; font-size: 10px; font-weight: 800;
+            line-height: 1.25; color: #991B1B;
+        }
+        .chip-unpaid-name {
+            display: block; max-width: 92px; overflow: hidden;
+            text-overflow: ellipsis; white-space: nowrap;
         }
         .chip-all-paid .chip-status-text { color: #059669; }
         .chip-has-unpaid .chip-status-text { color: #DC2626; }
@@ -5481,7 +5489,8 @@
                         var hStr = hy + '-' + String(hm).padStart(2, '0');
                         var hRents = (appData.rents || []).filter(function(r) { return r.month === hStr; });
                         var hPaid  = hRents.filter(function(r) { return r.status === 'paid'; }).length;
-                        var hUnpaid = hRents.filter(function(r) { return (r.status === 'pending' || r.status === 'overdue') && (!r.type || r.type === 'monthly'); }).length;
+                        var hUnpaidRents = hRents.filter(function(r) { return (r.status === 'pending' || r.status === 'overdue') && (!r.type || r.type === 'monthly'); });
+                        var hUnpaid = hUnpaidRents.length;
                         historyUnpaidTotal += hUnpaid;
                         var hTotal = hRents.length;
                         var isCurr = (mi === 0);
@@ -5504,15 +5513,20 @@
                             statusText = hPaid + '/' + hTotal;
                         }
 
+                        var unpaidNamesHtml = hUnpaidRents.length > 0
+                            ? '<span class="chip-unpaid-names">' + hUnpaidRents.map(function(r) {
+                                var tenant = (appData.tenants || []).find(function(t) { return t.id === r.tenantId; });
+                                return '<span class="chip-unpaid-name">' + escapeHTML(tenant && tenant.name ? tenant.name : '세입자 미상') + '</span>';
+                            }).join('') + '</span>'
+                            : '';
                         var chipIcon = hUnpaid === 0 && hPaid > 0
                             ? '<div class="chip-icon-circle chip-icon-ok">✓</div>'
-                            : hUnpaid > 0
-                            ? '<div class="chip-icon-circle chip-icon-warn">!</div>'
                             : '';
                         chips.push(
                             '<div class="unpaid-chip ' + chipClass + '" role="button" tabindex="0" aria-label="' + hStr + ' 미납 현황 보기" onclick="showUnpaidDetail(\'' + hStr + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();showUnpaidDetail(\'' + hStr + '\');}">' +
                             '<span class="chip-month-label">' + hm + '월</span>' +
                             '<span class="chip-status-text">' + statusText + '</span>' +
+                            unpaidNamesHtml +
                             chipIcon +
                             '</div>'
                         );
