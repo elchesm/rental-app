@@ -417,7 +417,11 @@
             border: 1px solid #EAECF4;
             box-shadow: 0 1px 4px rgba(0,0,0,0.05);
             opacity: 0.8;
+            transition: opacity 0.15s, box-shadow 0.15s, transform 0.12s;
+            -webkit-tap-highlight-color: transparent;
         }
+        .tc-past-card:hover { opacity: 1; box-shadow: 0 3px 12px rgba(0,0,0,0.10); }
+        .tc-past-card:active { transform: scale(0.98); opacity: 0.9; }
         .tc-past-header {
             display: flex; align-items: center; justify-content: space-between;
             margin-bottom: 10px;
@@ -547,7 +551,11 @@
             color: #2563EB; cursor: pointer; border-top: 1px solid #F1F5F9;
             background: none; border-left: none; border-right: none; border-bottom: none;
             width: 100%; touch-action: manipulation;
+            transition: background 0.15s;
+            -webkit-tap-highlight-color: transparent;
         }
+        .td-rent-history-btn:active { background: #EFF6FF; }
+        .td-rent-history-btn.expanded { color: #6B7280; background: #F8FAFC; }
         /* Deposit refund badge */
         .td-deposit-ok { background: #DCFCE7; color: #166534; border-radius: 10px; padding: 8px 12px; margin: 8px 10px; font-size: 13px; font-weight: 700; }
         /* Bottom action bar */
@@ -2000,6 +2008,60 @@
             <div id="dashboardDetailContent" style="padding-bottom:8px;"></div>
         </div>
     </div>
+    <div class="modal-overlay" id="renewContractModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>계약 갱신</h2>
+                <button class="modal-close" onclick="closeModal('renewContractModal')">✕</button>
+            </div>
+            <div style="padding:0 16px 8px;">
+                <p id="renewModalTenantName" style="margin:0 0 20px;color:#6b7280;font-size:14px;"></p>
+                <div class="form-group">
+                    <label>신규 시작일</label>
+                    <input type="date" id="renewStart">
+                </div>
+                <div class="form-group">
+                    <label>만료일</label>
+                    <input type="date" id="renewEnd">
+                </div>
+                <div class="form-group">
+                    <label>월 임대료 (원)</label>
+                    <input type="number" id="renewRent" min="0">
+                </div>
+                <div class="form-group">
+                    <label>관리비 (원)</label>
+                    <input type="number" id="renewFee" min="0">
+                </div>
+                <input type="hidden" id="renewTenantId">
+                <div style="display:flex;gap:10px;margin-top:8px;">
+                    <button type="button" class="btn btn-secondary" style="flex:1;" onclick="closeModal('renewContractModal')">취소</button>
+                    <button type="button" class="btn btn-primary" style="flex:2;" onclick="submitRenewal()">갱신 저장</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 공용 확인 다이얼로그 -->
+    <div class="modal-overlay" id="appConfirmModal" style="z-index:99999;">
+        <div class="modal-content" style="max-width:360px;padding:28px 24px 20px;">
+            <p id="appConfirmMsg" style="font-size:15px;line-height:1.6;color:#1F2937;white-space:pre-line;margin:0 0 24px;"></p>
+            <div style="display:flex;gap:10px;">
+                <button class="btn btn-secondary" style="flex:1;" onclick="_appConfirmResolve(false)">취소</button>
+                <button id="appConfirmOkBtn" class="btn btn-danger" style="flex:1;" onclick="_appConfirmResolve(true)">확인</button>
+            </div>
+        </div>
+    </div>
+    <!-- 보증금 반환일 입력 모달 -->
+    <div class="modal-overlay" id="depositRefundModal" style="z-index:99999;">
+        <div class="modal-content" style="max-width:360px;padding:28px 24px 20px;">
+            <h3 style="margin:0 0 16px;font-size:17px;">보증금 반환 처리</h3>
+            <label style="font-size:14px;color:#6B7280;display:block;margin-bottom:6px;">반환일</label>
+            <input type="date" id="depositRefundDateInput" class="form-input" style="width:100%;margin-bottom:20px;">
+            <div style="display:flex;gap:10px;">
+                <button class="btn btn-secondary" style="flex:1;" onclick="closeModal('depositRefundModal')">취소</button>
+                <button class="btn btn-primary" style="flex:1;" onclick="_submitDepositRefund()">저장</button>
+            </div>
+        </div>
+    </div>
     <div class="td-overlay" id="tenantDetailModal">
         <div class="td-header">
             <button class="td-back-btn" onclick="closeModal('tenantDetailModal')">‹</button>
@@ -2053,7 +2115,8 @@
         let account = null;
         // ============ STORAGE ============
         function cleanupInvalidRents() {
-            // 입주일 이전에 잘못 생성된 pending monthly 레코드 삭제
+            // 입주일 이전 또는 계약종료 이후에 잘못 생성된 pending monthly 레코드 삭제
+            const before = appData.rents.length;
             appData.rents = appData.rents.filter(r => {
                 if (r.type !== 'monthly' && r.type !== undefined && r.type !== '') return true;
                 if (!r.month) return true;
@@ -2071,6 +2134,7 @@
                 if (tEnd && r.month > tEnd && (r.status === 'pending' || r.status === 'overdue')) return false; // 퇴실 후 미납 레코드 제거
                 return true;
             });
+            return appData.rents.length < before; // 실제로 제거된 레코드가 있으면 true
         }
         function loadData() {
             const stored = localStorage.getItem('appData');
@@ -2142,7 +2206,12 @@
             // 변경 요약은 _syncPrevSaveSnapshot() 전에 생성해야 이전 상태와 비교 가능
             var _clSummary = _generateChangeSummary();
             _stampChangedRecordsSinceLastSave();
-            localStorage.setItem('appData', JSON.stringify(appData));
+            try {
+                localStorage.setItem('appData', JSON.stringify(appData));
+            } catch (e) {
+                showToast('⚠️ 저장 공간이 부족합니다. 오래된 사진 첨부를 삭제해 주세요.', 4000);
+                console.error('localStorage 저장 실패:', e);
+            }
             if (_db) {
                 // Firebase 실시간 동기화 (디바운스: 연속 저장 시 1초 후 한 번만)
                 clearTimeout(_fbDebounceTimer);
@@ -2183,6 +2252,12 @@
             _modalZBase++;
             el.style.zIndex = _modalZBase;
             el.classList.add('active');
+            if (document.body.style.overflow !== 'hidden') {
+                document.body._savedScrollY = window.scrollY;
+            }
+            document.body.style.overflow = 'hidden'; // 배경 스크롤 방지
+            // Android 하드웨어 뒤로가기를 모달 닫기로 처리
+            history.pushState({ modal: modalId }, '');
             editingId = null;
             editingType = null;
             if (modalId === 'addBuildingModal') {
@@ -2218,6 +2293,13 @@
             if (!el) return;
             el.classList.remove('active');
             el.style.zIndex = '';
+            // 열린 모달이 하나도 없으면 배경 스크롤 복원
+            const anyOpen = document.querySelectorAll('.modal-overlay.active, .td-overlay.active').length > 0;
+            if (!anyOpen) {
+                document.body.style.overflow = '';
+                const sy = document.body._savedScrollY;
+                if (sy != null) { window.scrollTo(0, sy); document.body._savedScrollY = null; }
+            }
         }
         // 방 모달 닫기 – 건물 상세에서 열었으면 건물 상세로 복귀
         function closeRoomModalWithBack() {
@@ -2250,7 +2332,7 @@
                 renderTenants();
             }
             else if (pageId === 'rentPage') renderRents();
-            else if (pageId === 'expensesPage') { loadExpenseFilterRooms(); renderExpenses(); }
+            else if (pageId === 'expensesPage') { _selectedExpenseRooms.clear(); loadExpenseFilterRooms(); renderExpenses(); }
             else if (pageId === 'dashboardPage') renderDashboard();
             else if (pageId === 'settingsPage') _updateFirebaseSettingsUI();
         }
@@ -2344,29 +2426,30 @@
             document.getElementById('buildingRoomsSection').style.display = 'none';
         }
         function deleteBuilding() {
-            if (confirm('건물을 삭제하면 해당 건물의 방, 세입자, 수납기록, 지출기록이 모두 삭제됩니다.\n정말 삭제하시겠습니까?')) {
+            const _bid = editingId;
+            showConfirm('건물을 삭제하면 해당 건물의 방, 세입자, 수납기록, 지출기록이 모두 삭제됩니다.\n정말 삭제하시겠습니까?', function() {
                 const deletedRoomIds = appData.rooms
-                    .filter(r => r.buildingId === editingId)
+                    .filter(r => r.buildingId === _bid)
                     .map(r => r.id);
-                // 고아 데이터 일괄 삭제
                 appData.tenants  = appData.tenants.filter(t => !deletedRoomIds.includes(t.roomId));
                 appData.rents    = appData.rents.filter(r => !deletedRoomIds.includes(r.roomId));
-                appData.expenses = appData.expenses.filter(e => e.buildingId !== editingId);
-                appData.rooms    = appData.rooms.filter(r => r.buildingId !== editingId);
-                appData.buildings = appData.buildings.filter(b => b.id !== editingId);
+                appData.expenses = appData.expenses.filter(e => e.buildingId !== _bid);
+                appData.rooms    = appData.rooms.filter(r => r.buildingId !== _bid);
+                appData.buildings = appData.buildings.filter(b => b.id !== _bid);
+                currentBuildingId = null;
                 saveData();
                 closeModal('addBuildingModal');
                 renderBuildings();
                 renderDashboard();
                 showToast('건물 및 관련 데이터가 모두 삭제되었습니다');
-            }
+            });
         }
         function renderBuildings() {
             const container = document.getElementById('buildingsList');
             if (!container) return; // 건물 페이지 없으면 무시
             container.innerHTML = '';
             if (appData.buildings.length === 0) {
-                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🏢</div><p>등록된 건물이 없습니다</p></div>';
+                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🏢</div><p>등록된 건물이 없습니다</p><button class="btn btn-primary" style="margin-top:16px;" onclick="openModal(\'addBuildingModal\')">+ 건물 추가</button></div>';
                 return;
             }
             appData.buildings.forEach(building => {
@@ -2555,19 +2638,22 @@
             document.getElementById('deleteRoomBtn').style.display = 'block';
         }
         function deleteRoom() {
-            if (confirm('방을 삭제하면 해당 방의 세입자와 수납 기록도 모두 삭제됩니다.\n정말 삭제하시겠습니까?')) {
-                const deletedRoomId = editingId;
-                appData.rooms    = appData.rooms.filter(r => r.id !== deletedRoomId);
-                appData.tenants  = appData.tenants.filter(t => t.roomId !== deletedRoomId);
-                appData.rents    = appData.rents.filter(r => r.roomId !== deletedRoomId);
-                appData.expenses = appData.expenses.filter(e => e.roomId !== deletedRoomId);
+            const _rid = editingId;
+            showConfirm('방을 삭제하면 해당 방의 세입자, 수납 기록, 지출 기록이 모두 삭제됩니다.\n정말 삭제하시겠습니까?', function() {
+                const deletedTenantIds = appData.tenants
+                    .filter(t => t.roomId === _rid)
+                    .map(t => t.id);
+                appData.rooms    = appData.rooms.filter(r => r.id !== _rid);
+                appData.tenants  = appData.tenants.filter(t => t.roomId !== _rid);
+                appData.rents    = appData.rents.filter(r => r.roomId !== _rid && !deletedTenantIds.includes(r.tenantId));
+                appData.expenses = appData.expenses.filter(e => e.roomId !== _rid);
                 saveData();
                 closeModal('addRoomModal');
                 renderBuildings();
                 renderDashboard();
                 if (currentBuildingId) showBuildingDetail(currentBuildingId);
                 showToast('방 및 관련 데이터가 삭제되었습니다');
-            }
+            });
         }
         // ============ TENANTS ============
         function clearTenantForm() {
@@ -2692,6 +2778,11 @@
             const rentType = document.getElementById('tenantRentType').value || 'monthly';
             if (!roomId) { showToast('⚠️ 호수를 선택해주세요'); return; }
             if (!tenantName) { showToast('⚠️ 세입자 이름을 입력해주세요'); return; }
+            const _cs = document.getElementById('tenantContractStart').value;
+            const _ce = document.getElementById('tenantContractEnd').value;
+            if (_cs && _ce && _cs >= _ce) { showToast('⚠️ 계약 종료일이 시작일보다 나중이어야 합니다'); return; }
+            const _rentVal = parseInt(document.getElementById('tenantRent').value);
+            if (isNaN(_rentVal) || _rentVal < 0) { showToast('⚠️ 올바른 월세 금액을 입력해주세요'); return; }
             const tenantData = {
                 id: editingId || Date.now().toString(),
                 roomId: roomId,
@@ -2720,6 +2811,11 @@
                 const oldTenant = appData.tenants.find(t => t.id === editingId);
                 const oldRoomId = oldTenant ? oldTenant.roomId : null;
                 const index = appData.tenants.findIndex(t => t.id === editingId);
+                // 월세 금액 변경 시 기존 미납 기록은 자동 변경되지 않음을 안내
+                if (oldTenant && (oldTenant.monthlyRent !== tenantData.monthlyRent || (oldTenant.managementFee || 0) !== (tenantData.managementFee || 0))) {
+                    const hasExisting = appData.rents.some(r => r.tenantId === editingId && (!r.type || r.type === 'monthly') && (r.status === 'pending' || r.status === 'overdue'));
+                    if (hasExisting) showToast('⚠️ 월세 금액이 변경되었습니다. 기존 미납 기록은 수동으로 수정해 주세요.', 4000);
+                }
                 appData.tenants[index] = tenantData;
                 // 호실이 변경된 경우: 이전 방 → 공실, 새 방 → 입주중
                 if (oldRoomId && oldRoomId !== roomId) {
@@ -2769,7 +2865,9 @@
             document.getElementById('tenantRentType').value = tenant.rentType || 'monthly';
             toggleRentTypeFields();
             document.getElementById('tenantName').value = tenant.name;
-            document.getElementById('tenantResidentId').value = tenant.residentId || '';
+            const _ridEl = document.getElementById('tenantResidentId');
+            _ridEl.value = tenant.residentId || '';
+            formatResidentId(_ridEl);
             document.getElementById('tenantPhone').value = tenant.phone;
             document.getElementById('tenantBirthday').value = tenant.birthday || '';
             document.getElementById('tenantOccupation').value = tenant.occupation || '';
@@ -2787,20 +2885,24 @@
             document.getElementById('deleteTenantBtn').style.display = 'block';
         }
         function deleteTenant() {
-            if (confirm('정말 삭제하시겠습니까?')) {
-                const tenant = appData.tenants.find(t => t.id === editingId);
+            const _tid = editingId;
+            showConfirm('세입자를 삭제하면 관련 수납 기록도 모두 삭제됩니다.\n정말 삭제하시겠습니까?', function() {
+                const tenant = appData.tenants.find(t => t.id === _tid);
                 if (!tenant) { showToast('오류: 세입자를 찾을 수 없습니다'); return; }
-                const deletedTenantId = editingId;
-                appData.tenants = appData.tenants.filter(t => t.id !== deletedTenantId);
-                appData.rents = appData.rents.filter(r => r.tenantId !== deletedTenantId);
-                // 방 상태를 공실로 변경
-                const room = appData.rooms.find(r => r.id === tenant.roomId);
-                if (room) room.status = 'vacant';
+                const roomId = tenant.roomId;
+                appData.tenants = appData.tenants.filter(t => t.id !== _tid);
+                appData.rents = appData.rents.filter(r => r.tenantId !== _tid);
+                const stillOccupied = appData.tenants.some(t => t.roomId === roomId && t.status === 'active');
+                if (!stillOccupied) {
+                    const room = appData.rooms.find(r => r.id === roomId);
+                    if (room) room.status = 'vacant';
+                }
                 saveData();
                 closeModal('addTenantModal');
                 renderTenants();
+                renderDashboard();
                 showToast('세입자가 삭제되었습니다');
-            }
+            });
         }
         function _calcAge(birthday) {
             if (!birthday) return null;
@@ -2838,7 +2940,7 @@
                 });
             }
             if (allTenants.length === 0) {
-                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">👥</div><p>현재 세입자가 없습니다</p></div>';
+                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">👥</div><p>현재 세입자가 없습니다</p><button class="btn btn-primary" style="margin-top:16px;" onclick="openModal(\'addTenantModal\')">+ 세입자 추가</button></div>';
                 return;
             }
             allTenants.sort(function(a, b) {
@@ -2922,27 +3024,8 @@
                 container.appendChild(card);
             });
         }
-        function filterTenants(filter) {
-            currentTenantFilter = filter;
-            document.querySelectorAll('#tenantsPage .tab-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            renderTenants();
-        }
         function refundDeposit(tenantId) {
-            const tenant = appData.tenants.find(t => t.id === tenantId);
-            if (!tenant) return;
-            const today = new Date().toISOString().split('T')[0];
-            const refundDate = prompt('보증금 반환일을 입력하세요 (예: ' + today + ')', today);
-            if (refundDate === null) return; // 취소
-            const index = appData.tenants.findIndex(t => t.id === tenantId);
-            appData.tenants[index].depositRefunded = true;
-            appData.tenants[index].depositRefundDate = refundDate;
-            saveData();
-            showToast('✅ 보증금 반환 완료 처리되었습니다 (₩' + tenant.deposit.toLocaleString() + ')');
-            renderTenants();
-            renderDashboard();
-            // refresh the detail view if it's still open
-            if (_currentDetailTenantId === tenantId) { showTenantDetail(tenantId); }
+            refundDepositModal(tenantId);
         }
         function addCleaningFeeRecord(tenantId) {
             const tenant = appData.tenants.find(t => t.id === tenantId);
@@ -3042,7 +3125,7 @@
             html += '<div class="td-hero-info">';
             html += '<div class="td-hero-name">'+safeTenantName+'</div>';
             if (tenant.phone) html += '<div class="td-hero-contact"><span>📱</span>'+safePhone+'</div>';
-            if (tenant.email) html += '<div class="td-hero-contact"><span>✉️</span>'+safeEmail+'</div>';
+            if (tenant.email) html += '<div class="td-hero-contact"><span>✉️</span><a href="mailto:'+safeEmail+'" style="color:inherit;text-decoration:none;">'+safeEmail+'</a></div>';
             if (tenant.birthday) { var _age=_calcAge(tenant.birthday); html += '<div class="td-hero-contact"><span>👤</span>'+_fmtDate(tenant.birthday)+(_age!==null?' (만 '+_age+'세)':'')+'</div>'; }
             if (tenant.occupation) html += '<div class="td-hero-contact"><span>📋</span>'+safeOccupation+'</div>';
             html += '</div>';
@@ -3179,12 +3262,11 @@
             const el = document.getElementById('tdRentHistory');
             if (!el) return;
             const btn = document.querySelector('.td-rent-history-btn');
-            if (el.style.display==='none') {
-                el.style.display='block';
-                if (btn) btn.innerHTML = '접기 <span>∧</span>';
-            } else {
-                el.style.display='none';
-                if (btn) btn.innerHTML = '전체 수납 내역 보기 <span>›</span>';
+            const isOpen = el.style.display !== 'none';
+            el.style.display = isOpen ? 'none' : 'block';
+            if (btn) {
+                btn.innerHTML = isOpen ? '전체 수납 내역 보기 <span>›</span>' : '접기 <span>∧</span>';
+                btn.classList.toggle('expanded', !isOpen);
             }
         }
         // ============ UTILS ============
@@ -3248,7 +3330,7 @@
                 buildingId: tenant.buildingId,
                 month: month,
                 amount: tenant.monthlyRent + (tenant.managementFee || 0),
-                rentAmount: tenant.monthlyRent,
+                rentAmount: tenant.monthlyRent || 0,
                 managementFee: tenant.managementFee || 0,
                 paidDate: null,
                 status: 'pending',
@@ -3256,7 +3338,10 @@
             });
             return true;
         }
+        let _generatingMonthlyRents = false;
         function generateAllMonthlyRents() {
+            if (_generatingMonthlyRents) return;
+            _generatingMonthlyRents = true;
             const month = getMonthStr(new Date());
             let created = 0;
             let skippedEnded = 0;
@@ -3278,11 +3363,16 @@
             } else {
                 showToast('이미 생성된 월세 기록이 있습니다');
             }
+            _generatingMonthlyRents = false;
         }
-        let _markRentSourceTenantId = null; // 세입자 상세에서 열렸을 때 재오픈용
+        let _markRentSourceTenantId = null;
+        let _markRentOpening = false; // 이중 탭 방지 플래그
         function markRentPaid(rentId) {
+            if (_markRentOpening) return;
+            _markRentOpening = true;
+            setTimeout(() => { _markRentOpening = false; }, 600);
             const rent = appData.rents.find(r => r.id === rentId);
-            if (!rent) { showToast('⚠️ 수납 기록을 찾을 수 없습니다'); return; }
+            if (!rent) { showToast('⚠️ 수납 기록을 찾을 수 없습니다'); _markRentOpening = false; return; }
             const tenant = appData.tenants.find(t => t.id === rent.tenantId);
             // 세입자 상세 모달에서 열렸는지 기록 (저장 후 재오픈)
             const tenantModal = document.getElementById('tenantDetailModal');
@@ -3317,7 +3407,9 @@
             const rent = appData.rents.find(r => r.id === editingId);
             if (!rent) { showToast('오류: 수납 기록을 찾을 수 없습니다'); return; }
             const fromTenantId = _markRentSourceTenantId; // 저장 전에 캡처
-            rent.amount = parseInt(document.getElementById('rentAmount').value);
+            const _rentAmt = parseInt(document.getElementById('rentAmount').value);
+            if (isNaN(_rentAmt) || _rentAmt < 0) { showToast('⚠️ 올바른 금액을 입력해주세요'); return; }
+            rent.amount = _rentAmt;
             rent.paidDate = document.getElementById('rentPaidDate').value;
             rent.status = document.getElementById('rentStatus').value;
             rent.memo = document.getElementById('rentMemo').value;
@@ -3329,6 +3421,7 @@
                 showTenantDetail(fromTenantId);
             }
             renderRents();
+            renderTenants();
             renderDashboard();
             showToast('수납 기록이 저장되었습니다');
         }
@@ -3395,7 +3488,7 @@
                 renderRentSummary([], currentYear);
                 container.innerHTML = rentSearchQuery
                     ? '<div class="empty-state"><div class="empty-state-icon">🔍</div><p>검색 결과가 없습니다</p></div>'
-                    : '<div class="empty-state"><div class="empty-state-icon">💰</div><p>입주 중인 세입자가 없습니다</p></div>';
+                    : '<div class="empty-state"><div class="empty-state-icon">💰</div><p>입주 중인 세입자가 없습니다</p><button class="btn btn-primary" style="margin-top:16px;" onclick="switchPage(\'tenantsPage\')">세입자 관리로 이동</button></div>';
                 return;
             }
             renderRentSummary(activeTenants, currentYear);
@@ -3427,7 +3520,7 @@
                         <div class="rent-year-card-header">
                             <div>
                                 <div class="rent-year-card-name">${escapeHTML(tenant.name)}</div>
-                                <div class="rent-year-card-sub">${escapeHTML(building?.name ?? '-')} ${escapeHTML(room?.roomNumber ?? '-')}호 · ₩${tenant.monthlyRent.toLocaleString()}/년 · 납부월: ${renewalMM}월</div>
+                                <div class="rent-year-card-sub">${escapeHTML(building?.name ?? '-')} ${escapeHTML(room?.roomNumber ?? '-')}호 · ₩${(tenant.monthlyRent || 0).toLocaleString()}/년 · 납부월: ${renewalMM}월</div>
                             </div>
                             <div>
                                 ${isPaid
@@ -3473,7 +3566,7 @@
                     tenants.forEach(tenant => {
                         const monthlyAmount = tenant.monthlyRent + (tenant.managementFee || 0);
                         const rentMap = {};
-                        appData.rents.filter(r => r.tenantId === tenant.id && (!r.type || r.type === 'monthly') && r.month.startsWith(currentYear + '-'))
+                        appData.rents.filter(r => r.tenantId === tenant.id && (!r.type || r.type === 'monthly') && r.month && r.month.startsWith(currentYear + '-'))
                             .forEach(r => { rentMap[r.month] = r; });
                         let paidCount = 0, pendingCount = 0;
                         const _mi2 = (tenant.moveInDate || '').slice(0,7);
@@ -3798,13 +3891,14 @@
             renderReceiptPreviews();
         }
         function deleteExpense() {
-            if (confirm('정말 삭제하시겠습니까?')) {
-                appData.expenses = appData.expenses.filter(e => e.id !== editingId);
+            const _eid = editingId;
+            showConfirm('이 지출 기록을 삭제하시겠습니까?', function() {
+                appData.expenses = appData.expenses.filter(e => e.id !== _eid);
                 saveData();
                 closeModal('addExpenseModal');
                 renderExpenses();
                 showToast('지출이 삭제되었습니다');
-            }
+            });
         }
 
         function renderExpenseRoomChart(expenses) {
@@ -3895,7 +3989,7 @@
             const expSearchQuery = expSearchEl ? expSearchEl.value.trim().toLowerCase() : '';
             let filtered = appData.expenses;
             if (_selectedExpenseRooms.size > 0) {
-                filtered = filtered.filter(e => _selectedExpenseRooms.has(e.roomId));
+                filtered = filtered.filter(e => _selectedExpenseRooms.has(e.roomId) || !e.roomId);
             }
             if (expSearchQuery) {
                 filtered = filtered.filter(e =>
@@ -3926,7 +4020,7 @@
             // Render list
             container.innerHTML = '';
             if (filtered.length === 0) {
-                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📄</div><p>지출이 없습니다</p></div>';
+                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📄</div><p>지출이 없습니다</p><button class="btn btn-primary" style="margin-top:16px;" onclick="openModal(\'addExpenseModal\')">+ 지출 추가</button></div>';
                 return;
             }
             filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -4055,7 +4149,12 @@
             const monthRents = appData.rents.filter(r => r.month === monthStr);
             const paidRents = monthRents.filter(r => r.status === 'paid');
             const monthlyIncome = paidRents.reduce((sum, r) => sum + r.amount, 0);
-            const unpaidRents = appData.rents.filter(r => r.status === 'pending' || r.status === 'overdue');
+            const unpaidRents = appData.rents.filter(r => {
+                if (!((r.status === 'pending' || r.status === 'overdue') && r.month <= monthStr)) return false;
+                const t = appData.tenants.find(t => t.id === r.tenantId);
+                const tEnd = t ? (t.contractEnd || '').slice(0, 7) : '';
+                return !tEnd || r.month <= tEnd; // 계약종료 이후 월은 미납 집계 제외
+            });
             // 이번달 수입예정: 월세는 매달, 연세는 계약 시작 월에만 포함
             const thisMonth = String(today.getMonth() + 1).padStart(2, '0'); // 'MM'
             const monthlyExpected = appData.tenants
@@ -4112,21 +4211,50 @@
             } else {
                 vacantAlert.style.display = 'none';
             }
-            // Update badges
-            if (unpaidRents.length > 0) {
-                document.getElementById('dashboardBadge').textContent = unpaidRents.length;
-                document.getElementById('dashboardBadge').style.display = 'block';
-            } else {
-                document.getElementById('dashboardBadge').style.display = 'none';
-            }
-            if (unpaidRents.length > 0) {
-                document.getElementById('rentBadge').textContent = unpaidRents.length;
-                document.getElementById('rentBadge').style.display = 'block';
-            } else {
-                document.getElementById('rentBadge').style.display = 'none';
-            }
+            // 뱃지는 패치된 renderDashboard(히스토리 4개월 집계)에서 단독 관리
         }
         // ============ UTILITIES ============
+        // ── 공용 확인 다이얼로그 ──
+        let _appConfirmCallback = null;
+        function showConfirm(message, onConfirm, okLabel, isDanger) {
+            _appConfirmCallback = onConfirm;
+            document.getElementById('appConfirmMsg').textContent = message;
+            const okBtn = document.getElementById('appConfirmOkBtn');
+            okBtn.textContent = okLabel || '확인';
+            okBtn.className = isDanger === false ? 'btn btn-primary' : 'btn btn-danger';
+            openModal('appConfirmModal');
+        }
+        function _appConfirmResolve(confirmed) {
+            closeModal('appConfirmModal');
+            if (confirmed && typeof _appConfirmCallback === 'function') _appConfirmCallback();
+            _appConfirmCallback = null;
+        }
+        // ── 보증금 반환 모달 ──
+        let _depositRefundTenantId = null;
+        function refundDepositModal(tenantId) {
+            _depositRefundTenantId = tenantId;
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('depositRefundDateInput').value = today;
+            openModal('depositRefundModal');
+        }
+        function _submitDepositRefund() {
+            const refundDate = document.getElementById('depositRefundDateInput').value;
+            if (!refundDate) { showToast('⚠️ 반환일을 입력해주세요'); return; }
+            const tenantId = _depositRefundTenantId;
+            const index = appData.tenants.findIndex(t => t.id === tenantId);
+            if (index === -1) { closeModal('depositRefundModal'); return; }
+            const tenant = appData.tenants[index];
+            appData.tenants[index].depositRefunded = true;
+            appData.tenants[index].depositRefundDate = refundDate;
+            saveData();
+            closeModal('depositRefundModal');
+            showToast('✅ 보증금 반환 완료 처리되었습니다 (₩' + (tenant.deposit || 0).toLocaleString() + ')');
+            renderTenants();
+            renderDashboard();
+            if (document.getElementById('tenantDetailModal')?.classList.contains('active')) {
+                showTenantDetail(tenantId);
+            }
+        }
         function showToast(message, durationMs) {
             var ms = durationMs == null ? 2000 : durationMs;
             const toast = document.createElement('div');
@@ -4202,7 +4330,7 @@
             appData.tenants.forEach(t => {
                 const building = appData.buildings.find(b => b.id === t.buildingId);
                 const room = appData.rooms.find(r => r.id === t.roomId);
-                csv += `${t.name},${building?.name},${room?.roomNumber},${t.monthlyRent},${t.deposit},${t.contractStart},${t.contractEnd}\n`;
+                csv += `${t.name},${building?.name ?? ''},${room?.roomNumber ?? ''},${t.monthlyRent ?? ''},${t.deposit ?? ''},${t.contractStart ?? ''},${t.contractEnd ?? ''}\n`;
             });
             csv += '\n월세수납,세입자,건물,금액,월,상태\n';
             appData.rents.forEach(r => {
@@ -4686,7 +4814,7 @@
         function rollbackToSnapshot(docId, label) {
             if (!_db) { showToast('⚠️ Firebase 연결 필요'); return; }
             var msg = (label ? label + ' 시점' : '선택한 시점') + '의 데이터로 복원할까요?\n현재 상태는 이력에 자동 저장됩니다.';
-            if (!confirm(msg)) return;
+            showConfirm(msg, function() {
             _db.collection('rentalAppChangelog').doc(docId).get()
                 .then(function(doc) {
                     if (!doc.exists) { showToast('⚠️ 해당 이력을 찾을 수 없습니다'); return; }
@@ -4721,6 +4849,7 @@
                 .catch(function(e) {
                     showToast('⚠️ 복원 실패: ' + e.message);
                 });
+            }, '복원', false);
         }
 
         /** 디바운스 대기 중인 Firestore 저장을 즉시 시도 (탭 종료·백그라운드 전환 시 유실 완화) */
@@ -4954,7 +5083,10 @@
         // ============ SEARCH ============
         document.addEventListener('DOMContentLoaded', () => {
             loadData();
-            cleanupInvalidRents();
+            if (cleanupInvalidRents()) {
+                // 잘못된 레코드가 제거됐으면 localStorage에 즉시 반영 (다음 로딩 때도 깨끗하게)
+                localStorage.setItem('appData', JSON.stringify(appData));
+            }
             _syncPrevSaveSnapshot();
             renderDashboard();
             const tenantSearch = document.getElementById('tenantSearch');
@@ -4996,6 +5128,13 @@
             });
             window.addEventListener('pagehide', _flushFirestorePending);
             window.addEventListener('beforeunload', _flushFirestorePending);
+            // Android 하드웨어 뒤로가기 → 열린 모달 닫기
+            window.addEventListener('popstate', function(e) {
+                const active = document.querySelector('.modal-overlay.active, .td-overlay.active');
+                if (active) {
+                    closeModal(active.id);
+                }
+            });
             document.addEventListener('visibilitychange', function() {
                 if (document.visibilityState === 'hidden') _flushFirestorePending();
             });
@@ -5029,7 +5168,7 @@
             const today = new Date().toISOString().split('T')[0];
             const data = appData;
             const pastTenants = (appData.tenants || []).filter(function(t) {
-                return t.status !== 'active' || (t.contractEnd && t.contractEnd < today);
+                return t.status === 'inactive' || (t.status === 'active' && t.contractEnd && t.contractEnd < today);
             });
             if (pastTenants.length === 0) {
                 listEl.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📋</div><p>과거 세입자가 없습니다</p></div>';
@@ -5051,17 +5190,26 @@
                 const badgeText = t.status !== 'active' ? '퇴거' : '계약만료';
                 const card = document.createElement('div');
                 card.className = 'tc-past-card';
+                card.style.cursor = 'pointer';
                 card.innerHTML =
                     '<div class="tc-past-header">' +
-                        '<div>' +
+                        '<div style="flex:1;min-width:0;">' +
                             '<div class="tc-past-name">' + escapeHTML(t.name) + '</div>' +
                             '<div class="tc-past-room">🏢 ' + escapeHTML((bldName ? bldName + ' ' : '') + roomNum) + '</div>' +
                         '</div>' +
-                        '<span class="tc-past-badge">' + badgeText + '</span>' +
+                        '<div style="display:flex;align-items:center;gap:8px;">' +
+                            '<span class="tc-past-badge">' + badgeText + '</span>' +
+                            '<span style="color:#CBD5E1;font-size:20px;line-height:1;">›</span>' +
+                        '</div>' +
                     '</div>' +
                     '<div class="tc-past-dates">📅 ' + escapeHTML(start) + ' ~ ' + escapeHTML(end) + '</div>' +
                     (t.deposit > 0 ? '<div style="margin-top:8px;font-size:12px;color:#6B7280;">🏦 보증금 ₩' + t.deposit.toLocaleString() + (t.depositRefunded ? ' <span style="color:#16A34A;font-weight:700;">반환완료</span>' : ' <span style="color:#DC2626;font-weight:700;">미반환</span>') + '</div>' : '') +
                     (isExpiredActive ? '<div style="margin-top:10px;"><button class="tc-btn-outline" style="width:100%;" data-tid="' + t.id + '">계약 갱신</button></div>' : '');
+                // 카드 클릭 → 세부정보 보기
+                card.addEventListener('click', function(e) {
+                    if (e.target.closest('[data-tid]')) return; // 갱신 버튼은 별도 처리
+                    showTenantDetail(t.id);
+                });
                 if (isExpiredActive) {
                     card.querySelector('[data-tid]').addEventListener('click', function(e) {
                         e.stopPropagation(); openRenewModal(t.id);
@@ -5075,49 +5223,19 @@
         function openRenewModal(tenantId) {
             var tenant = (appData.tenants || []).find(function(t) { return t.id === tenantId; });
             if (!tenant) return;
-            const existing = document.getElementById('renewModal');
-            if (existing) existing.remove();
-            
             const oldEnd = tenant.contractEnd || new Date().toISOString().split('T')[0];
-            const newStart = oldEnd;
-            const newEndDate = new Date(newStart);
+            const newEndDate = new Date(oldEnd);
             newEndDate.setFullYear(newEndDate.getFullYear() + 1);
-            const newEnd = newEndDate.toISOString().split('T')[0];
-            
-            const modal = document.createElement('div');
-            modal.id = 'renewModal';
-            modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;';
-            
-            modal.innerHTML = `
-                <div style="background:white;border-radius:16px;padding:24px;width:100%;max-width:380px;max-height:85vh;overflow-y:auto;">
-                    <h3 style="margin:0 0 4px;font-size:18px;font-weight:700;">계약 갱신</h3>
-                    <p style="margin:0 0 20px;color:#6b7280;font-size:14px;">${escapeHTML(tenant.name)}</p>
-                    <div style="margin-bottom:14px;">
-                        <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">신규 시작일</label>
-                        <input type="date" id="renewStart" value="${newStart}" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;box-sizing:border-box;">
-                    </div>
-                    <div style="margin-bottom:14px;">
-                        <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">만료일</label>
-                        <input type="date" id="renewEnd" value="${newEnd}" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;box-sizing:border-box;">
-                    </div>
-                    <div style="margin-bottom:14px;">
-                        <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">월 임대료 (원)</label>
-                        <input type="number" id="renewRent" value="${tenant.monthlyRent || 0}" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;box-sizing:border-box;">
-                    </div>
-                    <div style="margin-bottom:20px;">
-                        <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">관리비 (원)</label>
-                        <input type="number" id="renewFee" value="${tenant.managementFee || 0}" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;box-sizing:border-box;">
-                    </div>
-                    <div style="display:flex;gap:10px;">
-                        <button onclick="document.getElementById('renewModal').remove()" style="flex:1;padding:12px;background:#f3f4f6;color:#374151;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;">취소</button>
-                        <button onclick="submitRenewal('${tenantId}')" style="flex:2;padding:12px;background:#2563eb;color:white;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;">갱신 저장</button>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(modal);
-            modal.onclick = function(e) { if (e.target === modal) modal.remove(); };
+            document.getElementById('renewTenantId').value = tenantId;
+            document.getElementById('renewModalTenantName').textContent = tenant.name;
+            document.getElementById('renewStart').value = oldEnd;
+            document.getElementById('renewEnd').value = newEndDate.toISOString().split('T')[0];
+            document.getElementById('renewRent').value = tenant.monthlyRent || 0;
+            document.getElementById('renewFee').value = tenant.managementFee || 0;
+            openModal('renewContractModal');
         }
-        function submitRenewal(tenantId) {
+        function submitRenewal() {
+            const tenantId = document.getElementById('renewTenantId').value;
             const newStart = document.getElementById('renewStart').value;
             const newEnd = document.getElementById('renewEnd').value;
             const newRent = parseInt(document.getElementById('renewRent').value) || 0;
@@ -5131,9 +5249,16 @@
             appData.tenants[idx].monthlyRent = newRent;
             appData.tenants[idx].managementFee = newFee;
             appData.tenants[idx].status = 'active';
+            // 새 계약 시작월과 겹치는 기존 pending/overdue 월세 기록 제거 (중복 방지)
+            const newStartMonth = newStart.slice(0, 7);
+            appData.rents = appData.rents.filter(r => {
+                if (r.tenantId !== tenantId) return true;
+                if (!(!r.type || r.type === 'monthly')) return true;
+                if (r.status !== 'pending' && r.status !== 'overdue') return true;
+                return r.month !== newStartMonth;
+            });
             saveData();
-            const modal = document.getElementById('renewModal');
-            if (modal) modal.remove();
+            closeModal('renewContractModal');
             renderTenants();
             renderDashboard();
             showToast('✅ 계약이 갱신되었습니다!');
@@ -5193,15 +5318,15 @@
             navigator.clipboard.readText().then(text => {
               document.getElementById('smsInput').value = text;
             }).catch(() => {
-              alert('클립보드 접근이 거부되었습니다.\n직접 붙여넣기(길게 누르기)를 사용해 주세요.');
+              showToast('클립보드 접근이 거부되었습니다. 직접 붙여넣기를 사용해 주세요.', 3000);
             });
           } else {
-            alert('직접 붙여넣기(길게 누르기)를 사용해 주세요.');
+            showToast('직접 붙여넣기(길게 누르기)를 사용해 주세요.', 2500);
           }
         }
         function analyzeSms() {
           const sms = document.getElementById('smsInput').value.trim();
-          if (!sms) { alert('문자를 먼저 붙여넣어 주세요.'); return; }
+          if (!sms) { showToast('⚠️ 문자를 먼저 붙여넣어 주세요.', 2500); return; }
           const result = { amount: null, sender: null, bank: '알 수 없음' };
           // 은행 감지
           if (sms.includes('국민') || sms.includes('KB')) result.bank = 'KB국민은행';
@@ -5212,10 +5337,15 @@
           else if (sms.includes('IBK') || sms.includes('기업')) result.bank = 'IBK기업은행';
           else if (sms.includes('카카오')) result.bank = '카카오뱅크';
           else if (sms.includes('토스')) result.bank = '토스뱅크';
-          // 금액 추출 (잔액 제외하고 첫번째 금액)
-          const noBalance = sms.replace(/잔액[\d,\s원]*/g, '');
-          const amtM = noBalance.match(/(\d[\d,]{2,})\s*원/);
-          if (amtM) result.amount = parseInt(amtM[1].replace(/,/g, ''));
+          // 금액 추출: "입금 NNN원" 우선, 없으면 잔액 제외 후 첫번째 금액
+          const depositM = sms.match(/입금\s+([\d,]+)\s*원/);
+          if (depositM) {
+            result.amount = parseInt(depositM[1].replace(/,/g, ''));
+          } else {
+            const noBalance = sms.replace(/잔액[\d,\s원]*/g, '');
+            const amtM = noBalance.match(/(\d[\d,]{2,})\s*원/);
+            if (amtM) result.amount = parseInt(amtM[1].replace(/,/g, ''));
+          }
           // 입금자 이름 추출 (한글 2~4자)
           const namePatterns = [
             /([가-힣]{2,4})\s+[\d,]+원/,
@@ -5228,7 +5358,8 @@
             const m = sms.match(p);
             if (m && m[1] && !skipWords.includes(m[1])) { result.sender = m[1]; break; }
           }
-          if (!result.amount) { alert('금액을 찾지 못했습니다.\n문자 내용을 확인해 주세요.'); return; }
+          if (!result.amount) { showToast('⚠️ 금액을 찾지 못했습니다. 문자 내용을 확인해 주세요.', 3000); return; }
+          if (result.bank === '알 수 없음') { showToast('⚠️ 은행을 인식하지 못했습니다. 직접 확인 후 저장해 주세요.', 3500); }
           _smsParsed = result;
           document.getElementById('smsResBank').textContent = result.bank;
           document.getElementById('smsResAmount').textContent = result.amount.toLocaleString() + '원';
@@ -5238,55 +5369,63 @@
           sel.innerHTML = '<option value="">-- 세입자를 선택하세요 --</option>';
           // Use global appData directly (do not shadow with local const)
           const rooms = appData.rooms || [];
-          (appData.tenants || []).filter(t => t.status === 'active').forEach(t => {
+          const activeTenants = (appData.tenants || []).filter(t => t.status === 'active');
+          const amtMatches = activeTenants.filter(t =>
+            t.monthlyRent + (t.managementFee || 0) === result.amount || t.monthlyRent === result.amount
+          );
+          activeTenants.forEach(t => {
             const opt = document.createElement('option');
             const room = rooms.find(r => r.id === t.roomId);
             opt.value = t.id;
             opt.textContent = t.name + ' (' + (room ? room.roomNumber : '?') + '호)';
-            if (t.monthlyRent + (t.managementFee || 0) === result.amount || t.monthlyRent === result.amount) {
-              opt.selected = true;
-            }
+            // 동일 금액 세입자가 정확히 1명일 때만 자동 선택
+            if (amtMatches.length === 1 && amtMatches[0].id === t.id) opt.selected = true;
             sel.appendChild(opt);
           });
+          if (amtMatches.length > 1) showToast('⚠️ 동일 금액 세입자가 ' + amtMatches.length + '명입니다. 직접 선택해 주세요.', 3500);
           document.getElementById('smsStep1').style.display = 'none';
           document.getElementById('smsStep2').style.display = '';
         }
         function confirmSmsPayment() {
           const tenantId = document.getElementById('smsTenantSel').value;
-          if (!tenantId) { alert('세입자를 선택해 주세요.'); return; }
-          if (!_smsParsed || !_smsParsed.amount) { alert('분석 결과가 없습니다.'); return; }
+          if (!tenantId) { showToast('⚠️ 세입자를 선택해 주세요.', 2500); return; }
+          if (!_smsParsed || !_smsParsed.amount) { showToast('⚠️ 분석 결과가 없습니다.', 2500); return; }
           const tenant = (appData.tenants || []).find(function(t) { return t.id === tenantId; });
-          if (!tenant) { alert('세입자 정보를 찾을 수 없습니다.'); return; }
+          if (!tenant) { showToast('⚠️ 세입자 정보를 찾을 수 없습니다.', 2500); return; }
           const now = new Date();
           const month = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
           const paidDate = now.toISOString().split('T')[0];
           const existing = (appData.rents || []).find(function(r) {
             return r.tenantId === tenantId && r.month === month && r.status === 'paid' && (!r.type || r.type === 'monthly');
           });
-          if (existing) {
-            if (!confirm(tenant.name + '님의 ' + month + ' 수납이 이미 처리되어 있습니다.\n그래도 추가하시겠습니까?')) return;
+          function _doSave() {
+            const newRent = {
+              id: String(Date.now()),
+              type: 'monthly',
+              tenantId: tenantId,
+              roomId: tenant.roomId,
+              buildingId: tenant.buildingId,
+              month: month,
+              amount: _smsParsed.amount,
+              rentAmount: _smsParsed.amount,
+              managementFee: 0,
+              paidDate: paidDate,
+              status: 'paid',
+              memo: 'SMS 자동: ' + _smsParsed.bank + (_smsParsed.sender ? ' / ' + _smsParsed.sender : '')
+            };
+            if (!appData.rents) appData.rents = [];
+            appData.rents.push(newRent);
+            saveData();
+            closeSmsModal();
+            if (typeof renderRents === 'function') renderRents();
+            if (typeof renderDashboard === 'function') renderDashboard();
+            showToast('✅ ' + tenant.name + '님 ' + month + ' 수납 완료! ₩' + newRent.amount.toLocaleString());
           }
-          const newRent = {
-            id: String(Date.now()),
-            type: 'monthly',
-            tenantId: tenantId,
-            roomId: tenant.roomId,
-            buildingId: tenant.buildingId,
-            month: month,
-            amount: _smsParsed.amount,
-            rentAmount: _smsParsed.amount,
-            managementFee: 0,
-            paidDate: paidDate,
-            status: 'paid',
-            memo: 'SMS 자동: ' + _smsParsed.bank + (_smsParsed.sender ? ' / ' + _smsParsed.sender : '')
-          };
-          if (!appData.rents) appData.rents = [];
-          appData.rents.push(newRent);
-          saveData();
-          closeSmsModal();
-          if (typeof renderRents === 'function') renderRents();
-          if (typeof renderDashboard === 'function') renderDashboard();
-          showToast('✅ ' + tenant.name + '님 ' + month + ' 수납 완료! ₩' + newRent.amount.toLocaleString());
+          if (existing) {
+            showConfirm(tenant.name + '님의 ' + month + ' 수납이 이미 처리되어 있습니다.\n그래도 추가하시겠습니까?', _doSave, '추가', true);
+          } else {
+            _doSave();
+          }
         }
         // ===== SMS 기능 끝 =====
         // 대시보드 월 라벨 동적 업데이트
@@ -5366,7 +5505,13 @@
                 var paidAmt    = paidRents.reduce(function(s, r) { return s + r.amount; }, 0);
 
                 var expectedAmt = (appData.tenants || [])
-                    .filter(function(t) { return t.status === 'active'; })
+                    .filter(function(t) {
+                        if (t.status !== 'active') return false;
+                        // 아직 입주하지 않은 세입자(미래 moveInDate) 제외
+                        var mi = (t.moveInDate || '').slice(0, 7);
+                        if (mi && mi > monthStr) return false;
+                        return true;
+                    })
                     .reduce(function(sum, t) {
                         if ((t.rentType || 'monthly') === 'annual') {
                             var renewMM = (t.contractStart || '').slice(5, 7);
@@ -5503,7 +5648,12 @@
                         var hStr = hy + '-' + String(hm).padStart(2, '0');
                         var hRents = (appData.rents || []).filter(function(r) { return r.month === hStr; });
                         var hPaid  = hRents.filter(function(r) { return r.status === 'paid'; }).length;
-                        var hUnpaidRents = hRents.filter(function(r) { return (r.status === 'pending' || r.status === 'overdue') && (!r.type || r.type === 'monthly'); });
+                        var hUnpaidRents = hRents.filter(function(r) {
+                            if (!((r.status === 'pending' || r.status === 'overdue') && (!r.type || r.type === 'monthly'))) return false;
+                            var t = (appData.tenants || []).find(function(t) { return t.id === r.tenantId; });
+                            var tEnd = t ? (t.contractEnd || '').slice(0, 7) : '';
+                            return !tEnd || hStr <= tEnd; // 계약종료 이후 월은 미납으로 표시 안 함
+                        });
                         var hUnpaid = hUnpaidRents.length;
                         historyUnpaidTotal += hUnpaid;
                         var hTotal = hRents.length;
@@ -5567,7 +5717,7 @@
                 var expiringList = (appData.tenants || []).filter(function(t) {
                     if (t.status !== 'active') return false;
                     var d = Math.floor((new Date(t.contractEnd) - today) / 86400000);
-                    return d >= 0 && d <= 60;
+                    return d >= 0 && d <= 30;
                 }).sort(function(a, b) {
                     return new Date(a.contractEnd) - new Date(b.contractEnd);
                 });
