@@ -1681,6 +1681,7 @@
                     <div id="expenseFilterRoom" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
                 </div>
                 <div id="expenseRoomChart" style="margin:10px 12px 0;background:#fff;border-radius:var(--radius-md);padding:14px;box-shadow:var(--shadow-sm);border:1px solid var(--border-color);display:none;"></div>
+                <div id="expenseMonthChart" style="margin:10px 12px 0;background:#fff;border-radius:var(--radius-md);padding:14px;box-shadow:var(--shadow-sm);border:1px solid var(--border-color);display:none;"></div>
                 <div class="category-summary" id="categorySummary"></div>
                 <div id="expensesList"></div>
                 <div id="expenseActionBar" class="expense-action-bar" style="display:none;">
@@ -4079,6 +4080,43 @@
                 + rows;
         }
 
+        function renderExpenseMonthChart(expenses) {
+            var chartEl = document.getElementById('expenseMonthChart');
+            if (!chartEl) return;
+            if (!expenses || expenses.length === 0) { chartEl.style.display = 'none'; return; }
+
+            // 월별 합산 (최근 12개월 또는 데이터 있는 전체)
+            var byMonth = {};
+            expenses.forEach(function(e) {
+                var m = (e.date || '').slice(0, 7);
+                if (!m) return;
+                byMonth[m] = (byMonth[m] || 0) + (e.amount || 0);
+            });
+            var months = Object.keys(byMonth).sort();
+            if (months.length === 0) { chartEl.style.display = 'none'; return; }
+            // 최근 12개월로 제한
+            if (months.length > 12) months = months.slice(months.length - 12);
+            chartEl.style.display = 'block';
+
+            var maxAmt = Math.max.apply(null, months.map(function(m) { return byMonth[m] || 0; })) || 1;
+            var bars = months.map(function(m) {
+                var amt = byMonth[m] || 0;
+                var pct = Math.max(4, Math.round(amt / maxAmt * 100));
+                var label = m.slice(5) + '월'; // MM월
+                var amtStr = amt >= 10000 ? Math.round(amt/10000) + '만' : amt.toLocaleString();
+                return '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;min-width:0;">' +
+                    '<div style="font-size:9px;color:#94A3B8;font-weight:600;">' + amtStr + '</div>' +
+                    '<div style="width:100%;background:#EFF6FF;border-radius:4px;overflow:hidden;height:60px;display:flex;align-items:flex-end;">' +
+                    '<div style="width:100%;height:' + pct + '%;background:linear-gradient(180deg,#6366F1,#818CF8);border-radius:4px 4px 0 0;transition:height 0.3s;"></div>' +
+                    '</div>' +
+                    '<div style="font-size:9px;color:#64748B;font-weight:700;white-space:nowrap;">' + label + '</div>' +
+                    '</div>';
+            }).join('');
+
+            chartEl.innerHTML =
+                '<div style="font-size:12px;font-weight:700;color:#475569;margin-bottom:10px;">📈 월별 지출 추이</div>' +
+                '<div style="display:flex;gap:4px;align-items:flex-end;">' + bars + '</div>';
+        }
         function renderExpenseSummary(filtered) {
             const panel = document.getElementById('expenseSummaryPanel');
             if (!panel) return;
@@ -4134,6 +4172,8 @@
             renderExpenseSummary(filtered);
             // 호실별 차트
             renderExpenseRoomChart(filtered || []);
+            // 월별 추이 차트
+            renderExpenseMonthChart(filtered || []);
             // Render category summary
             const categorySummary = {};
             filtered.forEach(e => {
