@@ -653,6 +653,29 @@
             font-size: 13px; color: var(--text-tertiary); cursor: pointer;
             display: flex; align-items: center; gap: 2px;
         }
+        /* Annual summary grid */
+        .annual-stat-grid {
+            display: grid; grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 8px; padding: 0 12px;
+        }
+        .annual-stat-card {
+            background: var(--bg-card); border: 1px solid var(--border-color);
+            border-radius: var(--radius-md); padding: 12px 8px;
+            text-align: center;
+        }
+        .annual-stat-label {
+            font-size: 11px; color: var(--text-tertiary);
+            font-weight: 600; margin-bottom: 5px; letter-spacing: 0.02em;
+        }
+        .annual-stat-val {
+            font-size: 13px; font-weight: 800; color: var(--text-primary);
+            line-height: 1.2;
+        }
+        .annual-income  { color: #2563EB; }
+        .annual-expense { color: #DC2626; }
+        .annual-profit  { color: #16A34A; }
+        .annual-occ     { color: #7C3AED; }
+        .annual-profit.loss { color: #DC2626; }
         /* Recent payments */
         .recent-pay-card {
             background: var(--bg-card); border-radius: var(--radius-md);
@@ -847,6 +870,24 @@
         .rent-month-cell .m-icon  { font-size: 15px; line-height: 1; font-weight: 900; }
         .rent-month-cell .m-date  { font-size: 11px; margin-top: 2px; line-height: 1; opacity: 0.85; }
 
+        /* 건물 필터 칩 */
+        .rent-building-filter {
+            display: flex; gap: 6px; padding: 6px 12px;
+            overflow-x: auto; -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        .rent-building-filter::-webkit-scrollbar { display: none; }
+        .rent-bld-chip {
+            flex-shrink: 0; padding: 5px 14px; border-radius: 20px;
+            border: 1.5px solid var(--border-color); background: white;
+            font-size: 13px; font-weight: 600; color: var(--text-secondary);
+            cursor: pointer; white-space: nowrap;
+            transition: background 0.15s, color 0.15s, border-color 0.15s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .rent-bld-chip.active {
+            background: var(--primary); color: white; border-color: var(--primary);
+        }
         .rent-legend-bar {
             display: flex; gap: 6px 10px; margin: 8px 12px; padding: 10px 12px;
             background: white; border: 1px solid var(--border-color); border-radius: var(--radius-sm);
@@ -1245,6 +1286,7 @@
         .ibadge-warning { background: var(--warning-light); color: var(--warning); }
         .ibadge-info    { background: var(--info-light); color: var(--info); }
         .ibadge-yellow  { background: #FEF9C3; color: #92400E; }
+        .ibadge-gray    { background: #F1F5F9; color: #64748B; }
 
         /* 빠른 메뉴 (새 버튼 그리드) */
         .dashboard-actions-new {
@@ -1448,7 +1490,32 @@
                     </div>
                 </div>
 
-                <!-- ② 미납 현황 (다달 히스토리) -->
+                <!-- ② 연간 요약 카드 -->
+                <div class="dash-section" style="margin-top:14px;">
+                    <div class="dash-section-header">
+                        <span class="dash-section-label" id="annualSummaryTitle">올해 요약</span>
+                    </div>
+                    <div class="annual-stat-grid">
+                        <div class="annual-stat-card">
+                            <div class="annual-stat-label">수입</div>
+                            <div class="annual-stat-val annual-income" id="annualIncome">-</div>
+                        </div>
+                        <div class="annual-stat-card">
+                            <div class="annual-stat-label">지출</div>
+                            <div class="annual-stat-val annual-expense" id="annualExpense">-</div>
+                        </div>
+                        <div class="annual-stat-card">
+                            <div class="annual-stat-label">순수익</div>
+                            <div class="annual-stat-val annual-profit" id="annualProfit">-</div>
+                        </div>
+                        <div class="annual-stat-card">
+                            <div class="annual-stat-label">점유율</div>
+                            <div class="annual-stat-val annual-occ" id="annualOccupancy">-</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ③ 미납 현황 (다달 히스토리) -->
                 <div class="dash-section" style="margin-top:14px;">
                     <div class="dash-section-header">
                         <span class="dash-section-label">💸 미납 현황</span>
@@ -1470,7 +1537,18 @@
                     </div>
                 </div>
 
-                <!-- ④ 수리 요청 현황 -->
+                <!-- ④ 공실 현황 -->
+                <div class="dash-section" id="vacantSectionNew" style="display:none;margin-top:14px;">
+                    <div class="dash-section-header">
+                        <span class="dash-section-label">🏠 공실 현황</span>
+                        <span class="dash-section-more" onclick="openModal('addTenantModal')">세입자 추가 ›</span>
+                    </div>
+                    <div class="info-card-wrap">
+                        <div id="vacantListNew"></div>
+                    </div>
+                </div>
+
+                <!-- ⑤ 수리 요청 현황 -->
                 <div class="dash-section" id="maintenanceSectionNew" style="display:none;margin-top:14px;">
                     <div class="dash-section-header">
                         <span class="dash-section-label">🔧 수리요청 현황</span>
@@ -1553,6 +1631,8 @@
                     <span id="yearDisplay">2026년</span>
                     <button onclick="nextYear()">▶</button>
                 </div>
+                <!-- 건물 필터 칩 -->
+                <div class="rent-building-filter" id="rentBuildingFilter" style="display:none;"></div>
                 <div class="search-bar">
                     <input type="text" id="rentSearch" placeholder="세입자 이름 또는 호수로 검색" oninput="renderRents()" style="-webkit-user-select:text;user-select:text;">
                 </div>
@@ -2331,7 +2411,7 @@
                 if (pt) pt.style.display = 'none';
                 renderTenants();
             }
-            else if (pageId === 'rentPage') renderRents();
+            else if (pageId === 'rentPage') { loadRentBuildingFilter(); renderRents(); }
             else if (pageId === 'expensesPage') { _selectedExpenseRooms.clear(); loadExpenseFilterRooms(); renderExpenses(); }
             else if (pageId === 'dashboardPage') renderDashboard();
             else if (pageId === 'settingsPage') _updateFirebaseSettingsUI();
@@ -3306,6 +3386,29 @@
         }
         // ============ RENTS ============
         let currentYear = new Date().getFullYear();
+        let _rentBuildingFilter = null; // null = 전체
+
+        function loadRentBuildingFilter() {
+            const wrap = document.getElementById('rentBuildingFilter');
+            if (!wrap) return;
+            const buildings = appData.buildings || [];
+            if (buildings.length <= 1) { wrap.style.display = 'none'; return; }
+            wrap.style.display = 'flex';
+            wrap.innerHTML = '';
+            // 전체 칩
+            const allChip = document.createElement('button');
+            allChip.className = 'rent-bld-chip' + (_rentBuildingFilter === null ? ' active' : '');
+            allChip.textContent = '전체';
+            allChip.onclick = function() { _rentBuildingFilter = null; loadRentBuildingFilter(); renderRents(); };
+            wrap.appendChild(allChip);
+            buildings.forEach(function(b) {
+                const chip = document.createElement('button');
+                chip.className = 'rent-bld-chip' + (_rentBuildingFilter === b.id ? ' active' : '');
+                chip.textContent = b.name;
+                chip.onclick = function() { _rentBuildingFilter = b.id; loadRentBuildingFilter(); renderRents(); };
+                wrap.appendChild(chip);
+            });
+        }
         function isAfterContractEndMonth(tenant, month) {
             const tEnd = (tenant && tenant.contractEnd || '').slice(0, 7);
             return !!(tEnd && month > tEnd);
@@ -3479,6 +3582,8 @@
             const rentSearchQuery = rentSearchEl ? rentSearchEl.value.trim().toLowerCase() : '';
             const activeTenants = appData.tenants.filter(t => {
                 if (t.status !== 'active') return false;
+                // 건물 필터
+                if (_rentBuildingFilter && t.buildingId !== _rentBuildingFilter) return false;
                 if (!rentSearchQuery) return true;
                 const room = appData.rooms.find(r => r.id === t.roomId);
                 const roomNum = room ? room.roomNumber.toLowerCase() : '';
@@ -5780,6 +5885,70 @@
                         mainSectionNew.style.display = 'none';
                     }
                 }
+
+                /* ────────────────────────────────────────────────
+                   ⑦ 공실 현황 카드
+                ──────────────────────────────────────────────── */
+                var vacantSectionNew = document.getElementById('vacantSectionNew');
+                var vacantListNew    = document.getElementById('vacantListNew');
+                var vacantRoomsNew   = (appData.rooms || []).filter(function(r) { return r.status === 'vacant'; });
+                if (vacantSectionNew) {
+                    if (vacantRoomsNew.length > 0) {
+                        vacantSectionNew.style.display = '';
+                        if (vacantListNew) {
+                            vacantListNew.innerHTML = vacantRoomsNew.map(function(r) {
+                                var b = (appData.buildings || []).find(function(bl) { return bl.id === r.buildingId; });
+                                var bName = b ? b.name + ' ' : '';
+                                return '<div class="info-row">' +
+                                    '<div class="info-row-left">' +
+                                    '<span class="info-row-room">' + bName + r.roomNumber + '호</span>' +
+                                    (r.memo ? '<div class="info-row-desc">' + r.memo + '</div>' : '') +
+                                    '</div>' +
+                                    '<div class="info-row-right">' +
+                                    '<span class="info-row-badge ibadge-gray">공실</span>' +
+                                    '</div></div>';
+                            }).join('');
+                        }
+                    } else {
+                        vacantSectionNew.style.display = 'none';
+                    }
+                }
+
+                /* ────────────────────────────────────────────────
+                   ⑧ 연간 요약 카드 업데이트
+                ──────────────────────────────────────────────── */
+                var yearPrefix = y + '-';
+                var annualPaidAmt = (appData.rents || []).filter(function(r) {
+                    return r.status === 'paid' && r.month && r.month.startsWith(yearPrefix);
+                }).reduce(function(s, r) { return s + (r.amount || 0); }, 0);
+                var annualExpenseAmt = (appData.expenses || []).filter(function(e) {
+                    return e.date && e.date.startsWith(yearPrefix);
+                }).reduce(function(s, e) { return s + (e.amount || 0); }, 0);
+                var annualNet = annualPaidAmt - annualExpenseAmt;
+                var totalRooms = (appData.rooms || []).length;
+                var occupiedRooms = (appData.rooms || []).filter(function(r) { return r.status === 'occupied'; }).length;
+                var occRate = totalRooms > 0 ? Math.round(occupiedRooms / totalRooms * 100) : 0;
+
+                var annualTitleEl = document.getElementById('annualSummaryTitle');
+                if (annualTitleEl) annualTitleEl.textContent = y + '년 요약';
+                var annualIncomeEl = document.getElementById('annualIncome');
+                var annualExpenseEl = document.getElementById('annualExpense');
+                var annualProfitEl = document.getElementById('annualProfit');
+                var annualOccEl = document.getElementById('annualOccupancy');
+                function _fmtShort(n) {
+                    if (n >= 100000000) return (n / 100000000).toFixed(1).replace(/\.0$/, '') + '억';
+                    if (n >= 10000000)  return (n / 10000000).toFixed(1).replace(/\.0$/, '') + '천만';
+                    if (n >= 1000000)   return (n / 1000000).toFixed(1).replace(/\.0$/, '') + '백만';
+                    if (n >= 10000)     return (n / 10000).toFixed(1).replace(/\.0$/, '') + '만';
+                    return n.toLocaleString();
+                }
+                if (annualIncomeEl)  annualIncomeEl.textContent  = '₩' + _fmtShort(annualPaidAmt);
+                if (annualExpenseEl) annualExpenseEl.textContent = '₩' + _fmtShort(annualExpenseAmt);
+                if (annualProfitEl) {
+                    annualProfitEl.textContent = (annualNet >= 0 ? '₩' : '-₩') + _fmtShort(Math.abs(annualNet));
+                    annualProfitEl.className = 'annual-stat-val annual-profit' + (annualNet < 0 ? ' loss' : '');
+                }
+                if (annualOccEl) annualOccEl.innerHTML = occRate + '%<span style="display:block;font-size:10px;font-weight:600;color:#7C3AED;opacity:0.75;margin-top:1px;">' + occupiedRooms + '/' + totalRooms + '실</span>';
 
                 /* ── 하위호환: subtitle, 배지 업데이트 ── */
                 var sub = document.getElementById('dashSubtitleLine');
