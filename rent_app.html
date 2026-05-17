@@ -1287,6 +1287,22 @@
         .ibadge-info    { background: var(--info-light); color: var(--info); }
         .ibadge-yellow  { background: #FEF9C3; color: #92400E; }
         .ibadge-gray    { background: #F1F5F9; color: #64748B; }
+        /* 세입자 폼 접이식 추가 정보 섹션 */
+        .tenant-extra-section {
+            background: #F8FAFC; border: 1px solid var(--border-color);
+            border-radius: 10px; padding: 12px 14px; margin: 8px 0;
+        }
+        .tenant-extra-section > summary {
+            font-size: 14px; font-weight: 700; color: var(--text-primary);
+            cursor: pointer; padding: 4px 0; list-style: none;
+            user-select: none; -webkit-user-select: none;
+        }
+        .tenant-extra-section > summary::-webkit-details-marker { display: none; }
+        .tenant-extra-section > summary::after {
+            content: '›'; float: right; font-size: 18px; color: #94A3B8;
+            transition: transform 0.2s;
+        }
+        .tenant-extra-section[open] > summary::after { transform: rotate(90deg); }
 
         /* 빠른 메뉴 (새 버튼 그리드) */
         .dashboard-actions-new {
@@ -1984,6 +2000,33 @@
                     <label>입주일</label>
                     <input type="date" id="tenantMoveInDate">
                 </div>
+                <details class="tenant-extra-section">
+                    <summary>👥 비상연락처 · 보증인 <span style="font-size:12px;color:var(--neutral-gray);">(선택)</span></summary>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
+                        <div class="form-group">
+                            <label>비상연락처 이름</label>
+                            <input type="text" id="tenantEmergencyName" placeholder="가족 등">
+                        </div>
+                        <div class="form-group">
+                            <label>비상연락처 전화</label>
+                            <input type="tel" id="tenantEmergencyPhone">
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                        <div class="form-group">
+                            <label>보증인 이름</label>
+                            <input type="text" id="tenantGuarantorName">
+                        </div>
+                        <div class="form-group">
+                            <label>보증인 전화</label>
+                            <input type="tel" id="tenantGuarantorPhone">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>보증인 관계 <span style="font-size:13px;color:var(--neutral-gray);">(예: 부모, 형제)</span></label>
+                        <input type="text" id="tenantGuarantorRelation" placeholder="부모, 배우자, 형제 등">
+                    </div>
+                </details>
                 <div class="form-group">
                     <label>메모</label>
                     <textarea id="tenantMemo" placeholder="추가 정보를 입력하세요"></textarea>
@@ -2004,21 +2047,33 @@
                     <label>세입자</label>
                     <input type="text" id="rentTenantName" disabled>
                 </div>
-                <div class="form-group">
-                    <label>금액</label>
-                    <input type="number" id="rentAmount" required>
-                </div>
-                <div class="form-group">
-                    <label>수납일</label>
-                    <input type="date" id="rentPaidDate" required>
+                <!-- 청구 금액 · 잔액 안내 박스 -->
+                <div id="rentExpectedBox" style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:13px;display:none;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                        <span style="color:#64748B;">청구 금액</span>
+                        <span style="font-weight:700;color:#1E293B;" id="rentExpectedAmt">-</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;" id="rentBalanceRow">
+                        <span style="color:#64748B;">잔액 (미수금)</span>
+                        <span style="font-weight:700;" id="rentBalanceAmt">-</span>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label>상태</label>
-                    <select id="rentStatus" required>
+                    <select id="rentStatus" required onchange="_updateRentBalanceUI()">
                         <option value="paid">완납</option>
                         <option value="partial">부분납부</option>
                         <option value="pending">미납</option>
                     </select>
+                </div>
+                <div class="form-group">
+                    <label id="rentAmountLabel">납부 금액</label>
+                    <input type="number" id="rentAmount" required oninput="_updateRentBalanceUI()">
+                    <div id="rentPartialHint" style="font-size:12px;color:#94A3B8;margin-top:4px;display:none;">부분납부: 받은 금액만 입력하세요. 잔액이 자동 계산됩니다.</div>
+                </div>
+                <div class="form-group">
+                    <label>수납일</label>
+                    <input type="date" id="rentPaidDate" required>
                 </div>
                 <div class="form-group">
                     <label>메모</label>
@@ -2147,6 +2202,57 @@
             <div style="display:flex;gap:10px;">
                 <button class="btn btn-secondary" style="flex:1;" onclick="_appConfirmResolve(false)">취소</button>
                 <button id="appConfirmOkBtn" class="btn btn-danger" style="flex:1;" onclick="_appConfirmResolve(true)">확인</button>
+            </div>
+        </div>
+    </div>
+    <!-- 수리 요청 정보 입력 모달 -->
+    <div class="modal-overlay" id="maintenanceModal" style="z-index:99999;">
+        <div class="modal-content" style="max-width:400px;padding:24px;">
+            <h3 style="margin:0 0 16px;font-size:17px;" id="maintenanceModalTitle">🔧 수리 요청</h3>
+            <div id="maintenanceRoomLabel" style="font-size:13px;color:var(--neutral-gray);margin-bottom:14px;"></div>
+            <div class="form-group">
+                <label>수리 내용</label>
+                <textarea id="maintMemo" placeholder="예: 세면대 누수, 보일러 고장" style="min-height:60px;"></textarea>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                <div class="form-group">
+                    <label>시작일</label>
+                    <input type="date" id="maintStartDate">
+                </div>
+                <div class="form-group">
+                    <label>예상 비용 <span style="font-size:12px;color:#94A3B8;">(선택)</span></label>
+                    <input type="number" id="maintEstCost" min="0" placeholder="0">
+                </div>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:8px;">
+                <button class="btn btn-secondary" style="flex:1;" onclick="closeModal('maintenanceModal')">취소</button>
+                <button class="btn btn-primary" style="flex:1;" onclick="_submitMaintenance()">저장</button>
+            </div>
+        </div>
+    </div>
+    <!-- 수리 완료 처리 모달 -->
+    <div class="modal-overlay" id="maintenanceCompleteModal" style="z-index:99999;">
+        <div class="modal-content" style="max-width:400px;padding:24px;">
+            <h3 style="margin:0 0 12px;font-size:17px;">✅ 수리 완료 처리</h3>
+            <div id="maintCompleteRoomLabel" style="font-size:13px;color:var(--neutral-gray);margin-bottom:14px;"></div>
+            <div class="form-group">
+                <label>완료일</label>
+                <input type="date" id="maintCompleteDate">
+            </div>
+            <div class="form-group">
+                <label>실제 비용 <span style="font-size:12px;color:#94A3B8;">(선택, 지출에 자동 등록)</span></label>
+                <input type="number" id="maintActualCost" min="0" placeholder="0">
+            </div>
+            <div class="form-group">
+                <label>완료 후 상태</label>
+                <select id="maintCompleteStatus">
+                    <option value="vacant">공실</option>
+                    <option value="occupied">입주중 (세입자 있음)</option>
+                </select>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:8px;">
+                <button class="btn btn-secondary" style="flex:1;" onclick="closeModal('maintenanceCompleteModal')">취소</button>
+                <button class="btn btn-primary" style="flex:1;" onclick="_submitMaintenanceComplete()">완료</button>
             </div>
         </div>
     </div>
@@ -2690,6 +2796,9 @@
                 showToast('⚠️ 같은 건물에 이미 존재하는 호수입니다');
                 return;
             }
+            // 기존 방의 수리 메모/날짜를 유지하기 위해 이전 값 캡처
+            const _existingRoom = editingId ? appData.rooms.find(r => r.id === editingId) : null;
+            const newStatus = document.getElementById('roomStatus').value;
             const roomData = {
                 id: editingId || Date.now().toString(),
                 buildingId: buildingId,
@@ -2699,8 +2808,12 @@
                 managementFee: parseInt(document.getElementById('roomManagementFee').value) || 0,
                 deposit: parseInt(document.getElementById('roomDeposit').value) || 0,
                 cleaningFee: parseInt(document.getElementById('roomCleaningFee').value) || 0,
-                status: document.getElementById('roomStatus').value,
-                memo: document.getElementById('roomMemo').value
+                status: newStatus,
+                memo: document.getElementById('roomMemo').value,
+                // 수리 관련 필드는 기존 값 보존
+                maintMemo: _existingRoom ? (_existingRoom.maintMemo || '') : '',
+                maintStartDate: _existingRoom ? (_existingRoom.maintStartDate || '') : '',
+                maintEstCost: _existingRoom ? (_existingRoom.maintEstCost || 0) : 0
             };
             if (editingId) {
                 const index = appData.rooms.findIndex(r => r.id === editingId);
@@ -2712,9 +2825,13 @@
             saveData();
             closeModal('addRoomModal');
             renderBuildings();
-            // 방 저장 후 해당 건물 상세 다시 열기 (openModal이 editingId를 초기화하므로 먼저 저장)
             if (currentBuildingId) showBuildingDetail(currentBuildingId);
             showToast(wasEditing ? '방이 수정되었습니다' : '방이 추가되었습니다');
+            // 새로 maintenance 상태로 바뀌었고 아직 수리 메모가 없으면 수리 정보 모달 자동 오픈
+            const wasMaintenance = _existingRoom && _existingRoom.status === 'maintenance';
+            if (newStatus === 'maintenance' && !wasMaintenance) {
+                openMaintenanceModal(roomData.id);
+            }
         }
         function editRoom(roomId) {
             const room = appData.rooms.find(r => r.id === roomId);
@@ -2774,6 +2891,11 @@
             document.getElementById('tenantPayDay').value = '';
             document.getElementById('tenantMoveInDate').value = '';
             document.getElementById('tenantMemo').value = '';
+            document.getElementById('tenantEmergencyName').value = '';
+            document.getElementById('tenantEmergencyPhone').value = '';
+            document.getElementById('tenantGuarantorName').value = '';
+            document.getElementById('tenantGuarantorPhone').value = '';
+            document.getElementById('tenantGuarantorRelation').value = '';
             toggleRentTypeFields();
         }
         function loadBuildingSelect(selectId) {
@@ -2903,9 +3025,15 @@
                 payDay: parseInt(document.getElementById('tenantPayDay').value) || 1,
                 moveInDate: document.getElementById('tenantMoveInDate').value,
                 memo: document.getElementById('tenantMemo').value,
+                emergencyName: document.getElementById('tenantEmergencyName').value.trim() || '',
+                emergencyPhone: document.getElementById('tenantEmergencyPhone').value.trim() || '',
+                guarantorName: document.getElementById('tenantGuarantorName').value.trim() || '',
+                guarantorPhone: document.getElementById('tenantGuarantorPhone').value.trim() || '',
+                guarantorRelation: document.getElementById('tenantGuarantorRelation').value.trim() || '',
                 status: editingId ? (appData.tenants.find(t => t.id === editingId)?.status || 'active') : 'active',
                 depositRefunded: editingId ? (appData.tenants.find(t => t.id === editingId)?.depositRefunded || false) : false,
-                depositRefundDate: editingId ? (appData.tenants.find(t => t.id === editingId)?.depositRefundDate || '') : ''
+                depositRefundDate: editingId ? (appData.tenants.find(t => t.id === editingId)?.depositRefundDate || '') : '',
+                rentHistory: editingId ? (appData.tenants.find(t => t.id === editingId)?.rentHistory || []) : []
             };
             if (editingId) {
                 const oldTenant = appData.tenants.find(t => t.id === editingId);
@@ -2915,6 +3043,14 @@
                 if (oldTenant && (oldTenant.monthlyRent !== tenantData.monthlyRent || (oldTenant.managementFee || 0) !== (tenantData.managementFee || 0))) {
                     const hasExisting = appData.rents.some(r => r.tenantId === editingId && (!r.type || r.type === 'monthly') && (r.status === 'pending' || r.status === 'overdue'));
                     if (hasExisting) showToast('⚠️ 월세 금액이 변경되었습니다. 기존 미납 기록은 수동으로 수정해 주세요.', 4000);
+                    // 월세 인상 이력 기록 (이전 금액 + 종료시점 = 오늘)
+                    tenantData.rentHistory = (tenantData.rentHistory || []).concat([{
+                        monthlyRent: oldTenant.monthlyRent || 0,
+                        managementFee: oldTenant.managementFee || 0,
+                        from: oldTenant.contractStart || '',
+                        to: new Date().toISOString().split('T')[0],
+                        reason: 'edit'
+                    }]);
                 }
                 appData.tenants[index] = tenantData;
                 // 호실이 변경된 경우: 이전 방 → 공실, 새 방 → 입주중
@@ -2981,6 +3117,18 @@
             document.getElementById('tenantPayDay').value = tenant.payDay;
             document.getElementById('tenantMoveInDate').value = tenant.moveInDate;
             document.getElementById('tenantMemo').value = tenant.memo;
+            document.getElementById('tenantEmergencyName').value = tenant.emergencyName || '';
+            document.getElementById('tenantEmergencyPhone').value = tenant.emergencyPhone || '';
+            document.getElementById('tenantGuarantorName').value = tenant.guarantorName || '';
+            document.getElementById('tenantGuarantorPhone').value = tenant.guarantorPhone || '';
+            document.getElementById('tenantGuarantorRelation').value = tenant.guarantorRelation || '';
+            // 추가 정보가 입력된 경우 섹션 자동 펼침
+            var extraSec = document.querySelector('#addTenantModal .tenant-extra-section');
+            if (extraSec && (tenant.emergencyName || tenant.emergencyPhone || tenant.guarantorName || tenant.guarantorPhone)) {
+                extraSec.open = true;
+            } else if (extraSec) {
+                extraSec.open = false;
+            }
             document.getElementById('tenantModalTitle').textContent = '세입자 수정';
             document.getElementById('deleteTenantBtn').style.display = 'block';
         }
@@ -3276,6 +3424,15 @@
                 html += '<div class="td-pay-status-row '+statusClass+'">';
                 html += '<span>'+statusIcon+' '+curMonth.replace('-','년 ')+'월 '+(isPaid?'납부 완료':isPartial?'부분 납부':'미납')+'</span>';
                 html += '<span>'+paidInfo+'</span></div>';
+                // 부분납부 시 받은 금액·잔액 명시
+                if (isPartial) {
+                    const _expected = (thisMonthRent.rentAmount||0) + (thisMonthRent.managementFee||0);
+                    const _balance = Math.max(0, _expected - (thisMonthRent.amount||0));
+                    html += '<div style="padding:6px 12px 8px;background:#FFFBEB;border-radius:8px;margin:0 10px 8px;font-size:12px;">';
+                    html += '<div style="display:flex;justify-content:space-between;margin-bottom:2px;"><span style="color:#92400E;">받은 금액</span><span style="font-weight:700;color:#1E293B;">₩'+(thisMonthRent.amount||0).toLocaleString()+'</span></div>';
+                    html += '<div style="display:flex;justify-content:space-between;"><span style="color:#92400E;">미수 잔액</span><span style="font-weight:700;color:#DC2626;">₩'+_balance.toLocaleString()+'</span></div>';
+                    html += '</div>';
+                }
                 if (thisMonthRent.status !== 'paid') {
                     html += '<div style="padding:0 10px 8px;"><button class="td-bottom-btn-fill" style="width:100%;padding:9px;" onclick="markRentPaid(\''+thisMonthRent.id+'\')">💰 수납 처리</button></div>';
                 }
@@ -3299,9 +3456,12 @@
                 monthlyRents.forEach(function(rent) {
                     const badgeCls = rent.status==='paid'?'td-badge-ok':rent.status==='partial'?'td-badge-partial':'td-badge-fail';
                     const badgeTxt = rent.status==='paid'?'완납':rent.status==='partial'?'부분납부':'미납';
+                    const expected = (rent.rentAmount||0) + (rent.managementFee||0);
+                    const balance = rent.status === 'partial' ? Math.max(0, expected - (rent.amount||0)) : 0;
                     html += '<div class="td-rent-item" style="cursor:pointer;" onclick="markRentPaid(\''+rent.id+'\')">';
                     html += '<div><div class="td-rent-item-label">'+rent.month+'</div>';
                     if (rent.managementFee>0) html += '<div class="td-rent-item-sub">월세 ₩'+(rent.rentAmount||0).toLocaleString()+' + 관리비 ₩'+rent.managementFee.toLocaleString()+'</div>';
+                    if (balance > 0) html += '<div class="td-rent-item-sub" style="color:#DC2626;font-weight:700;">잔액 ₩'+balance.toLocaleString()+'</div>';
                     html += '<span class="'+badgeCls+'">'+badgeTxt+'</span></div>';
                     html += '<div class="td-rent-item-right"><div class="td-rent-item-amount">₩'+rent.amount.toLocaleString()+'</div>';
                     if (rent.paidDate) html += '<div class="td-rent-item-sub">'+rent.paidDate+'</div>';
@@ -3323,6 +3483,61 @@
                 html += '<div class="td-deposit-ok">✅ 보증금 반환 완료 '+escapeHTML('('+(tenant.depositRefundDate||'날짜 미기록')+')')+'</div>';
             }
             html += '</div></div>';
+
+            // ─── 임대료 변경 이력 ───
+            if (tenant.rentHistory && tenant.rentHistory.length > 0) {
+                html += '<div class="td-section"><div class="td-section-title">임대료 변경 이력</div>';
+                html += '<div class="td-section-card">';
+                // 최신순 정렬
+                const _hist = tenant.rentHistory.slice().sort(function(a,b){ return (b.to||'').localeCompare(a.to||''); });
+                // 현재 계약 (헤더 행)
+                html += '<div class="td-info-row" style="background:#EFF6FF;border-radius:6px;padding:8px 10px;margin-bottom:6px;">'
+                     + '<span class="td-info-label">현재 (' + escapeHTML(tenant.contractStart || '') + '~)</span>'
+                     + '<span class="td-info-value" style="color:#2563EB;font-weight:800;">₩' + ((tenant.monthlyRent||0) + (tenant.managementFee||0)).toLocaleString() + '</span>'
+                     + '</div>';
+                _hist.forEach(function(h) {
+                    const totalH = (h.monthlyRent||0) + (h.managementFee||0);
+                    const periodH = (h.from ? _fmtDate(h.from) : '?') + ' ~ ' + (h.to ? _fmtDate(h.to) : '?');
+                    const reasonTxt = h.reason === 'renew' ? '갱신' : '수정';
+                    html += '<div class="td-info-row"><span class="td-info-label" style="font-size:12px;">' + periodH + ' <span style="color:#94A3B8;font-size:11px;">(' + reasonTxt + ')</span></span>'
+                         + '<span class="td-info-value">₩' + totalH.toLocaleString() + '</span></div>';
+                });
+                html += '</div></div>';
+            }
+
+            // ─── 비상연락처 · 보증인 ───
+            const hasEmergency = tenant.emergencyName || tenant.emergencyPhone;
+            const hasGuarantor = tenant.guarantorName || tenant.guarantorPhone;
+            if (hasEmergency || hasGuarantor) {
+                html += '<div class="td-section"><div class="td-section-title">비상연락처 · 보증인</div>';
+                html += '<div class="td-section-card">';
+                if (hasEmergency) {
+                    const epName = escapeHTML(tenant.emergencyName || '비상연락처');
+                    const epPhone = escapeHTML(tenant.emergencyPhone || '');
+                    const epHref = safePhoneHref(tenant.emergencyPhone, 'tel');
+                    html += '<div class="td-info-row"><span class="td-info-label">📞 '+epName+'</span>';
+                    if (epPhone) {
+                        html += '<a href="'+epHref+'" class="td-info-value" style="color:#2563EB;text-decoration:none;">'+epPhone+'</a>';
+                    } else {
+                        html += '<span class="td-info-value">-</span>';
+                    }
+                    html += '</div>';
+                }
+                if (hasGuarantor) {
+                    const gName = escapeHTML(tenant.guarantorName || '보증인');
+                    const gPhone = escapeHTML(tenant.guarantorPhone || '');
+                    const gRel = tenant.guarantorRelation ? ' ('+escapeHTML(tenant.guarantorRelation)+')' : '';
+                    const gHref = safePhoneHref(tenant.guarantorPhone, 'tel');
+                    html += '<div class="td-info-row"><span class="td-info-label">🛡️ '+gName+gRel+'</span>';
+                    if (gPhone) {
+                        html += '<a href="'+gHref+'" class="td-info-value" style="color:#2563EB;text-decoration:none;">'+gPhone+'</a>';
+                    } else {
+                        html += '<span class="td-info-value">-</span>';
+                    }
+                    html += '</div>';
+                }
+                html += '</div></div>';
+            }
 
             // ─── Cleaning fee / deposit actions (non-active tenants) ───
             if (!isActive && !hasCleaningRecord && (tenant.cleaningFee||0)>0) {
@@ -3512,11 +3727,58 @@
                 ? rent.tenantId : null;
             openModal('markRentModal');
             editingId = rentId;
+            // 청구 금액: rent.type이 deposit/cleaning이면 rent.amount 자체가 청구, 월세면 rentAmount+managementFee
+            let expectedAmt;
+            if (rent.type === 'monthly' || !rent.type) {
+                expectedAmt = (rent.rentAmount != null ? rent.rentAmount : (tenant?.monthlyRent || 0))
+                    + (rent.managementFee != null ? rent.managementFee : (tenant?.managementFee || 0));
+            } else {
+                // 보증금·청소비 등 일시성 항목은 amount 자체가 청구
+                expectedAmt = rent.amount || 0;
+            }
             document.getElementById('rentTenantName').value = tenant?.name || '';
             document.getElementById('rentAmount').value = rent.amount;
+            document.getElementById('rentAmount').dataset.expected = expectedAmt;
             document.getElementById('rentPaidDate').value = rent.paidDate || new Date().toISOString().split('T')[0];
             document.getElementById('rentStatus').value = rent.status;
             document.getElementById('rentMemo').value = rent.memo || '';
+            _updateRentBalanceUI();
+        }
+        // 청구금액·잔액·상태에 따른 UI 동기화
+        function _updateRentBalanceUI() {
+            const box = document.getElementById('rentExpectedBox');
+            const amtEl = document.getElementById('rentAmount');
+            const statusEl = document.getElementById('rentStatus');
+            const labelEl = document.getElementById('rentAmountLabel');
+            const hintEl = document.getElementById('rentPartialHint');
+            const expectedAmtEl = document.getElementById('rentExpectedAmt');
+            const balRow = document.getElementById('rentBalanceRow');
+            const balAmtEl = document.getElementById('rentBalanceAmt');
+            if (!box || !amtEl || !statusEl) return;
+            const expected = parseInt(amtEl.dataset.expected) || 0;
+            const paid = parseInt(amtEl.value) || 0;
+            const status = statusEl.value;
+            if (expected <= 0) { box.style.display = 'none'; hintEl.style.display = 'none'; return; }
+            box.style.display = '';
+            expectedAmtEl.textContent = '₩' + expected.toLocaleString();
+            if (status === 'partial') {
+                labelEl.textContent = '받은 금액 (부분납부)';
+                hintEl.style.display = '';
+                const balance = expected - paid;
+                balRow.style.display = '';
+                balAmtEl.textContent = '₩' + Math.max(0, balance).toLocaleString();
+                balAmtEl.style.color = balance > 0 ? '#DC2626' : '#16A34A';
+            } else if (status === 'paid') {
+                labelEl.textContent = '납부 금액';
+                hintEl.style.display = 'none';
+                balRow.style.display = 'none';
+            } else { // pending
+                labelEl.textContent = '청구 금액';
+                hintEl.style.display = 'none';
+                balRow.style.display = '';
+                balAmtEl.textContent = '₩' + expected.toLocaleString();
+                balAmtEl.style.color = '#DC2626';
+            }
         }
         function markMonthCell(tenantId, month) {
             // 기록 없으면 자동 생성 후 수납 모달 열기
@@ -3572,7 +3834,12 @@
                 .filter(r => r.status === 'paid')
                 .reduce((sum, r) => sum + (r.amount || 0), 0);
             const dueRents = yearRents.filter(r => r.status === 'pending' || r.status === 'overdue' || r.status === 'partial');
-            const dueAmount = dueRents.reduce((sum, r) => sum + (r.amount || 0), 0);
+            // 미수금 = pending/overdue는 청구금액 전체, partial은 잔액(청구 - 받은 금액)
+            const dueAmount = dueRents.reduce((sum, r) => {
+                const expected = (r.rentAmount || 0) + (r.managementFee || 0);
+                if (r.status === 'partial') return sum + Math.max(0, expected - (r.amount || 0));
+                return sum + (expected || r.amount || 0);
+            }, 0);
             const totalAmount = paidAmount + dueAmount;
             const rate = totalAmount > 0 ? Math.round((paidAmount / totalAmount) * 100) : 0;
             panel.innerHTML = `
@@ -3776,7 +4043,14 @@
                             }
                             // 미래 월은 클릭 비활성화 (실수로 기록 생성 방지)
                             const onClickAttr = isFuture ? '' : `onclick="markMonthCell('${tenant.id}','${mStr}')"`;
-                            return `<div class="rent-month-cell ${cellClass}${isFuture ? ' future-cell' : ''}" ${onClickAttr} style="${isFuture ? 'cursor:default;' : ''}">
+                            // 부분납부 셀에 잔액 툴팁
+                            let cellTitle = '';
+                            if (r && r.status === 'partial') {
+                                const _exp = (r.rentAmount||0) + (r.managementFee||0);
+                                const _bal = Math.max(0, _exp - (r.amount||0));
+                                cellTitle = `title="받음 ₩${(r.amount||0).toLocaleString()} / 잔액 ₩${_bal.toLocaleString()}"`;
+                            }
+                            return `<div class="rent-month-cell ${cellClass}${isFuture ? ' future-cell' : ''}" ${onClickAttr} ${cellTitle} style="${isFuture ? 'cursor:default;' : ''}">
                                 <div class="m-label">${m}월</div>
                                 <div class="m-icon">${icon}</div>
                                 ${dateStr ? `<div class="m-date">${dateStr}</div>` : ''}
@@ -4427,6 +4701,83 @@
             if (document.getElementById('tenantDetailModal')?.classList.contains('active')) {
                 showTenantDetail(tenantId);
             }
+        }
+        // ── 수리 요청 워크플로우 ──
+        let _maintRoomId = null;
+        function openMaintenanceModal(roomId) {
+            const room = appData.rooms.find(r => r.id === roomId);
+            if (!room) { showToast('⚠️ 방을 찾을 수 없습니다'); return; }
+            _maintRoomId = roomId;
+            const building = appData.buildings.find(b => b.id === room.buildingId);
+            document.getElementById('maintenanceRoomLabel').textContent = (building ? building.name + ' · ' : '') + room.roomNumber + '호';
+            document.getElementById('maintMemo').value = room.maintMemo || '';
+            document.getElementById('maintStartDate').value = room.maintStartDate || new Date().toISOString().split('T')[0];
+            document.getElementById('maintEstCost').value = room.maintEstCost || '';
+            const titleEl = document.getElementById('maintenanceModalTitle');
+            if (titleEl) titleEl.textContent = room.maintMemo ? '🔧 수리 정보 수정' : '🔧 수리 요청';
+            openModal('maintenanceModal');
+        }
+        function _submitMaintenance() {
+            const room = appData.rooms.find(r => r.id === _maintRoomId);
+            if (!room) { closeModal('maintenanceModal'); return; }
+            const memo = document.getElementById('maintMemo').value.trim();
+            if (!memo) { showToast('⚠️ 수리 내용을 입력해주세요'); return; }
+            room.maintMemo = memo;
+            room.maintStartDate = document.getElementById('maintStartDate').value || '';
+            room.maintEstCost = parseInt(document.getElementById('maintEstCost').value) || 0;
+            room.status = 'maintenance';
+            saveData();
+            closeModal('maintenanceModal');
+            renderBuildings();
+            renderDashboard();
+            if (currentBuildingId === room.buildingId) showBuildingDetail(currentBuildingId);
+            showToast('🔧 수리 요청이 등록되었습니다');
+        }
+        function openMaintenanceCompleteModal(roomId) {
+            const room = appData.rooms.find(r => r.id === roomId);
+            if (!room) { showToast('⚠️ 방을 찾을 수 없습니다'); return; }
+            _maintRoomId = roomId;
+            const building = appData.buildings.find(b => b.id === room.buildingId);
+            document.getElementById('maintCompleteRoomLabel').textContent = (building ? building.name + ' · ' : '') + room.roomNumber + '호 — ' + (room.maintMemo || '');
+            document.getElementById('maintCompleteDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('maintActualCost').value = room.maintEstCost || '';
+            // 입주중 세입자 있으면 기본값을 occupied로
+            const hasActiveTenant = appData.tenants.some(t => t.roomId === roomId && t.status === 'active');
+            document.getElementById('maintCompleteStatus').value = hasActiveTenant ? 'occupied' : 'vacant';
+            openModal('maintenanceCompleteModal');
+        }
+        function _submitMaintenanceComplete() {
+            const room = appData.rooms.find(r => r.id === _maintRoomId);
+            if (!room) { closeModal('maintenanceCompleteModal'); return; }
+            const completeDate = document.getElementById('maintCompleteDate').value || new Date().toISOString().split('T')[0];
+            const actualCost = parseInt(document.getElementById('maintActualCost').value) || 0;
+            const newStatus = document.getElementById('maintCompleteStatus').value;
+            const memoSnapshot = room.maintMemo || '수리';
+            // 비용이 있으면 지출 자동 등록
+            if (actualCost > 0) {
+                appData.expenses.push({
+                    id: Date.now().toString() + '_maint',
+                    buildingId: room.buildingId,
+                    roomId: room.id,
+                    title: '🔧 ' + memoSnapshot,
+                    amount: actualCost,
+                    category: '수리비',
+                    date: completeDate,
+                    memo: '자동 등록 (수리 완료)',
+                    receipts: []
+                });
+            }
+            // 수리 정보 초기화 + 상태 변경
+            room.status = newStatus;
+            room.maintMemo = '';
+            room.maintStartDate = '';
+            room.maintEstCost = 0;
+            saveData();
+            closeModal('maintenanceCompleteModal');
+            renderBuildings();
+            renderDashboard();
+            if (currentBuildingId === room.buildingId) showBuildingDetail(currentBuildingId);
+            showToast(actualCost > 0 ? '✅ 수리 완료 — 지출 ₩' + actualCost.toLocaleString() + ' 자동 등록' : '✅ 수리 완료 처리되었습니다', 3000);
         }
         function showToast(message, durationMs) {
             var ms = durationMs == null ? 2000 : durationMs;
@@ -5417,6 +5768,19 @@
             if (newStart >= newEnd) { showToast('⚠️ 만료일이 시작일보다 나중이어야 합니다.'); return; }
             const idx = appData.tenants.findIndex(t => t.id === tenantId);
             if (idx === -1) { showToast('⚠️ 세입자를 찾을 수 없습니다.'); return; }
+            const _prev = appData.tenants[idx];
+            // 월세 인상 이력 기록 (이전 계약 한 줄)
+            const _oldRent = _prev.monthlyRent || 0;
+            const _oldFee = _prev.managementFee || 0;
+            if (_oldRent !== newRent || _oldFee !== newFee) {
+                _prev.rentHistory = (_prev.rentHistory || []).concat([{
+                    monthlyRent: _oldRent,
+                    managementFee: _oldFee,
+                    from: _prev.contractStart || '',
+                    to: newStart, // 새 계약 시작일을 종료시점으로 사용
+                    reason: 'renew'
+                }]);
+            }
             appData.tenants[idx].contractStart = newStart;
             appData.tenants[idx].contractEnd = newEnd;
             appData.tenants[idx].monthlyRent = newRent;
@@ -5938,14 +6302,17 @@
                             mainListNew.innerHTML = mainRoomsNew.map(function(r) {
                                 var b = (appData.buildings || []).find(function(bl) { return bl.id === r.buildingId; });
                                 var bName = b ? b.name + ' ' : '';
-                                var memo = r.memo || '수리 내용 미기재';
+                                var memo = r.maintMemo || r.memo || '수리 내용 미기재';
+                                var dateStr = r.maintStartDate ? ' · ' + r.maintStartDate.replace(/-/g, '.') : '';
+                                var estStr = r.maintEstCost > 0 ? ' · 예상 ₩' + r.maintEstCost.toLocaleString() : '';
                                 return '<div class="info-row">' +
-                                    '<div class="info-row-left">' +
+                                    '<div class="info-row-left" onclick="openMaintenanceModal(\'' + r.id + '\')" style="cursor:pointer;">' +
                                     '<span class="info-row-room">' + bName + r.roomNumber + '호</span>' +
-                                    '<div class="info-row-desc">' + memo + '</div>' +
+                                    '<div class="info-row-desc">' + escapeHTML(memo) + dateStr + estStr + '</div>' +
                                     '</div>' +
-                                    '<div class="info-row-right">' +
+                                    '<div class="info-row-right" style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;">' +
                                     '<span class="info-row-badge ibadge-yellow">🔧 수리중</span>' +
+                                    '<button onclick="openMaintenanceCompleteModal(\'' + r.id + '\')" style="font-size:11px;padding:3px 10px;background:#16A34A;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:700;">완료</button>' +
                                     '</div></div>';
                             }).join('');
                         }
