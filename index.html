@@ -112,7 +112,9 @@
             position: relative; touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
             border-radius: 16px;
+            min-width: 0;
         }
+        .nav-item .nav-label { font-size: 11px; }
         .nav-item.active {
             color: white;
             background: #5856D6;
@@ -417,7 +419,11 @@
             border: 1px solid #EAECF4;
             box-shadow: 0 1px 4px rgba(0,0,0,0.05);
             opacity: 0.8;
+            transition: opacity 0.15s, box-shadow 0.15s, transform 0.12s;
+            -webkit-tap-highlight-color: transparent;
         }
+        .tc-past-card:hover { opacity: 1; box-shadow: 0 3px 12px rgba(0,0,0,0.10); }
+        .tc-past-card:active { transform: scale(0.98); opacity: 0.9; }
         .tc-past-header {
             display: flex; align-items: center; justify-content: space-between;
             margin-bottom: 10px;
@@ -547,7 +553,11 @@
             color: #2563EB; cursor: pointer; border-top: 1px solid #F1F5F9;
             background: none; border-left: none; border-right: none; border-bottom: none;
             width: 100%; touch-action: manipulation;
+            transition: background 0.15s;
+            -webkit-tap-highlight-color: transparent;
         }
+        .td-rent-history-btn:active { background: #EFF6FF; }
+        .td-rent-history-btn.expanded { color: #6B7280; background: #F8FAFC; }
         /* Deposit refund badge */
         .td-deposit-ok { background: #DCFCE7; color: #166534; border-radius: 10px; padding: 8px 12px; margin: 8px 10px; font-size: 13px; font-weight: 700; }
         /* Bottom action bar */
@@ -645,6 +655,29 @@
             font-size: 13px; color: var(--text-tertiary); cursor: pointer;
             display: flex; align-items: center; gap: 2px;
         }
+        /* Annual summary grid */
+        .annual-stat-grid {
+            display: grid; grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 8px; padding: 0 12px;
+        }
+        .annual-stat-card {
+            background: var(--bg-card); border: 1px solid var(--border-color);
+            border-radius: var(--radius-md); padding: 12px 8px;
+            text-align: center;
+        }
+        .annual-stat-label {
+            font-size: 11px; color: var(--text-tertiary);
+            font-weight: 600; margin-bottom: 5px; letter-spacing: 0.02em;
+        }
+        .annual-stat-val {
+            font-size: 13px; font-weight: 800; color: var(--text-primary);
+            line-height: 1.2;
+        }
+        .annual-income  { color: #2563EB; }
+        .annual-expense { color: #DC2626; }
+        .annual-profit  { color: #16A34A; }
+        .annual-occ     { color: #7C3AED; }
+        .annual-profit.loss { color: #DC2626; }
         /* Recent payments */
         .recent-pay-card {
             background: var(--bg-card); border-radius: var(--radius-md);
@@ -839,6 +872,24 @@
         .rent-month-cell .m-icon  { font-size: 15px; line-height: 1; font-weight: 900; }
         .rent-month-cell .m-date  { font-size: 11px; margin-top: 2px; line-height: 1; opacity: 0.85; }
 
+        /* 건물 필터 칩 */
+        .rent-building-filter {
+            display: flex; gap: 6px; padding: 6px 12px;
+            overflow-x: auto; -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        .rent-building-filter::-webkit-scrollbar { display: none; }
+        .rent-bld-chip {
+            flex-shrink: 0; padding: 5px 14px; border-radius: 20px;
+            border: 1.5px solid var(--border-color); background: white;
+            font-size: 13px; font-weight: 600; color: var(--text-secondary);
+            cursor: pointer; white-space: nowrap;
+            transition: background 0.15s, color 0.15s, border-color 0.15s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .rent-bld-chip.active {
+            background: var(--primary); color: white; border-color: var(--primary);
+        }
         .rent-legend-bar {
             display: flex; gap: 6px 10px; margin: 8px 12px; padding: 10px 12px;
             background: white; border: 1px solid var(--border-color); border-radius: var(--radius-sm);
@@ -1237,6 +1288,179 @@
         .ibadge-warning { background: var(--warning-light); color: var(--warning); }
         .ibadge-info    { background: var(--info-light); color: var(--info); }
         .ibadge-yellow  { background: #FEF9C3; color: #92400E; }
+        .ibadge-gray    { background: #F1F5F9; color: #64748B; }
+        /* 세입자 폼 접이식 추가 정보 섹션 */
+        .tenant-extra-section {
+            background: #F8FAFC; border: 1px solid var(--border-color);
+            border-radius: 10px; padding: 12px 14px; margin: 8px 0;
+        }
+        .tenant-extra-section > summary {
+            font-size: 14px; font-weight: 700; color: var(--text-primary);
+            cursor: pointer; padding: 4px 0; list-style: none;
+            user-select: none; -webkit-user-select: none;
+        }
+        .tenant-extra-section > summary::-webkit-details-marker { display: none; }
+        .tenant-extra-section > summary::after {
+            content: '›'; float: right; font-size: 18px; color: #94A3B8;
+            transition: transform 0.2s;
+        }
+        .tenant-extra-section[open] > summary::after { transform: rotate(90deg); }
+        /* 세무 정리 탭 */
+        .tax-tab-btn {
+            flex: 1; padding: 12px 8px; border: none; background: transparent;
+            font-size: 13px; font-weight: 700; color: #64748B; cursor: pointer;
+            border-bottom: 2.5px solid transparent; transition: all 0.15s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .tax-tab-btn.active { color: #0F766E; border-bottom-color: #0F766E; background: white; }
+        .tax-card {
+            background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px;
+            padding: 14px; margin-bottom: 10px;
+        }
+        .tax-card-title { font-size: 12px; font-weight: 700; color: #64748B; margin-bottom: 6px; letter-spacing: 0.02em; }
+        .tax-card-amt { font-size: 22px; font-weight: 800; color: #1E293B; }
+        .tax-row { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-bottom: 1px solid #F1F5F9; }
+        .tax-row:last-child { border-bottom: none; }
+        .tax-row label { display: flex; align-items: center; gap: 8px; flex: 1; cursor: pointer; font-size: 13px; min-width: 0; }
+        .tax-row input[type=checkbox] { width: 18px; height: 18px; accent-color: #0F766E; flex-shrink: 0; }
+        .tax-row-amt { font-weight: 700; color: #1E293B; white-space: nowrap; font-size: 13px; }
+        .tax-row-amt.excluded { color: #CBD5E1; text-decoration: line-through; }
+        .tax-group-header {
+            background: #F1F5F9; padding: 8px 12px; font-size: 13px; font-weight: 800;
+            color: #334155; border-radius: 8px; margin: 10px 0 4px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .tax-cat-pill {
+            display: inline-block; padding: 2px 8px; font-size: 11px; font-weight: 700;
+            border-radius: 10px; background: #DCFCE7; color: #166534; margin-left: 6px;
+            cursor: pointer; user-select: none;
+        }
+        .tax-cat-pill.non { background: #FEE2E2; color: #991B1B; }
+        .tax-summary-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+        }
+        .tax-summary-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 8px 12px; font-size: 14px;
+        }
+        .tax-final {
+            background: linear-gradient(135deg,#0F766E,#0EA5A4); color: white;
+            border-radius: 12px; padding: 16px 18px; margin-top: 10px;
+        }
+        .tax-final .tax-card-title { color: rgba(255,255,255,0.85); }
+        .tax-final .tax-card-amt { color: white; font-size: 26px; }
+        .tax-deposit-input {
+            width: 100%; padding: 8px 10px; font-size: 14px; border: 1px solid #E2E8F0;
+            border-radius: 8px; -webkit-user-select: text; user-select: text;
+        }
+        /* 세금 페이지 카드 */
+        .tax-page-card {
+            background: white; border: 1px solid #E2E8F0; border-radius: 12px;
+            padding: 14px 16px; margin: 0 12px 12px;
+            box-shadow: 0 1px 3px rgba(15,118,110,0.04);
+        }
+        .tax-page-card-title {
+            font-size: 13px; font-weight: 800; color: #0F766E;
+            margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
+        }
+        .tax-page-card-title .pill {
+            font-size: 10px; padding: 2px 8px; border-radius: 10px;
+            background: #F0FDFA; color: #0F766E; font-weight: 700;
+        }
+        /* 세무 설정 카드 */
+        .tax-setup-card {
+            background: #FAFBFC; border: 1px dashed #CBD5E1; border-radius: 12px;
+            padding: 12px 16px; margin: 0 12px 12px;
+        }
+        .tax-setup-card > summary {
+            font-size: 13px; font-weight: 700; cursor: pointer;
+            list-style: none; display: flex; justify-content: space-between; align-items: center;
+            color: #475569;
+        }
+        .tax-setup-card > summary::-webkit-details-marker { display: none; }
+        .tax-setup-summary-state {
+            font-size: 11px; color: #94A3B8; font-weight: 500;
+        }
+        /* 큰 임대소득 카드 */
+        .tax-income-final {
+            background: linear-gradient(135deg,#0F766E,#0EA5A4);
+            color: white; padding: 18px 20px;
+        }
+        .tax-income-final .label { font-size: 12px; opacity: 0.9; }
+        .tax-income-final .amount { font-size: 28px; font-weight: 900; margin: 4px 0; }
+        .tax-income-final .breakdown {
+            font-size: 11px; opacity: 0.85; line-height: 1.6;
+        }
+        /* 절세 시뮬레이션 */
+        .tax-sim-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .tax-sim-card {
+            background: #F8FAFC; border: 2px solid transparent; border-radius: 10px;
+            padding: 10px 12px;
+        }
+        .tax-sim-card.recommended { border-color: #0F766E; background: #F0FDFA; }
+        .tax-sim-label { font-size: 11px; color: #64748B; font-weight: 700; }
+        .tax-sim-amount { font-size: 17px; font-weight: 800; color: #1E293B; margin-top: 2px; }
+        .tax-sim-badge {
+            display: inline-block; padding: 2px 6px; font-size: 9px;
+            background: #0F766E; color: white; border-radius: 8px; font-weight: 700;
+            margin-left: 4px;
+        }
+        /* 신고 의무 카드 */
+        .tax-req-required { background: #FEF2F2; color: #991B1B; border: 1px solid #FECACA; }
+        .tax-req-optional { background: #FFFBEB; color: #92400E; border: 1px solid #FDE68A; }
+        .tax-req-exempt   { background: #F0FDF4; color: #166534; border: 1px solid #BBF7D0; }
+        .tax-req-card {
+            border-radius: 10px; padding: 10px 12px; font-size: 13px;
+            font-weight: 700; line-height: 1.5;
+        }
+        /* 캘린더 */
+        .tax-cal-row {
+            display: flex; align-items: center; gap: 10px; padding: 8px 0;
+            border-bottom: 1px solid #F1F5F9;
+        }
+        .tax-cal-row:last-child { border-bottom: none; }
+        .tax-cal-icon {
+            width: 36px; height: 36px; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; flex-shrink: 0;
+        }
+        .tax-cal-body { flex: 1; min-width: 0; }
+        .tax-cal-name { font-size: 13px; font-weight: 700; color: #1E293B; }
+        .tax-cal-date { font-size: 11px; color: #64748B; }
+        .tax-cal-dday {
+            font-size: 12px; font-weight: 800; padding: 4px 8px; border-radius: 10px;
+            white-space: nowrap;
+        }
+        .tax-cal-dday.urgent { background: #FEE2E2; color: #991B1B; }
+        .tax-cal-dday.soon { background: #FEF3C7; color: #92400E; }
+        .tax-cal-dday.normal { background: #E0F2FE; color: #075985; }
+        .tax-cal-dday.done { background: #F1F5F9; color: #94A3B8; }
+        /* 체크리스트 */
+        .tax-check-row {
+            display: flex; align-items: center; gap: 8px; padding: 6px 0;
+            font-size: 13px;
+        }
+        .tax-check-icon { width: 18px; flex-shrink: 0; font-size: 14px; }
+        .tax-check-row.ok { color: #166534; }
+        .tax-check-row.warn { color: #92400E; }
+        .tax-check-row.bad { color: #991B1B; font-weight: 600; }
+        /* 추이 차트 */
+        .tax-trend-grid {
+            display: grid; gap: 6px; align-items: flex-end;
+        }
+        .tax-trend-bar-group {
+            display: flex; flex-direction: column; align-items: center; gap: 3px;
+        }
+        .tax-trend-bars {
+            display: flex; gap: 2px; align-items: flex-end; height: 70px;
+        }
+        .tax-trend-bar {
+            width: 12px; border-radius: 2px 2px 0 0;
+        }
+        .tax-trend-bar.income { background: linear-gradient(180deg,#0EA5A4,#0F766E); }
+        .tax-trend-bar.expense { background: linear-gradient(180deg,#F87171,#DC2626); }
+        .tax-trend-bar.profit { background: linear-gradient(180deg,#3B82F6,#1E40AF); }
+        .tax-trend-label { font-size: 10px; font-weight: 700; color: #64748B; }
 
         /* 빠른 메뉴 (새 버튼 그리드) */
         .dashboard-actions-new {
@@ -1440,7 +1664,32 @@
                     </div>
                 </div>
 
-                <!-- ② 미납 현황 (다달 히스토리) -->
+                <!-- ② 연간 요약 카드 -->
+                <div class="dash-section" style="margin-top:14px;">
+                    <div class="dash-section-header">
+                        <span class="dash-section-label" id="annualSummaryTitle">올해 요약</span>
+                    </div>
+                    <div class="annual-stat-grid">
+                        <div class="annual-stat-card">
+                            <div class="annual-stat-label">수입</div>
+                            <div class="annual-stat-val annual-income" id="annualIncome">-</div>
+                        </div>
+                        <div class="annual-stat-card">
+                            <div class="annual-stat-label">지출</div>
+                            <div class="annual-stat-val annual-expense" id="annualExpense">-</div>
+                        </div>
+                        <div class="annual-stat-card">
+                            <div class="annual-stat-label">순수익</div>
+                            <div class="annual-stat-val annual-profit" id="annualProfit">-</div>
+                        </div>
+                        <div class="annual-stat-card">
+                            <div class="annual-stat-label">점유율</div>
+                            <div class="annual-stat-val annual-occ" id="annualOccupancy">-</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ③ 미납 현황 (다달 히스토리) -->
                 <div class="dash-section" style="margin-top:14px;">
                     <div class="dash-section-header">
                         <span class="dash-section-label">💸 미납 현황</span>
@@ -1462,7 +1711,29 @@
                     </div>
                 </div>
 
-                <!-- ④ 수리 요청 현황 -->
+                <!-- ④ 보증금 미반환 -->
+                <div class="dash-section" id="depositPendingSection" style="display:none;margin-top:14px;">
+                    <div class="dash-section-header">
+                        <span class="dash-section-label">🏦 보증금 미반환</span>
+                        <span class="dash-section-more" onclick="switchPage('tenantsPage')">세입자 목록 ›</span>
+                    </div>
+                    <div class="info-card-wrap">
+                        <div id="depositPendingList"></div>
+                    </div>
+                </div>
+
+                <!-- ⑤ 공실 현황 -->
+                <div class="dash-section" id="vacantSectionNew" style="display:none;margin-top:14px;">
+                    <div class="dash-section-header">
+                        <span class="dash-section-label">🏠 공실 현황</span>
+                        <span class="dash-section-more" onclick="openModal('addTenantModal')">세입자 추가 ›</span>
+                    </div>
+                    <div class="info-card-wrap">
+                        <div id="vacantListNew"></div>
+                    </div>
+                </div>
+
+                <!-- ⑤ 수리 요청 현황 -->
                 <div class="dash-section" id="maintenanceSectionNew" style="display:none;margin-top:14px;">
                     <div class="dash-section-header">
                         <span class="dash-section-label">🔧 수리요청 현황</span>
@@ -1526,9 +1797,17 @@
                     <span class="tc-search-icon">🔍</span>
                     <input type="text" id="tenantSearch" placeholder="이름 또는 방번호로 검색" oninput="renderTenants()" style="-webkit-user-select:text;user-select:text;">
                 </div>
-                <div class="tc-tab-bar">
-                    <button id="tabCurrentTenant" class="tc-tab-btn active" onclick="showTenantSection('current')">현재 세입자</button>
-                    <button id="tabPastTenant" class="tc-tab-btn" onclick="showTenantSection('past')">과거 세입자</button>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:0 12px;margin-bottom:4px;">
+                    <div class="tc-tab-bar" style="margin:0;flex:1;">
+                        <button id="tabCurrentTenant" class="tc-tab-btn active" onclick="showTenantSection('current')">현재 세입자</button>
+                        <button id="tabPastTenant" class="tc-tab-btn" onclick="showTenantSection('past')">과거 세입자</button>
+                    </div>
+                    <select id="tenantSortSel" onchange="renderTenants()" style="margin-left:8px;padding:5px 8px;font-size:12px;border:1px solid var(--border-color);border-radius:8px;background:white;color:var(--text-secondary);cursor:pointer;flex-shrink:0;">
+                        <option value="name">이름순</option>
+                        <option value="rent_desc">월세↓</option>
+                        <option value="rent_asc">월세↑</option>
+                        <option value="end_asc">만료임박순</option>
+                    </select>
                 </div>
                 <div id="currentTenantSection">
                     <div id="tenantsList"></div>
@@ -1545,6 +1824,8 @@
                     <span id="yearDisplay">2026년</span>
                     <button onclick="nextYear()">▶</button>
                 </div>
+                <!-- 건물 필터 칩 -->
+                <div class="rent-building-filter" id="rentBuildingFilter" style="display:none;"></div>
                 <div class="search-bar">
                     <input type="text" id="rentSearch" placeholder="세입자 이름 또는 호수로 검색" oninput="renderRents()" style="-webkit-user-select:text;user-select:text;">
                 </div>
@@ -1574,6 +1855,7 @@
                     <div id="expenseFilterRoom" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
                 </div>
                 <div id="expenseRoomChart" style="margin:10px 12px 0;background:#fff;border-radius:var(--radius-md);padding:14px;box-shadow:var(--shadow-sm);border:1px solid var(--border-color);display:none;"></div>
+                <div id="expenseMonthChart" style="margin:10px 12px 0;background:#fff;border-radius:var(--radius-md);padding:14px;box-shadow:var(--shadow-sm);border:1px solid var(--border-color);display:none;"></div>
                 <div class="category-summary" id="categorySummary"></div>
                 <div id="expensesList"></div>
                 <div id="expenseActionBar" class="expense-action-bar" style="display:none;">
@@ -1584,8 +1866,94 @@
                 </div>
             </div>
 
+            <!-- ════════════ 세금 ════════════ -->
+            <div class="page" id="taxPage">
+                <!-- 연도 선택 헤더 -->
+                <div style="background:linear-gradient(135deg,#0F766E,#0EA5A4);color:white;padding:14px 16px;border-radius:14px;margin:8px 12px 14px;box-shadow:0 4px 14px rgba(15,118,110,0.25);">
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <button onclick="_taxPagePrevYear()" style="background:rgba(255,255,255,0.2);border:none;color:white;border-radius:8px;padding:6px 12px;font-size:16px;cursor:pointer;">◀</button>
+                        <div style="flex:1;text-align:center;">
+                            <div style="font-size:11px;opacity:0.9;letter-spacing:0.04em;">📑 종합소득세 임대소득</div>
+                            <div style="font-size:20px;font-weight:900;margin-top:2px;" id="taxPageYearLabel">2026년</div>
+                        </div>
+                        <button onclick="_taxPageNextYear()" style="background:rgba(255,255,255,0.2);border:none;color:white;border-radius:8px;padding:6px 12px;font-size:16px;cursor:pointer;">▶</button>
+                    </div>
+                </div>
+
+                <!-- 세무 설정 카드 -->
+                <details class="tax-setup-card" id="taxSetupCard">
+                    <summary>🏛️ 세무 설정 <span class="tax-setup-summary-state" id="taxSetupSummary">탭하여 입력</span></summary>
+                    <div style="padding:12px 4px 4px;display:grid;gap:10px;">
+                        <div>
+                            <label style="font-size:12px;color:#64748B;font-weight:600;">보유 주택 수</label>
+                            <input type="number" id="taxOwnedHouses" min="0" max="20" value="1" onchange="_taxPageSaveSettings();renderTaxPage();" style="width:100%;padding:8px 10px;border:1px solid #E2E8F0;border-radius:8px;margin-top:4px;">
+                        </div>
+                        <div>
+                            <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;cursor:pointer;">
+                                <input type="checkbox" id="taxIsRegistered" onchange="_taxPageSaveSettings();renderTaxPage();" style="width:18px;height:18px;accent-color:#0F766E;">
+                                <span>주택임대사업자 등록</span>
+                            </label>
+                            <div id="taxRegisteredOptions" style="display:none;margin-top:6px;padding-left:26px;">
+                                <select id="taxRegisteredTerm" onchange="_taxPageSaveSettings();renderTaxPage();" style="width:100%;padding:8px 10px;border:1px solid #E2E8F0;border-radius:8px;">
+                                    <option value="short">단기 (4년 이상) — 30% 감면</option>
+                                    <option value="long">장기 (8년 이상) — 75% 감면</option>
+                                    <option value="long_joint">장기 공동임대 — 50% 감면</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label style="font-size:12px;color:#64748B;font-weight:600;">다른 종합소득 (선택, 종합과세 비교용)</label>
+                            <input type="number" id="taxOtherIncome" min="0" placeholder="₩ 다른 소득금액" value="0" onchange="_taxPageSaveSettings();renderTaxPage();" style="width:100%;padding:8px 10px;border:1px solid #E2E8F0;border-radius:8px;margin-top:4px;">
+                            <div style="font-size:11px;color:#94A3B8;margin-top:3px;">근로·사업·기타 소득금액 (세금 비교에만 사용)</div>
+                        </div>
+                    </div>
+                </details>
+
+                <!-- 1. 신고 의무 판정 카드 -->
+                <div id="taxFilingReqCard" class="tax-page-card"></div>
+
+                <!-- 2. 절세 시뮬레이션 카드 (분리과세 vs 종합과세) -->
+                <div id="taxSimulationCard" class="tax-page-card"></div>
+
+                <!-- 3. 임대소득금액 큰 카드 -->
+                <div id="taxIncomeFinalCard" class="tax-page-card"></div>
+
+                <!-- 4. 세금 캘린더 -->
+                <div id="taxCalendarCard" class="tax-page-card"></div>
+
+                <!-- 5. 신고 전 체크리스트 -->
+                <div id="taxChecklistCard" class="tax-page-card"></div>
+
+                <!-- 6. 간주임대료 상세 -->
+                <div id="taxDeemedCard" class="tax-page-card"></div>
+
+                <!-- 7. 연도별 추이 차트 -->
+                <div id="taxTrendCard" class="tax-page-card"></div>
+
+                <!-- 8. 자료 정리 (탭) -->
+                <div class="tax-page-card" style="padding:0;overflow:hidden;">
+                    <div style="display:flex;border-bottom:1px solid #E2E8F0;background:#F8FAFC;">
+                        <button class="tax-tab-btn active" data-tab="income" onclick="_taxPageSwitchTab('income')">임대수입</button>
+                        <button class="tax-tab-btn" data-tab="expense" onclick="_taxPageSwitchTab('expense')">필요경비</button>
+                        <button class="tax-tab-btn" data-tab="tenants" onclick="_taxPageSwitchTab('tenants')">세입자명세</button>
+                    </div>
+                    <div id="taxPageDataContent" style="padding:12px;"></div>
+                </div>
+
+                <!-- 9. 출력 버튼 -->
+                <div style="margin:14px 12px 80px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                    <button class="btn btn-secondary" onclick="exportTaxFilingCSV()">📊 CSV</button>
+                    <button class="btn btn-secondary" onclick="printTaxFiling()">🖨️ 인쇄/PDF</button>
+                    <button class="btn btn-primary" style="grid-column:1/-1;background:#0F766E;" onclick="printTaxBundleForAccountant()">📁 세무사 전달용 묶음 PDF</button>
+                </div>
+            </div>
+
             <!-- ════════════ 설정 ════════════ -->
             <div class="page" id="settingsPage">
+                <div class="settings-section-title">📑 세무 신고 자료</div>
+                <button class="btn btn-primary btn-block" onclick="openTaxFiling()" style="background:linear-gradient(135deg,#0F766E,#0EA5A4);">📑 종합소득세 자료 정리</button>
+                <p style="font-size:12px;color:var(--text-tertiary);margin:6px 12px 16px;line-height:1.5;">선택한 연도의 임대수입·필요경비를 세입자/건물/카테고리별로 정리해 국세청 신고용 양식으로 출력합니다.</p>
+
                 <div class="settings-section-title">데이터 관리</div>
                 <button class="btn btn-secondary btn-block" onclick="exportToJSON()">📥 JSON으로 내보내기</button>
                 <button class="btn btn-secondary btn-block" onclick="importFromJSON()">📤 JSON에서 가져오기</button>
@@ -1681,6 +2049,10 @@
             <button class="nav-item" onclick="switchPage('expensesPage')">
                 <span class="nav-icon">📄</span>
                 <span class="nav-label">지출</span>
+            </button>
+            <button class="nav-item" onclick="switchPage('taxPage')">
+                <span class="nav-icon">📑</span>
+                <span class="nav-label">세금</span>
             </button>
             <button class="nav-item" onclick="switchPage('settingsPage')">
                 <span class="nav-icon">⚙️</span>
@@ -1876,6 +2248,33 @@
                     <label>입주일</label>
                     <input type="date" id="tenantMoveInDate">
                 </div>
+                <details class="tenant-extra-section">
+                    <summary>👥 비상연락처 · 보증인 <span style="font-size:12px;color:var(--neutral-gray);">(선택)</span></summary>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
+                        <div class="form-group">
+                            <label>비상연락처 이름</label>
+                            <input type="text" id="tenantEmergencyName" placeholder="가족 등">
+                        </div>
+                        <div class="form-group">
+                            <label>비상연락처 전화</label>
+                            <input type="tel" id="tenantEmergencyPhone">
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                        <div class="form-group">
+                            <label>보증인 이름</label>
+                            <input type="text" id="tenantGuarantorName">
+                        </div>
+                        <div class="form-group">
+                            <label>보증인 전화</label>
+                            <input type="tel" id="tenantGuarantorPhone">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>보증인 관계 <span style="font-size:13px;color:var(--neutral-gray);">(예: 부모, 형제)</span></label>
+                        <input type="text" id="tenantGuarantorRelation" placeholder="부모, 배우자, 형제 등">
+                    </div>
+                </details>
                 <div class="form-group">
                     <label>메모</label>
                     <textarea id="tenantMemo" placeholder="추가 정보를 입력하세요"></textarea>
@@ -1896,21 +2295,33 @@
                     <label>세입자</label>
                     <input type="text" id="rentTenantName" disabled>
                 </div>
-                <div class="form-group">
-                    <label>금액</label>
-                    <input type="number" id="rentAmount" required>
-                </div>
-                <div class="form-group">
-                    <label>수납일</label>
-                    <input type="date" id="rentPaidDate" required>
+                <!-- 청구 금액 · 잔액 안내 박스 -->
+                <div id="rentExpectedBox" style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:13px;display:none;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                        <span style="color:#64748B;">청구 금액</span>
+                        <span style="font-weight:700;color:#1E293B;" id="rentExpectedAmt">-</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;" id="rentBalanceRow">
+                        <span style="color:#64748B;">잔액 (미수금)</span>
+                        <span style="font-weight:700;" id="rentBalanceAmt">-</span>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label>상태</label>
-                    <select id="rentStatus" required>
+                    <select id="rentStatus" required onchange="_updateRentBalanceUI()">
                         <option value="paid">완납</option>
                         <option value="partial">부분납부</option>
                         <option value="pending">미납</option>
                     </select>
+                </div>
+                <div class="form-group">
+                    <label id="rentAmountLabel">납부 금액</label>
+                    <input type="number" id="rentAmount" required oninput="_updateRentBalanceUI()">
+                    <div id="rentPartialHint" style="font-size:12px;color:#94A3B8;margin-top:4px;display:none;">부분납부: 받은 금액만 입력하세요. 잔액이 자동 계산됩니다.</div>
+                </div>
+                <div class="form-group">
+                    <label>수납일</label>
+                    <input type="date" id="rentPaidDate" required>
                 </div>
                 <div class="form-group">
                     <label>메모</label>
@@ -2000,6 +2411,143 @@
             <div id="dashboardDetailContent" style="padding-bottom:8px;"></div>
         </div>
     </div>
+    <div class="modal-overlay" id="renewContractModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>계약 갱신</h2>
+                <button class="modal-close" onclick="closeModal('renewContractModal')">✕</button>
+            </div>
+            <div style="padding:0 16px 8px;">
+                <p id="renewModalTenantName" style="margin:0 0 20px;color:#6b7280;font-size:14px;"></p>
+                <div class="form-group">
+                    <label>신규 시작일</label>
+                    <input type="date" id="renewStart">
+                </div>
+                <div class="form-group">
+                    <label>만료일</label>
+                    <input type="date" id="renewEnd">
+                </div>
+                <div class="form-group">
+                    <label>월 임대료 (원)</label>
+                    <input type="number" id="renewRent" min="0">
+                </div>
+                <div class="form-group">
+                    <label>관리비 (원)</label>
+                    <input type="number" id="renewFee" min="0">
+                </div>
+                <input type="hidden" id="renewTenantId">
+                <div style="display:flex;gap:10px;margin-top:8px;">
+                    <button type="button" class="btn btn-secondary" style="flex:1;" onclick="closeModal('renewContractModal')">취소</button>
+                    <button type="button" class="btn btn-primary" style="flex:2;" onclick="submitRenewal()">갱신 저장</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 공용 확인 다이얼로그 -->
+    <div class="modal-overlay" id="appConfirmModal" style="z-index:99999;">
+        <div class="modal-content" style="max-width:360px;padding:28px 24px 20px;">
+            <p id="appConfirmMsg" style="font-size:15px;line-height:1.6;color:#1F2937;white-space:pre-line;margin:0 0 24px;"></p>
+            <div style="display:flex;gap:10px;">
+                <button class="btn btn-secondary" style="flex:1;" onclick="_appConfirmResolve(false)">취소</button>
+                <button id="appConfirmOkBtn" class="btn btn-danger" style="flex:1;" onclick="_appConfirmResolve(true)">확인</button>
+            </div>
+        </div>
+    </div>
+    <!-- 세무 정리 모달 -->
+    <div class="modal-overlay" id="taxFilingModal">
+        <div class="modal-content" style="max-width:680px;width:96%;max-height:92vh;padding:0;overflow:hidden;display:flex;flex-direction:column;">
+            <div style="padding:18px 20px 12px;border-bottom:1px solid #E2E8F0;background:linear-gradient(135deg,#0F766E,#0EA5A4);color:white;">
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                    <h2 style="margin:0;font-size:18px;color:white;">📑 종합소득세 자료 정리</h2>
+                    <button class="modal-close" onclick="closeModal('taxFilingModal')" style="color:white;">✕</button>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;margin-top:10px;">
+                    <button onclick="_taxPrevYear()" style="background:rgba(255,255,255,0.2);border:none;color:white;border-radius:8px;padding:6px 12px;font-size:16px;cursor:pointer;">◀</button>
+                    <span id="taxYearLabel" style="font-size:17px;font-weight:800;flex:1;text-align:center;">2026년</span>
+                    <button onclick="_taxNextYear()" style="background:rgba(255,255,255,0.2);border:none;color:white;border-radius:8px;padding:6px 12px;font-size:16px;cursor:pointer;">▶</button>
+                </div>
+            </div>
+            <!-- 탭 -->
+            <div style="display:flex;border-bottom:1px solid #E2E8F0;background:#F8FAFC;">
+                <button class="tax-tab-btn active" data-tab="summary" onclick="_taxSwitchTab('summary')">요약</button>
+                <button class="tax-tab-btn" data-tab="income" onclick="_taxSwitchTab('income')">임대수입</button>
+                <button class="tax-tab-btn" data-tab="expense" onclick="_taxSwitchTab('expense')">필요경비</button>
+                <button class="tax-tab-btn" data-tab="tenants" onclick="_taxSwitchTab('tenants')">세입자명세</button>
+            </div>
+            <!-- 콘텐츠 -->
+            <div id="taxFilingContent" style="flex:1;overflow-y:auto;padding:14px 16px;background:#fff;"></div>
+            <!-- 하단 액션 -->
+            <div style="padding:12px 16px;border-top:1px solid #E2E8F0;background:#F8FAFC;display:flex;gap:8px;">
+                <button class="btn btn-secondary" style="flex:1;" onclick="exportTaxFilingCSV()">📊 CSV</button>
+                <button class="btn btn-secondary" style="flex:1;" onclick="printTaxFiling()">🖨️ 인쇄/PDF</button>
+                <button class="btn btn-primary" style="flex:1;" onclick="closeModal('taxFilingModal')">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 수리 요청 정보 입력 모달 -->
+    <div class="modal-overlay" id="maintenanceModal" style="z-index:99999;">
+        <div class="modal-content" style="max-width:400px;padding:24px;">
+            <h3 style="margin:0 0 16px;font-size:17px;" id="maintenanceModalTitle">🔧 수리 요청</h3>
+            <div id="maintenanceRoomLabel" style="font-size:13px;color:var(--neutral-gray);margin-bottom:14px;"></div>
+            <div class="form-group">
+                <label>수리 내용</label>
+                <textarea id="maintMemo" placeholder="예: 세면대 누수, 보일러 고장" style="min-height:60px;"></textarea>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                <div class="form-group">
+                    <label>시작일</label>
+                    <input type="date" id="maintStartDate">
+                </div>
+                <div class="form-group">
+                    <label>예상 비용 <span style="font-size:12px;color:#94A3B8;">(선택)</span></label>
+                    <input type="number" id="maintEstCost" min="0" placeholder="0">
+                </div>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:8px;">
+                <button class="btn btn-secondary" style="flex:1;" onclick="closeModal('maintenanceModal')">취소</button>
+                <button class="btn btn-primary" style="flex:1;" onclick="_submitMaintenance()">저장</button>
+            </div>
+        </div>
+    </div>
+    <!-- 수리 완료 처리 모달 -->
+    <div class="modal-overlay" id="maintenanceCompleteModal" style="z-index:99999;">
+        <div class="modal-content" style="max-width:400px;padding:24px;">
+            <h3 style="margin:0 0 12px;font-size:17px;">✅ 수리 완료 처리</h3>
+            <div id="maintCompleteRoomLabel" style="font-size:13px;color:var(--neutral-gray);margin-bottom:14px;"></div>
+            <div class="form-group">
+                <label>완료일</label>
+                <input type="date" id="maintCompleteDate">
+            </div>
+            <div class="form-group">
+                <label>실제 비용 <span style="font-size:12px;color:#94A3B8;">(선택, 지출에 자동 등록)</span></label>
+                <input type="number" id="maintActualCost" min="0" placeholder="0">
+            </div>
+            <div class="form-group">
+                <label>완료 후 상태</label>
+                <select id="maintCompleteStatus">
+                    <option value="vacant">공실</option>
+                    <option value="occupied">입주중 (세입자 있음)</option>
+                </select>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:8px;">
+                <button class="btn btn-secondary" style="flex:1;" onclick="closeModal('maintenanceCompleteModal')">취소</button>
+                <button class="btn btn-primary" style="flex:1;" onclick="_submitMaintenanceComplete()">완료</button>
+            </div>
+        </div>
+    </div>
+    <!-- 보증금 반환일 입력 모달 -->
+    <div class="modal-overlay" id="depositRefundModal" style="z-index:99999;">
+        <div class="modal-content" style="max-width:360px;padding:28px 24px 20px;">
+            <h3 style="margin:0 0 16px;font-size:17px;">보증금 반환 처리</h3>
+            <label style="font-size:14px;color:#6B7280;display:block;margin-bottom:6px;">반환일</label>
+            <input type="date" id="depositRefundDateInput" class="form-input" style="width:100%;margin-bottom:20px;">
+            <div style="display:flex;gap:10px;">
+                <button class="btn btn-secondary" style="flex:1;" onclick="closeModal('depositRefundModal')">취소</button>
+                <button class="btn btn-primary" style="flex:1;" onclick="_submitDepositRefund()">저장</button>
+            </div>
+        </div>
+    </div>
     <div class="td-overlay" id="tenantDetailModal">
         <div class="td-header">
             <button class="td-back-btn" onclick="closeModal('tenantDetailModal')">‹</button>
@@ -2053,7 +2601,8 @@
         let account = null;
         // ============ STORAGE ============
         function cleanupInvalidRents() {
-            // 입주일 이전에 잘못 생성된 pending monthly 레코드 삭제
+            // 입주일 이전 또는 계약종료 이후에 잘못 생성된 pending monthly 레코드 삭제
+            const before = appData.rents.length;
             appData.rents = appData.rents.filter(r => {
                 if (r.type !== 'monthly' && r.type !== undefined && r.type !== '') return true;
                 if (!r.month) return true;
@@ -2071,6 +2620,7 @@
                 if (tEnd && r.month > tEnd && (r.status === 'pending' || r.status === 'overdue')) return false; // 퇴실 후 미납 레코드 제거
                 return true;
             });
+            return appData.rents.length < before; // 실제로 제거된 레코드가 있으면 true
         }
         function loadData() {
             const stored = localStorage.getItem('appData');
@@ -2142,7 +2692,12 @@
             // 변경 요약은 _syncPrevSaveSnapshot() 전에 생성해야 이전 상태와 비교 가능
             var _clSummary = _generateChangeSummary();
             _stampChangedRecordsSinceLastSave();
-            localStorage.setItem('appData', JSON.stringify(appData));
+            try {
+                localStorage.setItem('appData', JSON.stringify(appData));
+            } catch (e) {
+                showToast('⚠️ 저장 공간이 부족합니다. 오래된 사진 첨부를 삭제해 주세요.', 4000);
+                console.error('localStorage 저장 실패:', e);
+            }
             if (_db) {
                 // Firebase 실시간 동기화 (디바운스: 연속 저장 시 1초 후 한 번만)
                 clearTimeout(_fbDebounceTimer);
@@ -2183,6 +2738,12 @@
             _modalZBase++;
             el.style.zIndex = _modalZBase;
             el.classList.add('active');
+            if (document.body.style.overflow !== 'hidden') {
+                document.body._savedScrollY = window.scrollY;
+            }
+            document.body.style.overflow = 'hidden'; // 배경 스크롤 방지
+            // Android 하드웨어 뒤로가기를 모달 닫기로 처리
+            history.pushState({ modal: modalId }, '');
             editingId = null;
             editingType = null;
             if (modalId === 'addBuildingModal') {
@@ -2218,6 +2779,13 @@
             if (!el) return;
             el.classList.remove('active');
             el.style.zIndex = '';
+            // 열린 모달이 하나도 없으면 배경 스크롤 복원
+            const anyOpen = document.querySelectorAll('.modal-overlay.active, .td-overlay.active').length > 0;
+            if (!anyOpen) {
+                document.body.style.overflow = '';
+                const sy = document.body._savedScrollY;
+                if (sy != null) { window.scrollTo(0, sy); document.body._savedScrollY = null; }
+            }
         }
         // 방 모달 닫기 – 건물 상세에서 열었으면 건물 상세로 복귀
         function closeRoomModalWithBack() {
@@ -2249,9 +2817,10 @@
                 if (pt) pt.style.display = 'none';
                 renderTenants();
             }
-            else if (pageId === 'rentPage') renderRents();
-            else if (pageId === 'expensesPage') { loadExpenseFilterRooms(); renderExpenses(); }
+            else if (pageId === 'rentPage') { loadRentBuildingFilter(); renderRents(); }
+            else if (pageId === 'expensesPage') { _selectedExpenseRooms.clear(); loadExpenseFilterRooms(); renderExpenses(); }
             else if (pageId === 'dashboardPage') renderDashboard();
+            else if (pageId === 'taxPage') openTaxPage();
             else if (pageId === 'settingsPage') _updateFirebaseSettingsUI();
         }
         // ============ BUILDING ROOM ROWS ============
@@ -2344,29 +2913,30 @@
             document.getElementById('buildingRoomsSection').style.display = 'none';
         }
         function deleteBuilding() {
-            if (confirm('건물을 삭제하면 해당 건물의 방, 세입자, 수납기록, 지출기록이 모두 삭제됩니다.\n정말 삭제하시겠습니까?')) {
+            const _bid = editingId;
+            showConfirm('건물을 삭제하면 해당 건물의 방, 세입자, 수납기록, 지출기록이 모두 삭제됩니다.\n정말 삭제하시겠습니까?', function() {
                 const deletedRoomIds = appData.rooms
-                    .filter(r => r.buildingId === editingId)
+                    .filter(r => r.buildingId === _bid)
                     .map(r => r.id);
-                // 고아 데이터 일괄 삭제
                 appData.tenants  = appData.tenants.filter(t => !deletedRoomIds.includes(t.roomId));
                 appData.rents    = appData.rents.filter(r => !deletedRoomIds.includes(r.roomId));
-                appData.expenses = appData.expenses.filter(e => e.buildingId !== editingId);
-                appData.rooms    = appData.rooms.filter(r => r.buildingId !== editingId);
-                appData.buildings = appData.buildings.filter(b => b.id !== editingId);
+                appData.expenses = appData.expenses.filter(e => e.buildingId !== _bid);
+                appData.rooms    = appData.rooms.filter(r => r.buildingId !== _bid);
+                appData.buildings = appData.buildings.filter(b => b.id !== _bid);
+                currentBuildingId = null;
                 saveData();
                 closeModal('addBuildingModal');
                 renderBuildings();
                 renderDashboard();
                 showToast('건물 및 관련 데이터가 모두 삭제되었습니다');
-            }
+            });
         }
         function renderBuildings() {
             const container = document.getElementById('buildingsList');
             if (!container) return; // 건물 페이지 없으면 무시
             container.innerHTML = '';
             if (appData.buildings.length === 0) {
-                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🏢</div><p>등록된 건물이 없습니다</p></div>';
+                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🏢</div><p>등록된 건물이 없습니다</p><button class="btn btn-primary" style="margin-top:16px;" onclick="openModal(\'addBuildingModal\')">+ 건물 추가</button></div>';
                 return;
             }
             appData.buildings.forEach(building => {
@@ -2507,6 +3077,9 @@
                 showToast('⚠️ 같은 건물에 이미 존재하는 호수입니다');
                 return;
             }
+            // 기존 방의 수리 메모/날짜를 유지하기 위해 이전 값 캡처
+            const _existingRoom = editingId ? appData.rooms.find(r => r.id === editingId) : null;
+            const newStatus = document.getElementById('roomStatus').value;
             const roomData = {
                 id: editingId || Date.now().toString(),
                 buildingId: buildingId,
@@ -2516,8 +3089,12 @@
                 managementFee: parseInt(document.getElementById('roomManagementFee').value) || 0,
                 deposit: parseInt(document.getElementById('roomDeposit').value) || 0,
                 cleaningFee: parseInt(document.getElementById('roomCleaningFee').value) || 0,
-                status: document.getElementById('roomStatus').value,
-                memo: document.getElementById('roomMemo').value
+                status: newStatus,
+                memo: document.getElementById('roomMemo').value,
+                // 수리 관련 필드는 기존 값 보존
+                maintMemo: _existingRoom ? (_existingRoom.maintMemo || '') : '',
+                maintStartDate: _existingRoom ? (_existingRoom.maintStartDate || '') : '',
+                maintEstCost: _existingRoom ? (_existingRoom.maintEstCost || 0) : 0
             };
             if (editingId) {
                 const index = appData.rooms.findIndex(r => r.id === editingId);
@@ -2529,9 +3106,13 @@
             saveData();
             closeModal('addRoomModal');
             renderBuildings();
-            // 방 저장 후 해당 건물 상세 다시 열기 (openModal이 editingId를 초기화하므로 먼저 저장)
             if (currentBuildingId) showBuildingDetail(currentBuildingId);
             showToast(wasEditing ? '방이 수정되었습니다' : '방이 추가되었습니다');
+            // 새로 maintenance 상태로 바뀌었고 아직 수리 메모가 없으면 수리 정보 모달 자동 오픈
+            const wasMaintenance = _existingRoom && _existingRoom.status === 'maintenance';
+            if (newStatus === 'maintenance' && !wasMaintenance) {
+                openMaintenanceModal(roomData.id);
+            }
         }
         function editRoom(roomId) {
             const room = appData.rooms.find(r => r.id === roomId);
@@ -2555,19 +3136,22 @@
             document.getElementById('deleteRoomBtn').style.display = 'block';
         }
         function deleteRoom() {
-            if (confirm('방을 삭제하면 해당 방의 세입자와 수납 기록도 모두 삭제됩니다.\n정말 삭제하시겠습니까?')) {
-                const deletedRoomId = editingId;
-                appData.rooms    = appData.rooms.filter(r => r.id !== deletedRoomId);
-                appData.tenants  = appData.tenants.filter(t => t.roomId !== deletedRoomId);
-                appData.rents    = appData.rents.filter(r => r.roomId !== deletedRoomId);
-                appData.expenses = appData.expenses.filter(e => e.roomId !== deletedRoomId);
+            const _rid = editingId;
+            showConfirm('방을 삭제하면 해당 방의 세입자, 수납 기록, 지출 기록이 모두 삭제됩니다.\n정말 삭제하시겠습니까?', function() {
+                const deletedTenantIds = appData.tenants
+                    .filter(t => t.roomId === _rid)
+                    .map(t => t.id);
+                appData.rooms    = appData.rooms.filter(r => r.id !== _rid);
+                appData.tenants  = appData.tenants.filter(t => t.roomId !== _rid);
+                appData.rents    = appData.rents.filter(r => r.roomId !== _rid && !deletedTenantIds.includes(r.tenantId));
+                appData.expenses = appData.expenses.filter(e => e.roomId !== _rid);
                 saveData();
                 closeModal('addRoomModal');
                 renderBuildings();
                 renderDashboard();
                 if (currentBuildingId) showBuildingDetail(currentBuildingId);
                 showToast('방 및 관련 데이터가 삭제되었습니다');
-            }
+            });
         }
         // ============ TENANTS ============
         function clearTenantForm() {
@@ -2588,6 +3172,11 @@
             document.getElementById('tenantPayDay').value = '';
             document.getElementById('tenantMoveInDate').value = '';
             document.getElementById('tenantMemo').value = '';
+            document.getElementById('tenantEmergencyName').value = '';
+            document.getElementById('tenantEmergencyPhone').value = '';
+            document.getElementById('tenantGuarantorName').value = '';
+            document.getElementById('tenantGuarantorPhone').value = '';
+            document.getElementById('tenantGuarantorRelation').value = '';
             toggleRentTypeFields();
         }
         function loadBuildingSelect(selectId) {
@@ -2692,6 +3281,11 @@
             const rentType = document.getElementById('tenantRentType').value || 'monthly';
             if (!roomId) { showToast('⚠️ 호수를 선택해주세요'); return; }
             if (!tenantName) { showToast('⚠️ 세입자 이름을 입력해주세요'); return; }
+            const _cs = document.getElementById('tenantContractStart').value;
+            const _ce = document.getElementById('tenantContractEnd').value;
+            if (_cs && _ce && _cs >= _ce) { showToast('⚠️ 계약 종료일이 시작일보다 나중이어야 합니다'); return; }
+            const _rentVal = parseInt(document.getElementById('tenantRent').value);
+            if (isNaN(_rentVal) || _rentVal < 0) { showToast('⚠️ 올바른 월세 금액을 입력해주세요'); return; }
             const tenantData = {
                 id: editingId || Date.now().toString(),
                 roomId: roomId,
@@ -2712,14 +3306,33 @@
                 payDay: parseInt(document.getElementById('tenantPayDay').value) || 1,
                 moveInDate: document.getElementById('tenantMoveInDate').value,
                 memo: document.getElementById('tenantMemo').value,
+                emergencyName: document.getElementById('tenantEmergencyName').value.trim() || '',
+                emergencyPhone: document.getElementById('tenantEmergencyPhone').value.trim() || '',
+                guarantorName: document.getElementById('tenantGuarantorName').value.trim() || '',
+                guarantorPhone: document.getElementById('tenantGuarantorPhone').value.trim() || '',
+                guarantorRelation: document.getElementById('tenantGuarantorRelation').value.trim() || '',
                 status: editingId ? (appData.tenants.find(t => t.id === editingId)?.status || 'active') : 'active',
                 depositRefunded: editingId ? (appData.tenants.find(t => t.id === editingId)?.depositRefunded || false) : false,
-                depositRefundDate: editingId ? (appData.tenants.find(t => t.id === editingId)?.depositRefundDate || '') : ''
+                depositRefundDate: editingId ? (appData.tenants.find(t => t.id === editingId)?.depositRefundDate || '') : '',
+                rentHistory: editingId ? (appData.tenants.find(t => t.id === editingId)?.rentHistory || []) : []
             };
             if (editingId) {
                 const oldTenant = appData.tenants.find(t => t.id === editingId);
                 const oldRoomId = oldTenant ? oldTenant.roomId : null;
                 const index = appData.tenants.findIndex(t => t.id === editingId);
+                // 월세 금액 변경 시 기존 미납 기록은 자동 변경되지 않음을 안내
+                if (oldTenant && (oldTenant.monthlyRent !== tenantData.monthlyRent || (oldTenant.managementFee || 0) !== (tenantData.managementFee || 0))) {
+                    const hasExisting = appData.rents.some(r => r.tenantId === editingId && (!r.type || r.type === 'monthly') && (r.status === 'pending' || r.status === 'overdue'));
+                    if (hasExisting) showToast('⚠️ 월세 금액이 변경되었습니다. 기존 미납 기록은 수동으로 수정해 주세요.', 4000);
+                    // 월세 인상 이력 기록 (이전 금액 + 종료시점 = 오늘)
+                    tenantData.rentHistory = (tenantData.rentHistory || []).concat([{
+                        monthlyRent: oldTenant.monthlyRent || 0,
+                        managementFee: oldTenant.managementFee || 0,
+                        from: oldTenant.contractStart || '',
+                        to: new Date().toISOString().split('T')[0],
+                        reason: 'edit'
+                    }]);
+                }
                 appData.tenants[index] = tenantData;
                 // 호실이 변경된 경우: 이전 방 → 공실, 새 방 → 입주중
                 if (oldRoomId && oldRoomId !== roomId) {
@@ -2769,7 +3382,9 @@
             document.getElementById('tenantRentType').value = tenant.rentType || 'monthly';
             toggleRentTypeFields();
             document.getElementById('tenantName').value = tenant.name;
-            document.getElementById('tenantResidentId').value = tenant.residentId || '';
+            const _ridEl = document.getElementById('tenantResidentId');
+            _ridEl.value = tenant.residentId || '';
+            formatResidentId(_ridEl);
             document.getElementById('tenantPhone').value = tenant.phone;
             document.getElementById('tenantBirthday').value = tenant.birthday || '';
             document.getElementById('tenantOccupation').value = tenant.occupation || '';
@@ -2783,24 +3398,40 @@
             document.getElementById('tenantPayDay').value = tenant.payDay;
             document.getElementById('tenantMoveInDate').value = tenant.moveInDate;
             document.getElementById('tenantMemo').value = tenant.memo;
+            document.getElementById('tenantEmergencyName').value = tenant.emergencyName || '';
+            document.getElementById('tenantEmergencyPhone').value = tenant.emergencyPhone || '';
+            document.getElementById('tenantGuarantorName').value = tenant.guarantorName || '';
+            document.getElementById('tenantGuarantorPhone').value = tenant.guarantorPhone || '';
+            document.getElementById('tenantGuarantorRelation').value = tenant.guarantorRelation || '';
+            // 추가 정보가 입력된 경우 섹션 자동 펼침
+            var extraSec = document.querySelector('#addTenantModal .tenant-extra-section');
+            if (extraSec && (tenant.emergencyName || tenant.emergencyPhone || tenant.guarantorName || tenant.guarantorPhone)) {
+                extraSec.open = true;
+            } else if (extraSec) {
+                extraSec.open = false;
+            }
             document.getElementById('tenantModalTitle').textContent = '세입자 수정';
             document.getElementById('deleteTenantBtn').style.display = 'block';
         }
         function deleteTenant() {
-            if (confirm('정말 삭제하시겠습니까?')) {
-                const tenant = appData.tenants.find(t => t.id === editingId);
+            const _tid = editingId;
+            showConfirm('세입자를 삭제하면 관련 수납 기록도 모두 삭제됩니다.\n정말 삭제하시겠습니까?', function() {
+                const tenant = appData.tenants.find(t => t.id === _tid);
                 if (!tenant) { showToast('오류: 세입자를 찾을 수 없습니다'); return; }
-                const deletedTenantId = editingId;
-                appData.tenants = appData.tenants.filter(t => t.id !== deletedTenantId);
-                appData.rents = appData.rents.filter(r => r.tenantId !== deletedTenantId);
-                // 방 상태를 공실로 변경
-                const room = appData.rooms.find(r => r.id === tenant.roomId);
-                if (room) room.status = 'vacant';
+                const roomId = tenant.roomId;
+                appData.tenants = appData.tenants.filter(t => t.id !== _tid);
+                appData.rents = appData.rents.filter(r => r.tenantId !== _tid);
+                const stillOccupied = appData.tenants.some(t => t.roomId === roomId && t.status === 'active');
+                if (!stillOccupied) {
+                    const room = appData.rooms.find(r => r.id === roomId);
+                    if (room) room.status = 'vacant';
+                }
                 saveData();
                 closeModal('addTenantModal');
                 renderTenants();
+                renderDashboard();
                 showToast('세입자가 삭제되었습니다');
-            }
+            });
         }
         function _calcAge(birthday) {
             if (!birthday) return null;
@@ -2838,10 +3469,19 @@
                 });
             }
             if (allTenants.length === 0) {
-                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">👥</div><p>현재 세입자가 없습니다</p></div>';
+                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">👥</div><p>현재 세입자가 없습니다</p><button class="btn btn-primary" style="margin-top:16px;" onclick="openModal(\'addTenantModal\')">+ 세입자 추가</button></div>';
                 return;
             }
+            var _sortSel = document.getElementById('tenantSortSel');
+            var _sortMode = _sortSel ? _sortSel.value : 'name';
             allTenants.sort(function(a, b) {
+                if (_sortMode === 'rent_desc') return ((b.monthlyRent||0)+(b.managementFee||0)) - ((a.monthlyRent||0)+(a.managementFee||0));
+                if (_sortMode === 'rent_asc')  return ((a.monthlyRent||0)+(a.managementFee||0)) - ((b.monthlyRent||0)+(b.managementFee||0));
+                if (_sortMode === 'end_asc') {
+                    var ea = a.contractEnd || '9999-99', eb = b.contractEnd || '9999-99';
+                    return ea.localeCompare(eb);
+                }
+                // 기본: 건물명 → 호수순
                 var bA = (appData.buildings.find(function(x){return x.id===a.buildingId;})||{}).name||'';
                 var bB = (appData.buildings.find(function(x){return x.id===b.buildingId;})||{}).name||'';
                 if (bA !== bB) return bA.localeCompare(bB);
@@ -2922,27 +3562,8 @@
                 container.appendChild(card);
             });
         }
-        function filterTenants(filter) {
-            currentTenantFilter = filter;
-            document.querySelectorAll('#tenantsPage .tab-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            renderTenants();
-        }
         function refundDeposit(tenantId) {
-            const tenant = appData.tenants.find(t => t.id === tenantId);
-            if (!tenant) return;
-            const today = new Date().toISOString().split('T')[0];
-            const refundDate = prompt('보증금 반환일을 입력하세요 (예: ' + today + ')', today);
-            if (refundDate === null) return; // 취소
-            const index = appData.tenants.findIndex(t => t.id === tenantId);
-            appData.tenants[index].depositRefunded = true;
-            appData.tenants[index].depositRefundDate = refundDate;
-            saveData();
-            showToast('✅ 보증금 반환 완료 처리되었습니다 (₩' + tenant.deposit.toLocaleString() + ')');
-            renderTenants();
-            renderDashboard();
-            // refresh the detail view if it's still open
-            if (_currentDetailTenantId === tenantId) { showTenantDetail(tenantId); }
+            refundDepositModal(tenantId);
         }
         function addCleaningFeeRecord(tenantId) {
             const tenant = appData.tenants.find(t => t.id === tenantId);
@@ -3042,7 +3663,7 @@
             html += '<div class="td-hero-info">';
             html += '<div class="td-hero-name">'+safeTenantName+'</div>';
             if (tenant.phone) html += '<div class="td-hero-contact"><span>📱</span>'+safePhone+'</div>';
-            if (tenant.email) html += '<div class="td-hero-contact"><span>✉️</span>'+safeEmail+'</div>';
+            if (tenant.email) html += '<div class="td-hero-contact"><span>✉️</span><a href="mailto:'+safeEmail+'" style="color:inherit;text-decoration:none;">'+safeEmail+'</a></div>';
             if (tenant.birthday) { var _age=_calcAge(tenant.birthday); html += '<div class="td-hero-contact"><span>👤</span>'+_fmtDate(tenant.birthday)+(_age!==null?' (만 '+_age+'세)':'')+'</div>'; }
             if (tenant.occupation) html += '<div class="td-hero-contact"><span>📋</span>'+safeOccupation+'</div>';
             html += '</div>';
@@ -3084,6 +3705,15 @@
                 html += '<div class="td-pay-status-row '+statusClass+'">';
                 html += '<span>'+statusIcon+' '+curMonth.replace('-','년 ')+'월 '+(isPaid?'납부 완료':isPartial?'부분 납부':'미납')+'</span>';
                 html += '<span>'+paidInfo+'</span></div>';
+                // 부분납부 시 받은 금액·잔액 명시
+                if (isPartial) {
+                    const _expected = (thisMonthRent.rentAmount||0) + (thisMonthRent.managementFee||0);
+                    const _balance = Math.max(0, _expected - (thisMonthRent.amount||0));
+                    html += '<div style="padding:6px 12px 8px;background:#FFFBEB;border-radius:8px;margin:0 10px 8px;font-size:12px;">';
+                    html += '<div style="display:flex;justify-content:space-between;margin-bottom:2px;"><span style="color:#92400E;">받은 금액</span><span style="font-weight:700;color:#1E293B;">₩'+(thisMonthRent.amount||0).toLocaleString()+'</span></div>';
+                    html += '<div style="display:flex;justify-content:space-between;"><span style="color:#92400E;">미수 잔액</span><span style="font-weight:700;color:#DC2626;">₩'+_balance.toLocaleString()+'</span></div>';
+                    html += '</div>';
+                }
                 if (thisMonthRent.status !== 'paid') {
                     html += '<div style="padding:0 10px 8px;"><button class="td-bottom-btn-fill" style="width:100%;padding:9px;" onclick="markRentPaid(\''+thisMonthRent.id+'\')">💰 수납 처리</button></div>';
                 }
@@ -3107,9 +3737,12 @@
                 monthlyRents.forEach(function(rent) {
                     const badgeCls = rent.status==='paid'?'td-badge-ok':rent.status==='partial'?'td-badge-partial':'td-badge-fail';
                     const badgeTxt = rent.status==='paid'?'완납':rent.status==='partial'?'부분납부':'미납';
+                    const expected = (rent.rentAmount||0) + (rent.managementFee||0);
+                    const balance = rent.status === 'partial' ? Math.max(0, expected - (rent.amount||0)) : 0;
                     html += '<div class="td-rent-item" style="cursor:pointer;" onclick="markRentPaid(\''+rent.id+'\')">';
                     html += '<div><div class="td-rent-item-label">'+rent.month+'</div>';
                     if (rent.managementFee>0) html += '<div class="td-rent-item-sub">월세 ₩'+(rent.rentAmount||0).toLocaleString()+' + 관리비 ₩'+rent.managementFee.toLocaleString()+'</div>';
+                    if (balance > 0) html += '<div class="td-rent-item-sub" style="color:#DC2626;font-weight:700;">잔액 ₩'+balance.toLocaleString()+'</div>';
                     html += '<span class="'+badgeCls+'">'+badgeTxt+'</span></div>';
                     html += '<div class="td-rent-item-right"><div class="td-rent-item-amount">₩'+rent.amount.toLocaleString()+'</div>';
                     if (rent.paidDate) html += '<div class="td-rent-item-sub">'+rent.paidDate+'</div>';
@@ -3131,6 +3764,61 @@
                 html += '<div class="td-deposit-ok">✅ 보증금 반환 완료 '+escapeHTML('('+(tenant.depositRefundDate||'날짜 미기록')+')')+'</div>';
             }
             html += '</div></div>';
+
+            // ─── 임대료 변경 이력 ───
+            if (tenant.rentHistory && tenant.rentHistory.length > 0) {
+                html += '<div class="td-section"><div class="td-section-title">임대료 변경 이력</div>';
+                html += '<div class="td-section-card">';
+                // 최신순 정렬
+                const _hist = tenant.rentHistory.slice().sort(function(a,b){ return (b.to||'').localeCompare(a.to||''); });
+                // 현재 계약 (헤더 행)
+                html += '<div class="td-info-row" style="background:#EFF6FF;border-radius:6px;padding:8px 10px;margin-bottom:6px;">'
+                     + '<span class="td-info-label">현재 (' + escapeHTML(tenant.contractStart || '') + '~)</span>'
+                     + '<span class="td-info-value" style="color:#2563EB;font-weight:800;">₩' + ((tenant.monthlyRent||0) + (tenant.managementFee||0)).toLocaleString() + '</span>'
+                     + '</div>';
+                _hist.forEach(function(h) {
+                    const totalH = (h.monthlyRent||0) + (h.managementFee||0);
+                    const periodH = (h.from ? _fmtDate(h.from) : '?') + ' ~ ' + (h.to ? _fmtDate(h.to) : '?');
+                    const reasonTxt = h.reason === 'renew' ? '갱신' : '수정';
+                    html += '<div class="td-info-row"><span class="td-info-label" style="font-size:12px;">' + periodH + ' <span style="color:#94A3B8;font-size:11px;">(' + reasonTxt + ')</span></span>'
+                         + '<span class="td-info-value">₩' + totalH.toLocaleString() + '</span></div>';
+                });
+                html += '</div></div>';
+            }
+
+            // ─── 비상연락처 · 보증인 ───
+            const hasEmergency = tenant.emergencyName || tenant.emergencyPhone;
+            const hasGuarantor = tenant.guarantorName || tenant.guarantorPhone;
+            if (hasEmergency || hasGuarantor) {
+                html += '<div class="td-section"><div class="td-section-title">비상연락처 · 보증인</div>';
+                html += '<div class="td-section-card">';
+                if (hasEmergency) {
+                    const epName = escapeHTML(tenant.emergencyName || '비상연락처');
+                    const epPhone = escapeHTML(tenant.emergencyPhone || '');
+                    const epHref = safePhoneHref(tenant.emergencyPhone, 'tel');
+                    html += '<div class="td-info-row"><span class="td-info-label">📞 '+epName+'</span>';
+                    if (epPhone) {
+                        html += '<a href="'+epHref+'" class="td-info-value" style="color:#2563EB;text-decoration:none;">'+epPhone+'</a>';
+                    } else {
+                        html += '<span class="td-info-value">-</span>';
+                    }
+                    html += '</div>';
+                }
+                if (hasGuarantor) {
+                    const gName = escapeHTML(tenant.guarantorName || '보증인');
+                    const gPhone = escapeHTML(tenant.guarantorPhone || '');
+                    const gRel = tenant.guarantorRelation ? ' ('+escapeHTML(tenant.guarantorRelation)+')' : '';
+                    const gHref = safePhoneHref(tenant.guarantorPhone, 'tel');
+                    html += '<div class="td-info-row"><span class="td-info-label">🛡️ '+gName+gRel+'</span>';
+                    if (gPhone) {
+                        html += '<a href="'+gHref+'" class="td-info-value" style="color:#2563EB;text-decoration:none;">'+gPhone+'</a>';
+                    } else {
+                        html += '<span class="td-info-value">-</span>';
+                    }
+                    html += '</div>';
+                }
+                html += '</div></div>';
+            }
 
             // ─── Cleaning fee / deposit actions (non-active tenants) ───
             if (!isActive && !hasCleaningRecord && (tenant.cleaningFee||0)>0) {
@@ -3179,12 +3867,11 @@
             const el = document.getElementById('tdRentHistory');
             if (!el) return;
             const btn = document.querySelector('.td-rent-history-btn');
-            if (el.style.display==='none') {
-                el.style.display='block';
-                if (btn) btn.innerHTML = '접기 <span>∧</span>';
-            } else {
-                el.style.display='none';
-                if (btn) btn.innerHTML = '전체 수납 내역 보기 <span>›</span>';
+            const isOpen = el.style.display !== 'none';
+            el.style.display = isOpen ? 'none' : 'block';
+            if (btn) {
+                btn.innerHTML = isOpen ? '전체 수납 내역 보기 <span>›</span>' : '접기 <span>∧</span>';
+                btn.classList.toggle('expanded', !isOpen);
             }
         }
         // ============ UTILS ============
@@ -3224,6 +3911,29 @@
         }
         // ============ RENTS ============
         let currentYear = new Date().getFullYear();
+        let _rentBuildingFilter = null; // null = 전체
+
+        function loadRentBuildingFilter() {
+            const wrap = document.getElementById('rentBuildingFilter');
+            if (!wrap) return;
+            const buildings = appData.buildings || [];
+            if (buildings.length <= 1) { wrap.style.display = 'none'; return; }
+            wrap.style.display = 'flex';
+            wrap.innerHTML = '';
+            // 전체 칩
+            const allChip = document.createElement('button');
+            allChip.className = 'rent-bld-chip' + (_rentBuildingFilter === null ? ' active' : '');
+            allChip.textContent = '전체';
+            allChip.onclick = function() { _rentBuildingFilter = null; loadRentBuildingFilter(); renderRents(); };
+            wrap.appendChild(allChip);
+            buildings.forEach(function(b) {
+                const chip = document.createElement('button');
+                chip.className = 'rent-bld-chip' + (_rentBuildingFilter === b.id ? ' active' : '');
+                chip.textContent = b.name;
+                chip.onclick = function() { _rentBuildingFilter = b.id; loadRentBuildingFilter(); renderRents(); };
+                wrap.appendChild(chip);
+            });
+        }
         function isAfterContractEndMonth(tenant, month) {
             const tEnd = (tenant && tenant.contractEnd || '').slice(0, 7);
             return !!(tEnd && month > tEnd);
@@ -3248,7 +3958,7 @@
                 buildingId: tenant.buildingId,
                 month: month,
                 amount: tenant.monthlyRent + (tenant.managementFee || 0),
-                rentAmount: tenant.monthlyRent,
+                rentAmount: tenant.monthlyRent || 0,
                 managementFee: tenant.managementFee || 0,
                 paidDate: null,
                 status: 'pending',
@@ -3256,7 +3966,10 @@
             });
             return true;
         }
+        let _generatingMonthlyRents = false;
         function generateAllMonthlyRents() {
+            if (_generatingMonthlyRents) return;
+            _generatingMonthlyRents = true;
             const month = getMonthStr(new Date());
             let created = 0;
             let skippedEnded = 0;
@@ -3278,11 +3991,16 @@
             } else {
                 showToast('이미 생성된 월세 기록이 있습니다');
             }
+            _generatingMonthlyRents = false;
         }
-        let _markRentSourceTenantId = null; // 세입자 상세에서 열렸을 때 재오픈용
+        let _markRentSourceTenantId = null;
+        let _markRentOpening = false; // 이중 탭 방지 플래그
         function markRentPaid(rentId) {
+            if (_markRentOpening) return;
+            _markRentOpening = true;
+            setTimeout(() => { _markRentOpening = false; }, 600);
             const rent = appData.rents.find(r => r.id === rentId);
-            if (!rent) { showToast('⚠️ 수납 기록을 찾을 수 없습니다'); return; }
+            if (!rent) { showToast('⚠️ 수납 기록을 찾을 수 없습니다'); _markRentOpening = false; return; }
             const tenant = appData.tenants.find(t => t.id === rent.tenantId);
             // 세입자 상세 모달에서 열렸는지 기록 (저장 후 재오픈)
             const tenantModal = document.getElementById('tenantDetailModal');
@@ -3290,11 +4008,58 @@
                 ? rent.tenantId : null;
             openModal('markRentModal');
             editingId = rentId;
+            // 청구 금액: rent.type이 deposit/cleaning이면 rent.amount 자체가 청구, 월세면 rentAmount+managementFee
+            let expectedAmt;
+            if (rent.type === 'monthly' || !rent.type) {
+                expectedAmt = (rent.rentAmount != null ? rent.rentAmount : (tenant?.monthlyRent || 0))
+                    + (rent.managementFee != null ? rent.managementFee : (tenant?.managementFee || 0));
+            } else {
+                // 보증금·청소비 등 일시성 항목은 amount 자체가 청구
+                expectedAmt = rent.amount || 0;
+            }
             document.getElementById('rentTenantName').value = tenant?.name || '';
             document.getElementById('rentAmount').value = rent.amount;
+            document.getElementById('rentAmount').dataset.expected = expectedAmt;
             document.getElementById('rentPaidDate').value = rent.paidDate || new Date().toISOString().split('T')[0];
             document.getElementById('rentStatus').value = rent.status;
             document.getElementById('rentMemo').value = rent.memo || '';
+            _updateRentBalanceUI();
+        }
+        // 청구금액·잔액·상태에 따른 UI 동기화
+        function _updateRentBalanceUI() {
+            const box = document.getElementById('rentExpectedBox');
+            const amtEl = document.getElementById('rentAmount');
+            const statusEl = document.getElementById('rentStatus');
+            const labelEl = document.getElementById('rentAmountLabel');
+            const hintEl = document.getElementById('rentPartialHint');
+            const expectedAmtEl = document.getElementById('rentExpectedAmt');
+            const balRow = document.getElementById('rentBalanceRow');
+            const balAmtEl = document.getElementById('rentBalanceAmt');
+            if (!box || !amtEl || !statusEl) return;
+            const expected = parseInt(amtEl.dataset.expected) || 0;
+            const paid = parseInt(amtEl.value) || 0;
+            const status = statusEl.value;
+            if (expected <= 0) { box.style.display = 'none'; hintEl.style.display = 'none'; return; }
+            box.style.display = '';
+            expectedAmtEl.textContent = '₩' + expected.toLocaleString();
+            if (status === 'partial') {
+                labelEl.textContent = '받은 금액 (부분납부)';
+                hintEl.style.display = '';
+                const balance = expected - paid;
+                balRow.style.display = '';
+                balAmtEl.textContent = '₩' + Math.max(0, balance).toLocaleString();
+                balAmtEl.style.color = balance > 0 ? '#DC2626' : '#16A34A';
+            } else if (status === 'paid') {
+                labelEl.textContent = '납부 금액';
+                hintEl.style.display = 'none';
+                balRow.style.display = 'none';
+            } else { // pending
+                labelEl.textContent = '청구 금액';
+                hintEl.style.display = 'none';
+                balRow.style.display = '';
+                balAmtEl.textContent = '₩' + expected.toLocaleString();
+                balAmtEl.style.color = '#DC2626';
+            }
         }
         function markMonthCell(tenantId, month) {
             // 기록 없으면 자동 생성 후 수납 모달 열기
@@ -3317,7 +4082,9 @@
             const rent = appData.rents.find(r => r.id === editingId);
             if (!rent) { showToast('오류: 수납 기록을 찾을 수 없습니다'); return; }
             const fromTenantId = _markRentSourceTenantId; // 저장 전에 캡처
-            rent.amount = parseInt(document.getElementById('rentAmount').value);
+            const _rentAmt = parseInt(document.getElementById('rentAmount').value);
+            if (isNaN(_rentAmt) || _rentAmt < 0) { showToast('⚠️ 올바른 금액을 입력해주세요'); return; }
+            rent.amount = _rentAmt;
             rent.paidDate = document.getElementById('rentPaidDate').value;
             rent.status = document.getElementById('rentStatus').value;
             rent.memo = document.getElementById('rentMemo').value;
@@ -3329,6 +4096,7 @@
                 showTenantDetail(fromTenantId);
             }
             renderRents();
+            renderTenants();
             renderDashboard();
             showToast('수납 기록이 저장되었습니다');
         }
@@ -3347,7 +4115,12 @@
                 .filter(r => r.status === 'paid')
                 .reduce((sum, r) => sum + (r.amount || 0), 0);
             const dueRents = yearRents.filter(r => r.status === 'pending' || r.status === 'overdue' || r.status === 'partial');
-            const dueAmount = dueRents.reduce((sum, r) => sum + (r.amount || 0), 0);
+            // 미수금 = pending/overdue는 청구금액 전체, partial은 잔액(청구 - 받은 금액)
+            const dueAmount = dueRents.reduce((sum, r) => {
+                const expected = (r.rentAmount || 0) + (r.managementFee || 0);
+                if (r.status === 'partial') return sum + Math.max(0, expected - (r.amount || 0));
+                return sum + (expected || r.amount || 0);
+            }, 0);
             const totalAmount = paidAmount + dueAmount;
             const rate = totalAmount > 0 ? Math.round((paidAmount / totalAmount) * 100) : 0;
             panel.innerHTML = `
@@ -3386,6 +4159,8 @@
             const rentSearchQuery = rentSearchEl ? rentSearchEl.value.trim().toLowerCase() : '';
             const activeTenants = appData.tenants.filter(t => {
                 if (t.status !== 'active') return false;
+                // 건물 필터
+                if (_rentBuildingFilter && t.buildingId !== _rentBuildingFilter) return false;
                 if (!rentSearchQuery) return true;
                 const room = appData.rooms.find(r => r.id === t.roomId);
                 const roomNum = room ? room.roomNumber.toLowerCase() : '';
@@ -3395,7 +4170,7 @@
                 renderRentSummary([], currentYear);
                 container.innerHTML = rentSearchQuery
                     ? '<div class="empty-state"><div class="empty-state-icon">🔍</div><p>검색 결과가 없습니다</p></div>'
-                    : '<div class="empty-state"><div class="empty-state-icon">💰</div><p>입주 중인 세입자가 없습니다</p></div>';
+                    : '<div class="empty-state"><div class="empty-state-icon">💰</div><p>입주 중인 세입자가 없습니다</p><button class="btn btn-primary" style="margin-top:16px;" onclick="switchPage(\'tenantsPage\')">세입자 관리로 이동</button></div>';
                 return;
             }
             renderRentSummary(activeTenants, currentYear);
@@ -3427,7 +4202,7 @@
                         <div class="rent-year-card-header">
                             <div>
                                 <div class="rent-year-card-name">${escapeHTML(tenant.name)}</div>
-                                <div class="rent-year-card-sub">${escapeHTML(building?.name ?? '-')} ${escapeHTML(room?.roomNumber ?? '-')}호 · ₩${tenant.monthlyRent.toLocaleString()}/년 · 납부월: ${renewalMM}월</div>
+                                <div class="rent-year-card-sub">${escapeHTML(building?.name ?? '-')} ${escapeHTML(room?.roomNumber ?? '-')}호 · ₩${(tenant.monthlyRent || 0).toLocaleString()}/년 · 납부월: ${renewalMM}월</div>
                             </div>
                             <div>
                                 ${isPaid
@@ -3473,7 +4248,7 @@
                     tenants.forEach(tenant => {
                         const monthlyAmount = tenant.monthlyRent + (tenant.managementFee || 0);
                         const rentMap = {};
-                        appData.rents.filter(r => r.tenantId === tenant.id && (!r.type || r.type === 'monthly') && r.month.startsWith(currentYear + '-'))
+                        appData.rents.filter(r => r.tenantId === tenant.id && (!r.type || r.type === 'monthly') && r.month && r.month.startsWith(currentYear + '-'))
                             .forEach(r => { rentMap[r.month] = r; });
                         let paidCount = 0, pendingCount = 0;
                         const _mi2 = (tenant.moveInDate || '').slice(0,7);
@@ -3549,7 +4324,14 @@
                             }
                             // 미래 월은 클릭 비활성화 (실수로 기록 생성 방지)
                             const onClickAttr = isFuture ? '' : `onclick="markMonthCell('${tenant.id}','${mStr}')"`;
-                            return `<div class="rent-month-cell ${cellClass}${isFuture ? ' future-cell' : ''}" ${onClickAttr} style="${isFuture ? 'cursor:default;' : ''}">
+                            // 부분납부 셀에 잔액 툴팁
+                            let cellTitle = '';
+                            if (r && r.status === 'partial') {
+                                const _exp = (r.rentAmount||0) + (r.managementFee||0);
+                                const _bal = Math.max(0, _exp - (r.amount||0));
+                                cellTitle = `title="받음 ₩${(r.amount||0).toLocaleString()} / 잔액 ₩${_bal.toLocaleString()}"`;
+                            }
+                            return `<div class="rent-month-cell ${cellClass}${isFuture ? ' future-cell' : ''}" ${onClickAttr} ${cellTitle} style="${isFuture ? 'cursor:default;' : ''}">
                                 <div class="m-label">${m}월</div>
                                 <div class="m-icon">${icon}</div>
                                 ${dateStr ? `<div class="m-date">${dateStr}</div>` : ''}
@@ -3798,13 +4580,14 @@
             renderReceiptPreviews();
         }
         function deleteExpense() {
-            if (confirm('정말 삭제하시겠습니까?')) {
-                appData.expenses = appData.expenses.filter(e => e.id !== editingId);
+            const _eid = editingId;
+            showConfirm('이 지출 기록을 삭제하시겠습니까?', function() {
+                appData.expenses = appData.expenses.filter(e => e.id !== _eid);
                 saveData();
                 closeModal('addExpenseModal');
                 renderExpenses();
                 showToast('지출이 삭제되었습니다');
-            }
+            });
         }
 
         function renderExpenseRoomChart(expenses) {
@@ -3852,6 +4635,43 @@
                 + rows;
         }
 
+        function renderExpenseMonthChart(expenses) {
+            var chartEl = document.getElementById('expenseMonthChart');
+            if (!chartEl) return;
+            if (!expenses || expenses.length === 0) { chartEl.style.display = 'none'; return; }
+
+            // 월별 합산 (최근 12개월 또는 데이터 있는 전체)
+            var byMonth = {};
+            expenses.forEach(function(e) {
+                var m = (e.date || '').slice(0, 7);
+                if (!m) return;
+                byMonth[m] = (byMonth[m] || 0) + (e.amount || 0);
+            });
+            var months = Object.keys(byMonth).sort();
+            if (months.length === 0) { chartEl.style.display = 'none'; return; }
+            // 최근 12개월로 제한
+            if (months.length > 12) months = months.slice(months.length - 12);
+            chartEl.style.display = 'block';
+
+            var maxAmt = Math.max.apply(null, months.map(function(m) { return byMonth[m] || 0; })) || 1;
+            var bars = months.map(function(m) {
+                var amt = byMonth[m] || 0;
+                var pct = Math.max(4, Math.round(amt / maxAmt * 100));
+                var label = m.slice(5) + '월'; // MM월
+                var amtStr = amt >= 10000 ? Math.round(amt/10000) + '만' : amt.toLocaleString();
+                return '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;min-width:0;">' +
+                    '<div style="font-size:9px;color:#94A3B8;font-weight:600;">' + amtStr + '</div>' +
+                    '<div style="width:100%;background:#EFF6FF;border-radius:4px;overflow:hidden;height:60px;display:flex;align-items:flex-end;">' +
+                    '<div style="width:100%;height:' + pct + '%;background:linear-gradient(180deg,#6366F1,#818CF8);border-radius:4px 4px 0 0;transition:height 0.3s;"></div>' +
+                    '</div>' +
+                    '<div style="font-size:9px;color:#64748B;font-weight:700;white-space:nowrap;">' + label + '</div>' +
+                    '</div>';
+            }).join('');
+
+            chartEl.innerHTML =
+                '<div style="font-size:12px;font-weight:700;color:#475569;margin-bottom:10px;">📈 월별 지출 추이</div>' +
+                '<div style="display:flex;gap:4px;align-items:flex-end;">' + bars + '</div>';
+        }
         function renderExpenseSummary(filtered) {
             const panel = document.getElementById('expenseSummaryPanel');
             if (!panel) return;
@@ -3895,7 +4715,7 @@
             const expSearchQuery = expSearchEl ? expSearchEl.value.trim().toLowerCase() : '';
             let filtered = appData.expenses;
             if (_selectedExpenseRooms.size > 0) {
-                filtered = filtered.filter(e => _selectedExpenseRooms.has(e.roomId));
+                filtered = filtered.filter(e => _selectedExpenseRooms.has(e.roomId) || !e.roomId);
             }
             if (expSearchQuery) {
                 filtered = filtered.filter(e =>
@@ -3907,6 +4727,8 @@
             renderExpenseSummary(filtered);
             // 호실별 차트
             renderExpenseRoomChart(filtered || []);
+            // 월별 추이 차트
+            renderExpenseMonthChart(filtered || []);
             // Render category summary
             const categorySummary = {};
             filtered.forEach(e => {
@@ -3926,7 +4748,7 @@
             // Render list
             container.innerHTML = '';
             if (filtered.length === 0) {
-                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📄</div><p>지출이 없습니다</p></div>';
+                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📄</div><p>지출이 없습니다</p><button class="btn btn-primary" style="margin-top:16px;" onclick="openModal(\'addExpenseModal\')">+ 지출 추가</button></div>';
                 return;
             }
             filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -4055,7 +4877,12 @@
             const monthRents = appData.rents.filter(r => r.month === monthStr);
             const paidRents = monthRents.filter(r => r.status === 'paid');
             const monthlyIncome = paidRents.reduce((sum, r) => sum + r.amount, 0);
-            const unpaidRents = appData.rents.filter(r => r.status === 'pending' || r.status === 'overdue');
+            const unpaidRents = appData.rents.filter(r => {
+                if (!((r.status === 'pending' || r.status === 'overdue') && r.month <= monthStr)) return false;
+                const t = appData.tenants.find(t => t.id === r.tenantId);
+                const tEnd = t ? (t.contractEnd || '').slice(0, 7) : '';
+                return !tEnd || r.month <= tEnd; // 계약종료 이후 월은 미납 집계 제외
+            });
             // 이번달 수입예정: 월세는 매달, 연세는 계약 시작 월에만 포함
             const thisMonth = String(today.getMonth() + 1).padStart(2, '0'); // 'MM'
             const monthlyExpected = appData.tenants
@@ -4112,21 +4939,127 @@
             } else {
                 vacantAlert.style.display = 'none';
             }
-            // Update badges
-            if (unpaidRents.length > 0) {
-                document.getElementById('dashboardBadge').textContent = unpaidRents.length;
-                document.getElementById('dashboardBadge').style.display = 'block';
-            } else {
-                document.getElementById('dashboardBadge').style.display = 'none';
-            }
-            if (unpaidRents.length > 0) {
-                document.getElementById('rentBadge').textContent = unpaidRents.length;
-                document.getElementById('rentBadge').style.display = 'block';
-            } else {
-                document.getElementById('rentBadge').style.display = 'none';
-            }
+            // 뱃지는 패치된 renderDashboard(히스토리 4개월 집계)에서 단독 관리
         }
         // ============ UTILITIES ============
+        // ── 공용 확인 다이얼로그 ──
+        let _appConfirmCallback = null;
+        function showConfirm(message, onConfirm, okLabel, isDanger) {
+            _appConfirmCallback = onConfirm;
+            document.getElementById('appConfirmMsg').textContent = message;
+            const okBtn = document.getElementById('appConfirmOkBtn');
+            okBtn.textContent = okLabel || '확인';
+            okBtn.className = isDanger === false ? 'btn btn-primary' : 'btn btn-danger';
+            openModal('appConfirmModal');
+        }
+        function _appConfirmResolve(confirmed) {
+            closeModal('appConfirmModal');
+            if (confirmed && typeof _appConfirmCallback === 'function') _appConfirmCallback();
+            _appConfirmCallback = null;
+        }
+        // ── 보증금 반환 모달 ──
+        let _depositRefundTenantId = null;
+        function refundDepositModal(tenantId) {
+            _depositRefundTenantId = tenantId;
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('depositRefundDateInput').value = today;
+            openModal('depositRefundModal');
+        }
+        function _submitDepositRefund() {
+            const refundDate = document.getElementById('depositRefundDateInput').value;
+            if (!refundDate) { showToast('⚠️ 반환일을 입력해주세요'); return; }
+            const tenantId = _depositRefundTenantId;
+            const index = appData.tenants.findIndex(t => t.id === tenantId);
+            if (index === -1) { closeModal('depositRefundModal'); return; }
+            const tenant = appData.tenants[index];
+            appData.tenants[index].depositRefunded = true;
+            appData.tenants[index].depositRefundDate = refundDate;
+            saveData();
+            closeModal('depositRefundModal');
+            showToast('✅ 보증금 반환 완료 처리되었습니다 (₩' + (tenant.deposit || 0).toLocaleString() + ')');
+            renderTenants();
+            renderDashboard();
+            if (document.getElementById('tenantDetailModal')?.classList.contains('active')) {
+                showTenantDetail(tenantId);
+            }
+        }
+        // ── 수리 요청 워크플로우 ──
+        let _maintRoomId = null;
+        function openMaintenanceModal(roomId) {
+            const room = appData.rooms.find(r => r.id === roomId);
+            if (!room) { showToast('⚠️ 방을 찾을 수 없습니다'); return; }
+            _maintRoomId = roomId;
+            const building = appData.buildings.find(b => b.id === room.buildingId);
+            document.getElementById('maintenanceRoomLabel').textContent = (building ? building.name + ' · ' : '') + room.roomNumber + '호';
+            document.getElementById('maintMemo').value = room.maintMemo || '';
+            document.getElementById('maintStartDate').value = room.maintStartDate || new Date().toISOString().split('T')[0];
+            document.getElementById('maintEstCost').value = room.maintEstCost || '';
+            const titleEl = document.getElementById('maintenanceModalTitle');
+            if (titleEl) titleEl.textContent = room.maintMemo ? '🔧 수리 정보 수정' : '🔧 수리 요청';
+            openModal('maintenanceModal');
+        }
+        function _submitMaintenance() {
+            const room = appData.rooms.find(r => r.id === _maintRoomId);
+            if (!room) { closeModal('maintenanceModal'); return; }
+            const memo = document.getElementById('maintMemo').value.trim();
+            if (!memo) { showToast('⚠️ 수리 내용을 입력해주세요'); return; }
+            room.maintMemo = memo;
+            room.maintStartDate = document.getElementById('maintStartDate').value || '';
+            room.maintEstCost = parseInt(document.getElementById('maintEstCost').value) || 0;
+            room.status = 'maintenance';
+            saveData();
+            closeModal('maintenanceModal');
+            renderBuildings();
+            renderDashboard();
+            if (currentBuildingId === room.buildingId) showBuildingDetail(currentBuildingId);
+            showToast('🔧 수리 요청이 등록되었습니다');
+        }
+        function openMaintenanceCompleteModal(roomId) {
+            const room = appData.rooms.find(r => r.id === roomId);
+            if (!room) { showToast('⚠️ 방을 찾을 수 없습니다'); return; }
+            _maintRoomId = roomId;
+            const building = appData.buildings.find(b => b.id === room.buildingId);
+            document.getElementById('maintCompleteRoomLabel').textContent = (building ? building.name + ' · ' : '') + room.roomNumber + '호 — ' + (room.maintMemo || '');
+            document.getElementById('maintCompleteDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('maintActualCost').value = room.maintEstCost || '';
+            // 입주중 세입자 있으면 기본값을 occupied로
+            const hasActiveTenant = appData.tenants.some(t => t.roomId === roomId && t.status === 'active');
+            document.getElementById('maintCompleteStatus').value = hasActiveTenant ? 'occupied' : 'vacant';
+            openModal('maintenanceCompleteModal');
+        }
+        function _submitMaintenanceComplete() {
+            const room = appData.rooms.find(r => r.id === _maintRoomId);
+            if (!room) { closeModal('maintenanceCompleteModal'); return; }
+            const completeDate = document.getElementById('maintCompleteDate').value || new Date().toISOString().split('T')[0];
+            const actualCost = parseInt(document.getElementById('maintActualCost').value) || 0;
+            const newStatus = document.getElementById('maintCompleteStatus').value;
+            const memoSnapshot = room.maintMemo || '수리';
+            // 비용이 있으면 지출 자동 등록
+            if (actualCost > 0) {
+                appData.expenses.push({
+                    id: Date.now().toString() + '_maint',
+                    buildingId: room.buildingId,
+                    roomId: room.id,
+                    title: '🔧 ' + memoSnapshot,
+                    amount: actualCost,
+                    category: '수리비',
+                    date: completeDate,
+                    memo: '자동 등록 (수리 완료)',
+                    receipts: []
+                });
+            }
+            // 수리 정보 초기화 + 상태 변경
+            room.status = newStatus;
+            room.maintMemo = '';
+            room.maintStartDate = '';
+            room.maintEstCost = 0;
+            saveData();
+            closeModal('maintenanceCompleteModal');
+            renderBuildings();
+            renderDashboard();
+            if (currentBuildingId === room.buildingId) showBuildingDetail(currentBuildingId);
+            showToast(actualCost > 0 ? '✅ 수리 완료 — 지출 ₩' + actualCost.toLocaleString() + ' 자동 등록' : '✅ 수리 완료 처리되었습니다', 3000);
+        }
         function showToast(message, durationMs) {
             var ms = durationMs == null ? 2000 : durationMs;
             const toast = document.createElement('div');
@@ -4193,6 +5126,887 @@
             };
             input.click();
         }
+        // ════════════════════════════════════════════════
+        // 📑 세무 정리 (종합소득세 임대소득 신고용)
+        // ════════════════════════════════════════════════
+        let _taxYear = new Date().getFullYear();
+        let _taxActiveTab = 'summary';
+        let _taxExcludedRents = new Set();      // 임대수입에서 제외할 rent id
+        let _taxExcludedExpenses = new Set();   // 필요경비에서 제외할 expense id
+        let _taxExpenseOverride = {};           // { expenseId: 'deductible'|'non' } 사용자 강제 분류
+        let _taxDepositRate = 3.5;              // 간주임대료 정기예금이자율(%) — 사용자 수정 가능
+        // 카테고리별 기본 필요경비 분류 (사용자가 픽 변경 가능)
+        const _taxDeductibleCategories = new Set(['수리비','관리비','재산세','보험료','청소비','인테리어','중개수수료','공과금','전기료','수도료','가스료','세금']);
+
+        function openTaxFiling() {
+            _taxYear = new Date().getFullYear();
+            _taxActiveTab = 'summary';
+            _taxExcludedRents.clear();
+            _taxExcludedExpenses.clear();
+            _taxExpenseOverride = {};
+            openModal('taxFilingModal');
+            renderTaxFiling();
+        }
+        // ════════════════════════════════════════════════
+        // 📑 세금 페이지 (전용 페이지)
+        // ════════════════════════════════════════════════
+        let _taxPageDataTab = 'income';
+        function openTaxPage() {
+            _taxYear = _taxYear || new Date().getFullYear();
+            _taxPageLoadSettings();
+            renderTaxPage();
+        }
+        function _taxPagePrevYear() { _taxYear--; renderTaxPage(); }
+        function _taxPageNextYear() { _taxYear++; renderTaxPage(); }
+        function _taxPageSwitchTab(tab) {
+            _taxPageDataTab = tab;
+            document.querySelectorAll('#taxPage .tax-tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+            _renderTaxPageData();
+        }
+        function _taxPageLoadSettings() {
+            const s = appData._taxSettings || {};
+            document.getElementById('taxOwnedHouses').value = s.ownedHouses != null ? s.ownedHouses : 1;
+            document.getElementById('taxIsRegistered').checked = !!s.isRegistered;
+            document.getElementById('taxRegisteredTerm').value = s.registeredTerm || 'short';
+            document.getElementById('taxRegisteredOptions').style.display = s.isRegistered ? 'block' : 'none';
+            document.getElementById('taxOtherIncome').value = s.otherIncome || 0;
+        }
+        function _taxPageSaveSettings() {
+            const s = {
+                ownedHouses: parseInt(document.getElementById('taxOwnedHouses').value) || 1,
+                isRegistered: document.getElementById('taxIsRegistered').checked,
+                registeredTerm: document.getElementById('taxRegisteredTerm').value || 'short',
+                otherIncome: parseInt(document.getElementById('taxOtherIncome').value) || 0
+            };
+            appData._taxSettings = s;
+            document.getElementById('taxRegisteredOptions').style.display = s.isRegistered ? 'block' : 'none';
+            saveData();
+        }
+        function _taxPageGetSettings() {
+            const s = appData._taxSettings || {};
+            return {
+                ownedHouses: s.ownedHouses != null ? s.ownedHouses : 1,
+                isRegistered: !!s.isRegistered,
+                registeredTerm: s.registeredTerm || 'short',
+                otherIncome: s.otherIncome || 0
+            };
+        }
+        // ── 정밀 간주임대료 (일별 보증금적수) ──
+        function _taxComputePreciseDeemed() {
+            const yearStart = new Date(_taxYear + '-01-01');
+            const yearEnd = new Date(_taxYear + '-12-31');
+            const yearDays = 365 + ((_taxYear % 4 === 0 && _taxYear % 100 !== 0) || _taxYear % 400 === 0 ? 1 : 0);
+            const THRESHOLD = 300000000; // 3억
+            let totalDepositSum = 0; // 보증금적수 (deposit × days)
+            const perTenant = [];
+            (appData.tenants || []).forEach(t => {
+                if (!t.deposit || t.deposit <= 0) return;
+                if (t._taxExcludeSmallHouse) { perTenant.push({tenant:t, days:0, sum:0, excluded:true}); return; }
+                const cs = t.contractStart ? new Date(t.contractStart) : null;
+                const ce = t.contractEnd ? new Date(t.contractEnd) : yearEnd;
+                if (!cs) return;
+                const start = cs > yearStart ? cs : yearStart;
+                const end = ce < yearEnd ? ce : yearEnd;
+                if (start > end) return;
+                const days = Math.round((end - start) / (1000 * 60 * 60 * 24)) + 1;
+                const sum = (t.deposit || 0) * days;
+                totalDepositSum += sum;
+                perTenant.push({tenant:t, days:days, sum:sum, deposit:t.deposit});
+            });
+            // 간주임대료 = (보증금적수 합계 - 3억×365) × 60% × 이자율 ÷ 365
+            const thresholdSum = THRESHOLD * yearDays;
+            const excessSum = Math.max(0, totalDepositSum - thresholdSum);
+            const deemed = Math.round(excessSum * 0.60 * (_taxDepositRate / 100) / yearDays);
+            return { yearDays, totalDepositSum, thresholdSum, excessSum, deemed, perTenant };
+        }
+        // ── 신고 의무 판정 ──
+        function _taxComputeFilingReq() {
+            const s = _taxPageGetSettings();
+            const inc = _taxCollectIncome();
+            const totalRent = inc.totalIncluded;
+            if (s.ownedHouses <= 0) return { status: 'exempt', text: '보유 주택 0개 — 임대소득세 대상 아님' };
+            if (s.ownedHouses === 1) {
+                // 1주택자: 월세 0이면 비과세 (기준시가 9억 이하 + 국외주택 아님), 월세 받으면 과세
+                if (totalRent === 0) return { status: 'exempt', text: '1주택자 + 월세 수입 없음 → 비과세 (기준시가 9억 초과 / 국외주택 시 과세)' };
+                return { status: 'required', text: '1주택자 + 월세 수입 발생 → 신고 의무 (기준시가 9억 이하면 비과세 가능 — 본인 확인 필요)' };
+            }
+            // 2주택 이상
+            if (totalRent <= 20000000) return { status: 'optional', text: '2주택 이상 + 임대수입 2,000만 이하 → 분리과세 / 종합과세 선택 가능' };
+            return { status: 'required', text: '2주택 이상 + 임대수입 2,000만 초과 → 종합과세 의무' };
+        }
+        // ── 분리과세 세액 계산 ──
+        function _taxComputeSeparateTax() {
+            const s = _taxPageGetSettings();
+            const inc = _taxCollectIncome();
+            const dep = _taxComputePreciseDeemed();
+            const grossIncome = inc.totalIncluded + dep.deemed;
+            // 분리과세 필요경비율
+            const necessaryRate = s.isRegistered ? 0.60 : 0.50;
+            const necessaryExp = Math.round(grossIncome * necessaryRate);
+            // 기본공제
+            const basicDeduction = s.isRegistered ? 4000000 : 2000000;
+            const taxBase = Math.max(0, grossIncome - necessaryExp - basicDeduction);
+            let tax = Math.round(taxBase * 0.14); // 14% 세율
+            // 등록임대 감면
+            let discountRate = 0;
+            if (s.isRegistered) {
+                if (s.registeredTerm === 'long') discountRate = 0.75;
+                else if (s.registeredTerm === 'long_joint') discountRate = 0.50;
+                else discountRate = 0.30;
+            }
+            const discount = Math.round(tax * discountRate);
+            const finalTax = tax - discount;
+            const localTax = Math.round(finalTax * 0.10); // 지방소득세 10%
+            return { grossIncome, necessaryExp, basicDeduction, taxBase, tax, discount, finalTax, localTax, total: finalTax + localTax };
+        }
+        // ── 종합과세 세액 (단순 추정) ──
+        function _taxComputeCombinedTax() {
+            const s = _taxPageGetSettings();
+            const inc = _taxCollectIncome();
+            const exp = _taxCollectExpenses();
+            const dep = _taxComputePreciseDeemed();
+            const rentalIncome = Math.max(0, inc.totalIncluded + dep.deemed - exp.deductibleTotal);
+            const totalIncome = rentalIncome + (s.otherIncome || 0);
+            // 종합소득세 누진세율 (2024년 기준)
+            const tax = _taxProgressiveTax(totalIncome);
+            // 임대 부분만 분리해서 표시
+            const taxIfOnlyOther = _taxProgressiveTax(s.otherIncome || 0);
+            const rentalPortionTax = Math.max(0, tax - taxIfOnlyOther);
+            const localTax = Math.round(rentalPortionTax * 0.10);
+            return { rentalIncome, totalIncome, totalTax: tax, rentalPortionTax, localTax, total: rentalPortionTax + localTax };
+        }
+        function _taxProgressiveTax(income) {
+            if (income <= 0) return 0;
+            if (income <= 14000000) return Math.round(income * 0.06);
+            if (income <= 50000000) return Math.round(840000 + (income - 14000000) * 0.15);
+            if (income <= 88000000) return Math.round(6240000 + (income - 50000000) * 0.24);
+            if (income <= 150000000) return Math.round(15360000 + (income - 88000000) * 0.35);
+            if (income <= 300000000) return Math.round(37060000 + (income - 150000000) * 0.38);
+            if (income <= 500000000) return Math.round(94060000 + (income - 300000000) * 0.40);
+            if (income <= 1000000000) return Math.round(174060000 + (income - 500000000) * 0.42);
+            return Math.round(384060000 + (income - 1000000000) * 0.45);
+        }
+        // ── 세금 캘린더 ──
+        function _taxComputeCalendar() {
+            const today = new Date();
+            const events = [
+                { name: '종합소득세 신고', date: _taxYear + '-05-31', icon: '📑', forYear: _taxYear - 1, key: 'income' },
+                { name: '부가가치세 신고 (1기 확정)', date: _taxYear + '-07-25', icon: '💼', forYear: _taxYear, key: 'vat1' },
+                { name: '재산세 (주택분 1/2)', date: _taxYear + '-07-31', icon: '🏠', forYear: _taxYear, key: 'prop1' },
+                { name: '재산세 (주택분 1/2 + 토지)', date: _taxYear + '-09-30', icon: '🏠', forYear: _taxYear, key: 'prop2' },
+                { name: '부가가치세 신고 (2기 예정)', date: _taxYear + '-10-25', icon: '💼', forYear: _taxYear, key: 'vat2' },
+                { name: '종합부동산세 납부', date: _taxYear + '-12-15', icon: '🏛️', forYear: _taxYear, key: 'gjong' },
+                { name: '부가가치세 신고 (2기 확정)', date: (_taxYear+1) + '-01-25', icon: '💼', forYear: _taxYear, key: 'vat3' }
+            ];
+            events.forEach(e => {
+                const d = new Date(e.date);
+                const diff = Math.round((d - today) / (1000 * 60 * 60 * 24));
+                e.dday = diff;
+            });
+            return events;
+        }
+        // ── 신고 전 체크리스트 ──
+        function _taxComputeChecklist() {
+            const yp = _taxYearPrefix();
+            const items = [];
+            // 1. 미납 월세 확인
+            const yearStart = _taxYear + '-01-01';
+            const yearEnd = _taxYear + '-12-31';
+            const unpaidThisYear = (appData.rents || []).filter(r => r.month && r.month.startsWith(yp) && (r.status === 'pending' || r.status === 'overdue'));
+            if (unpaidThisYear.length > 0) items.push({ status: 'warn', text: `미납 처리되지 않은 월세 기록이 ${unpaidThisYear.length}건 있습니다 — 실제 수납 여부 확인` });
+            else items.push({ status: 'ok', text: `${_taxYear}년 월세 수납 상태 정상` });
+            // 2. partial 미해결
+            const partialThisYear = (appData.rents || []).filter(r => r.month && r.month.startsWith(yp) && r.status === 'partial');
+            if (partialThisYear.length > 0) items.push({ status: 'warn', text: `부분납부 상태 기록 ${partialThisYear.length}건 — 잔액 처리 확인` });
+            // 3. 영수증 없는 지출
+            const expWithoutReceipt = (appData.expenses || []).filter(e => e.date && e.date.startsWith(yp) && (!e.receipts || e.receipts.length === 0));
+            if (expWithoutReceipt.length > 0) items.push({ status: 'warn', text: `영수증 미첨부 지출이 ${expWithoutReceipt.length}건 — 세무조사 대비 첨부 권장` });
+            else if ((appData.expenses || []).filter(e => e.date && e.date.startsWith(yp)).length > 0) items.push({ status: 'ok', text: '모든 지출에 영수증 첨부됨' });
+            // 4. 카테고리 미분류 지출
+            const uncategorized = (appData.expenses || []).filter(e => e.date && e.date.startsWith(yp) && (!e.category || e.category === '기타'));
+            if (uncategorized.length > 0) items.push({ status: 'warn', text: `'기타' 또는 미분류 지출이 ${uncategorized.length}건 — 정확한 분류 권장` });
+            // 5. 세입자 주민번호 누락
+            const tenantsWithoutRid = (appData.tenants || []).filter(t => {
+                const cs = t.contractStart || '';
+                const ce = t.contractEnd || '9999-12-31';
+                return cs && cs <= yearEnd && ce >= yearStart && !t.residentId;
+            });
+            if (tenantsWithoutRid.length > 0) items.push({ status: 'warn', text: `주민번호 미입력 세입자 ${tenantsWithoutRid.length}명 — 신고서 작성 시 필요` });
+            // 6. 세무 설정 미입력
+            const s = _taxPageGetSettings();
+            if (!appData._taxSettings) items.push({ status: 'bad', text: '세무 설정(보유 주택 수 등)을 입력해주세요' });
+            return items;
+        }
+        // ── 연도별 추이 ──
+        function _taxComputeTrend() {
+            const years = [];
+            for (let i = 4; i >= 0; i--) {
+                const y = _taxYear - i;
+                const yp = y + '-';
+                const inc = (appData.rents || []).filter(r => r.status === 'paid' && r.month && r.month.startsWith(yp) && (!r.type || r.type === 'monthly'))
+                    .reduce((s,r) => s + (r.amount || 0), 0);
+                const exp = (appData.expenses || []).filter(e => e.date && e.date.startsWith(yp))
+                    .reduce((s,e) => s + (e.amount || 0), 0);
+                years.push({ year: y, income: inc, expense: exp, profit: inc - exp });
+            }
+            return years;
+        }
+        // ── 페이지 전체 렌더링 ──
+        function renderTaxPage() {
+            document.getElementById('taxPageYearLabel').textContent = _taxYear + '년';
+            // 세무 설정 요약
+            const s = _taxPageGetSettings();
+            const setupSum = document.getElementById('taxSetupSummary');
+            if (setupSum) {
+                let txt = s.ownedHouses + '주택';
+                if (s.isRegistered) txt += ' · 등록임대';
+                if (s.otherIncome > 0) txt += ' · 다른소득 ₩' + s.otherIncome.toLocaleString();
+                setupSum.textContent = txt;
+            }
+            _renderTaxFilingReqCard();
+            _renderTaxSimulationCard();
+            _renderTaxIncomeFinalCard();
+            _renderTaxCalendarCard();
+            _renderTaxChecklistCard();
+            _renderTaxDeemedCard();
+            _renderTaxTrendCard();
+            _renderTaxPageData();
+        }
+        function _renderTaxFilingReqCard() {
+            const req = _taxComputeFilingReq();
+            const cls = req.status === 'exempt' ? 'tax-req-exempt' : (req.status === 'optional' ? 'tax-req-optional' : 'tax-req-required');
+            const icon = req.status === 'exempt' ? '✅' : (req.status === 'optional' ? '⚖️' : '⚠️');
+            const label = req.status === 'exempt' ? '신고 의무 없음' : (req.status === 'optional' ? '신고 선택 가능' : '신고 의무 있음');
+            document.getElementById('taxFilingReqCard').innerHTML =
+                '<div class="tax-page-card-title">🎯 신고 의무 판정</div>'
+                + '<div class="tax-req-card ' + cls + '">' + icon + ' <strong>' + label + '</strong><br><span style="font-weight:500;font-size:12px;">' + req.text + '</span></div>';
+        }
+        function _renderTaxSimulationCard() {
+            const sep = _taxComputeSeparateTax();
+            const comb = _taxComputeCombinedTax();
+            const sepBetter = sep.total < comb.total;
+            const diff = Math.abs(sep.total - comb.total);
+            const s = _taxPageGetSettings();
+            const inc = _taxCollectIncome();
+            const expData = _taxCollectExpenses();
+            const dep = _taxComputePreciseDeemed();
+            const grossIncome = inc.totalIncluded + dep.deemed;
+            // 표준공제 vs 실제경비
+            const standardDed = Math.round(grossIncome * (s.isRegistered ? 0.60 : 0.50));
+            const realExp = expData.deductibleTotal;
+            const realBetter = realExp > standardDed;
+            document.getElementById('taxSimulationCard').innerHTML =
+                '<div class="tax-page-card-title">💰 절세 시뮬레이션 <span class="pill">자동 추천</span></div>'
+                + '<div class="tax-sim-grid">'
+                + '  <div class="tax-sim-card' + (sepBetter ? ' recommended' : '') + '">'
+                + '    <div class="tax-sim-label">분리과세' + (sepBetter ? '<span class="tax-sim-badge">유리</span>' : '') + '</div>'
+                + '    <div class="tax-sim-amount">₩' + sep.total.toLocaleString() + '</div>'
+                + '    <div style="font-size:10px;color:#94A3B8;margin-top:2px;">14% + 지방세</div>'
+                + '  </div>'
+                + '  <div class="tax-sim-card' + (!sepBetter ? ' recommended' : '') + '">'
+                + '    <div class="tax-sim-label">종합과세' + (!sepBetter ? '<span class="tax-sim-badge">유리</span>' : '') + '</div>'
+                + '    <div class="tax-sim-amount">₩' + comb.total.toLocaleString() + '</div>'
+                + '    <div style="font-size:10px;color:#94A3B8;margin-top:2px;">누진 6~45%</div>'
+                + '  </div>'
+                + '</div>'
+                + (inc.totalIncluded <= 20000000
+                    ? '<div style="font-size:11px;color:#0F766E;margin-top:8px;padding:6px 10px;background:#F0FDFA;border-radius:6px;">💡 임대수입 2,000만 이하 → ' + (sepBetter ? '분리과세' : '종합과세') + '가 약 <strong>₩' + diff.toLocaleString() + '</strong> 유리합니다</div>'
+                    : '<div style="font-size:11px;color:#92400E;margin-top:8px;padding:6px 10px;background:#FFFBEB;border-radius:6px;">⚠️ 임대수입 2,000만 초과 → 종합과세 의무</div>')
+                + '<div style="border-top:1px dashed #E2E8F0;margin:12px 0 10px;"></div>'
+                + '<div style="font-size:12px;font-weight:700;color:#475569;margin-bottom:6px;">📌 표준공제 vs 실제 필요경비</div>'
+                + '<div class="tax-sim-grid">'
+                + '  <div class="tax-sim-card' + (!realBetter ? ' recommended' : '') + '"><div class="tax-sim-label">표준공제' + (!realBetter ? '<span class="tax-sim-badge">유리</span>' : '') + '</div><div class="tax-sim-amount">₩' + standardDed.toLocaleString() + '</div><div style="font-size:10px;color:#94A3B8;">' + (s.isRegistered ? '60%' : '50%') + ' 비율</div></div>'
+                + '  <div class="tax-sim-card' + (realBetter ? ' recommended' : '') + '"><div class="tax-sim-label">실제 경비' + (realBetter ? '<span class="tax-sim-badge">유리</span>' : '') + '</div><div class="tax-sim-amount">₩' + realExp.toLocaleString() + '</div><div style="font-size:10px;color:#94A3B8;">분류 항목 합계</div></div>'
+                + '</div>'
+                + (s.isRegistered
+                    ? '<div style="font-size:11px;color:#0F766E;margin-top:8px;padding:6px 10px;background:#F0FDFA;border-radius:6px;">🏛️ 등록임대 감면 적용 — 세액 ' + (sep.discount > 0 ? '₩' + sep.discount.toLocaleString() + ' 감면' : '없음') + '</div>'
+                    : '<div style="font-size:11px;color:#64748B;margin-top:8px;padding:6px 10px;background:#F8FAFC;border-radius:6px;">💡 주택임대사업자 등록 시 세액 30~75% 감면 가능 (세무 설정에서 토글)</div>');
+        }
+        function _renderTaxIncomeFinalCard() {
+            const inc = _taxCollectIncome();
+            const dep = _taxComputePreciseDeemed();
+            const expData = _taxCollectExpenses();
+            const taxBase = inc.totalIncluded + dep.deemed - expData.deductibleTotal;
+            document.getElementById('taxIncomeFinalCard').className = 'tax-page-card tax-income-final';
+            document.getElementById('taxIncomeFinalCard').innerHTML =
+                '<div class="label">📊 임대소득금액 (' + _taxYear + '년)</div>'
+                + '<div class="amount">₩' + taxBase.toLocaleString() + '</div>'
+                + '<div class="breakdown">수입 ₩' + inc.totalIncluded.toLocaleString() + ' + 간주 ₩' + dep.deemed.toLocaleString() + ' − 경비 ₩' + expData.deductibleTotal.toLocaleString() + '</div>';
+        }
+        function _renderTaxCalendarCard() {
+            const events = _taxComputeCalendar().filter(e => e.dday >= -30); // 지난 것 30일까지만
+            let html = '<div class="tax-page-card-title">📅 세금 캘린더</div>';
+            if (events.length === 0) {
+                html += '<div style="color:#94A3B8;font-size:12px;padding:8px 0;text-align:center;">해당 연도의 세금 일정이 모두 지났습니다.</div>';
+            } else {
+                events.forEach(e => {
+                    const ddayCls = e.dday < 0 ? 'done' : (e.dday <= 7 ? 'urgent' : (e.dday <= 30 ? 'soon' : 'normal'));
+                    const ddayTxt = e.dday < 0 ? '완료' : (e.dday === 0 ? '오늘' : 'D-' + e.dday);
+                    html += '<div class="tax-cal-row">'
+                         + '  <div class="tax-cal-icon" style="background:#F0FDFA;">' + e.icon + '</div>'
+                         + '  <div class="tax-cal-body"><div class="tax-cal-name">' + e.name + '</div><div class="tax-cal-date">' + e.date + (e.forYear ? ' · ' + e.forYear + '년 귀속' : '') + '</div></div>'
+                         + '  <span class="tax-cal-dday ' + ddayCls + '">' + ddayTxt + '</span>'
+                         + '</div>';
+                });
+            }
+            document.getElementById('taxCalendarCard').innerHTML = html;
+        }
+        function _renderTaxChecklistCard() {
+            const items = _taxComputeChecklist();
+            let html = '<div class="tax-page-card-title">✅ 신고 전 체크리스트</div>';
+            if (items.length === 0) {
+                html += '<div style="color:#16A34A;font-size:13px;padding:8px 0;text-align:center;">✨ 모든 항목이 정상입니다!</div>';
+            } else {
+                items.forEach(it => {
+                    const icon = it.status === 'ok' ? '✓' : (it.status === 'warn' ? '⚠️' : '❗');
+                    html += '<div class="tax-check-row ' + it.status + '"><span class="tax-check-icon">' + icon + '</span><span>' + it.text + '</span></div>';
+                });
+            }
+            document.getElementById('taxChecklistCard').innerHTML = html;
+        }
+        function _renderTaxDeemedCard() {
+            const dep = _taxComputePreciseDeemed();
+            let html = '<div class="tax-page-card-title">🏦 간주임대료 (정밀 계산)</div>'
+                + '<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;"><span>보증금적수 합계 (보증금×일수)</span><span style="font-weight:700;">₩' + dep.totalDepositSum.toLocaleString() + '</span></div>'
+                + '<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;"><span>3억 ×' + dep.yearDays + '일 차감</span><span style="font-weight:700;">−₩' + dep.thresholdSum.toLocaleString() + '</span></div>'
+                + '<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-top:1px solid #F1F5F9;margin-top:4px;"><span>초과분</span><span style="font-weight:700;">₩' + dep.excessSum.toLocaleString() + '</span></div>'
+                + '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:13px;gap:8px;"><span>정기예금 이자율 (%)</span><input type="number" step="0.1" min="0" max="20" value="' + _taxDepositRate + '" onchange="_taxUpdateRate(this.value);renderTaxPage();" style="width:80px;padding:6px 8px;border:1px solid #E2E8F0;border-radius:6px;text-align:right;"></div>'
+                + '<div style="display:flex;justify-content:space-between;padding:10px;background:#F0FDFA;border-radius:8px;font-weight:800;font-size:14px;margin-top:6px;"><span>📌 간주임대료</span><span style="color:#0F766E;">₩' + dep.deemed.toLocaleString() + '</span></div>'
+                + '<div style="font-size:11px;color:#94A3B8;margin-top:6px;line-height:1.5;">계산: (보증금적수 − 3억×' + dep.yearDays + '일) × 60% × ' + _taxDepositRate + '% ÷ ' + dep.yearDays + '<br>※ 소형주택(40㎡↓ 기준시가 2억↓) 제외 가능 — 세입자 상세에서 토글 (추후)</div>';
+            document.getElementById('taxDeemedCard').innerHTML = html;
+        }
+        function _renderTaxTrendCard() {
+            const years = _taxComputeTrend();
+            const maxVal = Math.max.apply(null, years.flatMap(y => [Math.abs(y.income), Math.abs(y.expense), Math.abs(y.profit)])) || 1;
+            const cols = years.map(y => {
+                const incH = Math.max(2, Math.round(Math.abs(y.income) / maxVal * 70));
+                const expH = Math.max(2, Math.round(Math.abs(y.expense) / maxVal * 70));
+                const profH = Math.max(2, Math.round(Math.abs(y.profit) / maxVal * 70));
+                return '<div class="tax-trend-bar-group">'
+                     + '  <div class="tax-trend-bars">'
+                     + '    <div class="tax-trend-bar income" style="height:' + incH + 'px;" title="수입 ₩' + y.income.toLocaleString() + '"></div>'
+                     + '    <div class="tax-trend-bar expense" style="height:' + expH + 'px;" title="지출 ₩' + y.expense.toLocaleString() + '"></div>'
+                     + '    <div class="tax-trend-bar profit" style="height:' + profH + 'px;" title="순익 ₩' + y.profit.toLocaleString() + '"></div>'
+                     + '  </div>'
+                     + '  <div class="tax-trend-label">' + y.year + '</div>'
+                     + '</div>';
+            }).join('');
+            document.getElementById('taxTrendCard').innerHTML = '<div class="tax-page-card-title">📈 연도별 추이 (최근 5년)</div>'
+                + '<div style="display:flex;gap:8px;align-items:flex-end;justify-content:space-around;padding:0 4px;">' + cols + '</div>'
+                + '<div style="display:flex;gap:10px;justify-content:center;margin-top:10px;font-size:11px;color:#64748B;">'
+                + '<span><span style="display:inline-block;width:10px;height:10px;background:#0EA5A4;border-radius:2px;vertical-align:middle;"></span> 수입</span>'
+                + '<span><span style="display:inline-block;width:10px;height:10px;background:#DC2626;border-radius:2px;vertical-align:middle;"></span> 지출</span>'
+                + '<span><span style="display:inline-block;width:10px;height:10px;background:#1E40AF;border-radius:2px;vertical-align:middle;"></span> 순익</span>'
+                + '</div>';
+        }
+        function _renderTaxPageData() {
+            const el = document.getElementById('taxPageDataContent');
+            if (!el) return;
+            if (_taxPageDataTab === 'income') el.innerHTML = _renderTaxIncome();
+            else if (_taxPageDataTab === 'expense') el.innerHTML = _renderTaxExpense();
+            else if (_taxPageDataTab === 'tenants') el.innerHTML = _renderTaxTenants();
+        }
+        // 변경된 토글이 페이지에도 영향 주도록 기존 _taxToggle* 함수에서도 페이지 재렌더
+        const _origRenderTaxFiling = renderTaxFiling;
+        renderTaxFiling = function() {
+            _origRenderTaxFiling();
+            // 현재 페이지가 taxPage라면 같이 갱신
+            if (document.getElementById('taxPage') && document.getElementById('taxPage').classList.contains('active')) {
+                renderTaxPage();
+            }
+        };
+        // ── 세무사 전달용 묶음 PDF ──
+        function printTaxBundleForAccountant() {
+            const inc = _taxCollectIncome();
+            const exp = _taxCollectExpenses();
+            const dep = _taxComputePreciseDeemed();
+            const sep = _taxComputeSeparateTax();
+            const comb = _taxComputeCombinedTax();
+            const req = _taxComputeFilingReq();
+            const s = _taxPageGetSettings();
+            const yearStart = _taxYear + '-01-01';
+            const yearEnd = _taxYear + '-12-31';
+            const tenants = (appData.tenants || []).filter(t => {
+                const cs = t.contractStart || '';
+                const ce = t.contractEnd || '9999-12-31';
+                return cs && cs <= yearEnd && ce >= yearStart;
+            });
+            const taxBase = inc.totalIncluded + dep.deemed - exp.deductibleTotal;
+            let html = '<html><head><meta charset="utf-8"><title>' + _taxYear + '년 임대소득 세무 자료 (세무사용)</title>'
+                + '<style>body{font-family:"Malgun Gothic",sans-serif;margin:0;padding:24px;color:#1E293B;}'
+                + 'h1{font-size:22px;margin:0 0 4px;color:#0F766E;}h2{font-size:16px;margin:24px 0 10px;border-bottom:2.5px solid #0F766E;padding-bottom:6px;color:#0F766E;}'
+                + 'h3{font-size:13px;margin:14px 0 6px;color:#475569;}'
+                + 'table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px;}'
+                + 'th,td{border:1px solid #CBD5E1;padding:6px 8px;text-align:left;vertical-align:top;}'
+                + 'th{background:#F1F5F9;font-weight:700;}'
+                + '.total-row{background:#F0FDFA;font-weight:700;}'
+                + '.summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0;}'
+                + '.summary-card{border:1px solid #CBD5E1;border-radius:6px;padding:10px;}'
+                + '.summary-label{font-size:10px;color:#64748B;margin-bottom:4px;font-weight:700;}'
+                + '.summary-amt{font-size:15px;font-weight:800;}'
+                + '.final{background:#0F766E;color:white;padding:14px;border-radius:8px;text-align:center;margin:12px 0;}'
+                + '.final .summary-amt{font-size:24px;color:white;}'
+                + '.final .summary-label{color:rgba(255,255,255,0.85);}'
+                + '.info-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;font-size:12px;}'
+                + '.info-item{padding:6px 10px;background:#F8FAFC;border-radius:6px;}'
+                + '.info-label{color:#64748B;font-size:10px;}'
+                + '.info-val{font-weight:700;}'
+                + '.page-break{page-break-before:always;}'
+                + '.receipt-img{max-width:100%;max-height:300px;border:1px solid #CBD5E1;border-radius:6px;margin:4px 0;display:block;}'
+                + '@media print{body{padding:12px;}}</style></head><body>';
+            html += '<h1>📑 ' + _taxYear + '년 종합소득세 임대소득 신고 자료</h1>';
+            html += '<div style="font-size:11px;color:#64748B;margin-bottom:12px;">생성일: ' + new Date().toISOString().split('T')[0] + ' · 세무사 전달용 종합 자료</div>';
+
+            // 1. 신고 요약
+            html += '<h2>1. 신고 개요</h2>';
+            html += '<div class="info-grid">'
+                  + '<div class="info-item"><div class="info-label">신고 의무</div><div class="info-val">' + req.text + '</div></div>'
+                  + '<div class="info-item"><div class="info-label">보유 주택 수</div><div class="info-val">' + s.ownedHouses + '주택</div></div>'
+                  + '<div class="info-item"><div class="info-label">임대사업자 등록</div><div class="info-val">' + (s.isRegistered ? '등록 (' + (s.registeredTerm === 'long' ? '8년 장기' : (s.registeredTerm === 'long_joint' ? '8년 공동' : '4년 단기')) + ')' : '미등록') + '</div></div>'
+                  + '<div class="info-item"><div class="info-label">대상 세입자</div><div class="info-val">' + tenants.length + '명</div></div>'
+                  + '</div>';
+
+            html += '<h2>2. 최종 임대소득금액</h2>';
+            html += '<div class="summary-grid">'
+                  + '<div class="summary-card"><div class="summary-label">임대수입</div><div class="summary-amt">₩' + inc.totalIncluded.toLocaleString() + '</div></div>'
+                  + '<div class="summary-card"><div class="summary-label">간주임대료 (정밀)</div><div class="summary-amt">₩' + dep.deemed.toLocaleString() + '</div></div>'
+                  + '<div class="summary-card"><div class="summary-label">필요경비</div><div class="summary-amt">₩' + exp.deductibleTotal.toLocaleString() + '</div></div>'
+                  + '</div>';
+            html += '<div class="final"><div class="summary-label">📊 임대소득금액</div><div class="summary-amt">₩' + taxBase.toLocaleString() + '</div></div>';
+
+            html += '<h2>3. 절세 시뮬레이션</h2>';
+            html += '<table><tr><th>방식</th><th>본세</th><th>지방세</th><th>세액 합계</th><th>비고</th></tr>'
+                  + '<tr><td>분리과세</td><td style="text-align:right;">₩' + sep.finalTax.toLocaleString() + '</td><td style="text-align:right;">₩' + sep.localTax.toLocaleString() + '</td><td style="text-align:right;font-weight:700;">₩' + sep.total.toLocaleString() + '</td><td>14% + 등록감면 ' + (sep.discount > 0 ? '−₩' + sep.discount.toLocaleString() : '없음') + '</td></tr>'
+                  + '<tr><td>종합과세</td><td style="text-align:right;">₩' + comb.rentalPortionTax.toLocaleString() + '</td><td style="text-align:right;">₩' + comb.localTax.toLocaleString() + '</td><td style="text-align:right;font-weight:700;">₩' + comb.total.toLocaleString() + '</td><td>누진 (다른소득 ₩' + (s.otherIncome||0).toLocaleString() + ' 포함)</td></tr>'
+                  + '</table>';
+
+            html += '<h2>4. 간주임대료 정밀 계산</h2>';
+            html += '<table><tr><th>세입자</th><th>보증금</th><th>임대일수</th><th>보증금적수</th></tr>';
+            dep.perTenant.forEach(p => {
+                if (p.excluded) return;
+                html += '<tr><td>' + (p.tenant.name||'') + '</td><td style="text-align:right;">₩' + (p.deposit||0).toLocaleString() + '</td><td style="text-align:right;">' + p.days + '일</td><td style="text-align:right;">₩' + p.sum.toLocaleString() + '</td></tr>';
+            });
+            html += '<tr class="total-row"><td colspan="3">보증금적수 합계</td><td style="text-align:right;">₩' + dep.totalDepositSum.toLocaleString() + '</td></tr>';
+            html += '<tr><td colspan="3">3억 × ' + dep.yearDays + '일 차감</td><td style="text-align:right;">−₩' + dep.thresholdSum.toLocaleString() + '</td></tr>';
+            html += '<tr class="total-row"><td colspan="3">초과분 × 60% × ' + _taxDepositRate + '% ÷ ' + dep.yearDays + ' = 간주임대료</td><td style="text-align:right;">₩' + dep.deemed.toLocaleString() + '</td></tr>';
+            html += '</table>';
+
+            html += '<h2 class="page-break">5. 세입자별 명세</h2>';
+            html += '<table><tr><th>세입자</th><th>주민번호</th><th>호실</th><th>계약기간</th><th>월세</th><th>관리비</th><th>보증금</th><th>연간임대수입</th></tr>';
+            tenants.forEach(t => {
+                const room = appData.rooms.find(r => r.id === t.roomId);
+                const building = appData.buildings.find(b => b.id === t.buildingId);
+                const roomLabel = (building ? building.name + ' ' : '') + (room ? room.roomNumber + '호' : '');
+                const yearRents = (appData.rents || []).filter(r => r.tenantId === t.id && r.status === 'paid' && r.month && r.month.startsWith(_taxYearPrefix()) && !_taxExcludedRents.has(r.id) && (!r.type || r.type === 'monthly'));
+                const annualPaid = yearRents.reduce((s,r) => s + (r.amount||0), 0);
+                html += '<tr><td>' + (t.name||'') + '</td><td>' + (t.residentId||'-') + '</td><td>' + roomLabel + '</td>'
+                     + '<td>' + (t.contractStart||'') + '~' + (t.contractEnd||'') + '</td>'
+                     + '<td style="text-align:right;">₩' + (t.monthlyRent||0).toLocaleString() + '</td>'
+                     + '<td style="text-align:right;">₩' + (t.managementFee||0).toLocaleString() + '</td>'
+                     + '<td style="text-align:right;">₩' + (t.deposit||0).toLocaleString() + '</td>'
+                     + '<td style="text-align:right;font-weight:700;">₩' + annualPaid.toLocaleString() + '</td></tr>';
+            });
+            html += '</table>';
+
+            html += '<h2>6. 임대수입 상세 (월별)</h2>';
+            html += '<table><tr><th>세입자</th><th>월</th><th>수납일</th><th>금액</th><th>상태</th></tr>';
+            inc.paidRents.filter(r => !_taxExcludedRents.has(r.id)).forEach(r => {
+                const t = appData.tenants.find(t => t.id === r.tenantId) || {};
+                html += '<tr><td>' + (t.name||'-') + '</td><td>' + r.month + '</td><td>' + (r.paidDate||'-') + '</td><td style="text-align:right;">₩' + (r.amount||0).toLocaleString() + '</td><td>' + (r.status || '') + '</td></tr>';
+            });
+            html += '<tr class="total-row"><td colspan="3">합계</td><td style="text-align:right;">₩' + inc.totalIncluded.toLocaleString() + '</td><td></td></tr></table>';
+
+            html += '<h2 class="page-break">7. 필요경비 상세 (영수증 포함)</h2>';
+            html += '<table><tr><th>날짜</th><th>분류</th><th>항목</th><th>건물/호실</th><th>금액</th></tr>';
+            const dedExp = exp.yearExp.filter(e => !_taxExcludedExpenses.has(e.id) && _taxIsDeductible(e));
+            dedExp.forEach(e => {
+                const b = appData.buildings.find(x => x.id === e.buildingId);
+                const r = appData.rooms.find(x => x.id === e.roomId);
+                html += '<tr><td>' + (e.date||'') + '</td><td>' + (e.category||'') + '</td><td>' + (e.title||'') + '</td>'
+                     + '<td>' + (b?.name||'') + ' ' + (r?.roomNumber||'') + '</td><td style="text-align:right;">₩' + (e.amount||0).toLocaleString() + '</td></tr>';
+            });
+            html += '<tr class="total-row"><td colspan="4">합계</td><td style="text-align:right;">₩' + exp.deductibleTotal.toLocaleString() + '</td></tr></table>';
+
+            // 영수증 사진 모음
+            const expWithReceipts = dedExp.filter(e => e.receipts && e.receipts.length > 0);
+            if (expWithReceipts.length > 0) {
+                html += '<h2 class="page-break">8. 영수증 사진</h2>';
+                expWithReceipts.forEach(e => {
+                    html += '<h3>' + (e.date||'') + ' · ' + (e.title||'') + ' · ₩' + (e.amount||0).toLocaleString() + '</h3>';
+                    e.receipts.forEach(src => {
+                        html += '<img src="' + src + '" class="receipt-img">';
+                    });
+                });
+            }
+
+            html += '<script>window.onload=function(){window.print();}<\/script></body></html>';
+            const w = window.open('', '_blank');
+            if (!w) { showToast('팝업이 차단되었습니다. 브라우저 설정을 확인하세요.'); return; }
+            w.document.write(html);
+            w.document.close();
+        }
+        function _taxPrevYear() { _taxYear--; renderTaxFiling(); }
+        function _taxNextYear() { _taxYear++; renderTaxFiling(); }
+        function _taxSwitchTab(tab) {
+            _taxActiveTab = tab;
+            document.querySelectorAll('.tax-tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+            renderTaxFiling();
+        }
+        // 분류 토글 (필요경비 ↔ 비필요경비)
+        function _taxToggleCategory(expenseId) {
+            const exp = appData.expenses.find(e => e.id === expenseId);
+            if (!exp) return;
+            const currentlyDeductible = _taxIsDeductible(exp);
+            _taxExpenseOverride[expenseId] = currentlyDeductible ? 'non' : 'deductible';
+            renderTaxFiling();
+        }
+        function _taxIsDeductible(exp) {
+            if (_taxExpenseOverride[exp.id]) return _taxExpenseOverride[exp.id] === 'deductible';
+            return _taxDeductibleCategories.has(exp.category || '');
+        }
+        function _taxToggleIncomeRent(rentId) {
+            if (_taxExcludedRents.has(rentId)) _taxExcludedRents.delete(rentId);
+            else _taxExcludedRents.add(rentId);
+            renderTaxFiling();
+        }
+        function _taxToggleExpenseInclude(expenseId) {
+            if (_taxExcludedExpenses.has(expenseId)) _taxExcludedExpenses.delete(expenseId);
+            else _taxExcludedExpenses.add(expenseId);
+            renderTaxFiling();
+        }
+        function _taxToggleAllRentsByTenant(tenantId, on) {
+            const yp = _taxYear + '-';
+            (appData.rents || []).forEach(r => {
+                if (r.tenantId !== tenantId) return;
+                if (!r.month || !r.month.startsWith(yp)) return;
+                if (r.status !== 'paid') return;
+                if (on) _taxExcludedRents.delete(r.id);
+                else _taxExcludedRents.add(r.id);
+            });
+            renderTaxFiling();
+        }
+        function _taxUpdateRate(v) {
+            const rate = parseFloat(v);
+            if (!isNaN(rate) && rate >= 0 && rate <= 20) _taxDepositRate = rate;
+            renderTaxFiling();
+        }
+        function _taxFmt(n) { return '₩' + (n||0).toLocaleString(); }
+        function _taxYearPrefix() { return _taxYear + '-'; }
+
+        // 데이터 집계
+        function _taxCollectIncome() {
+            const yp = _taxYearPrefix();
+            const paidRents = (appData.rents || []).filter(r =>
+                r.status === 'paid' && r.month && r.month.startsWith(yp) && (!r.type || r.type === 'monthly')
+            );
+            // 세입자별 그룹
+            const byTenant = {};
+            paidRents.forEach(r => {
+                if (!byTenant[r.tenantId]) byTenant[r.tenantId] = { tenant: null, rents: [], total: 0, included: 0 };
+                byTenant[r.tenantId].tenant = appData.tenants.find(t => t.id === r.tenantId) || { id: r.tenantId, name: '(삭제됨)' };
+                byTenant[r.tenantId].rents.push(r);
+                byTenant[r.tenantId].total += (r.amount || 0);
+                if (!_taxExcludedRents.has(r.id)) byTenant[r.tenantId].included += (r.amount || 0);
+            });
+            // rents 월순 정렬
+            Object.values(byTenant).forEach(g => g.rents.sort((a,b) => (a.month||'').localeCompare(b.month||'')));
+            const totalGross = paidRents.reduce((s,r) => s + (r.amount||0), 0);
+            const totalIncluded = paidRents.filter(r => !_taxExcludedRents.has(r.id)).reduce((s,r) => s + (r.amount||0), 0);
+            return { paidRents, byTenant, totalGross, totalIncluded };
+        }
+        function _taxCollectExpenses() {
+            const yp = _taxYearPrefix();
+            const yearExp = (appData.expenses || []).filter(e => e.date && e.date.startsWith(yp));
+            const byCategory = {};
+            let deductibleTotal = 0, nonDeductibleTotal = 0, excludedTotal = 0;
+            yearExp.forEach(e => {
+                const cat = e.category || '미분류';
+                if (!byCategory[cat]) byCategory[cat] = { items: [], deductible: 0, non: 0 };
+                byCategory[cat].items.push(e);
+                if (_taxExcludedExpenses.has(e.id)) { excludedTotal += (e.amount||0); return; }
+                if (_taxIsDeductible(e)) { deductibleTotal += (e.amount||0); byCategory[cat].deductible += (e.amount||0); }
+                else { nonDeductibleTotal += (e.amount||0); byCategory[cat].non += (e.amount||0); }
+            });
+            return { yearExp, byCategory, deductibleTotal, nonDeductibleTotal, excludedTotal };
+        }
+        function _taxCollectDeposits() {
+            // 해당 연도에 활성이었던 세입자들의 보증금 합계
+            const yp = _taxYearPrefix();
+            const yearStart = _taxYear + '-01-01';
+            const yearEnd = _taxYear + '-12-31';
+            const active = (appData.tenants || []).filter(t => {
+                const cs = t.contractStart || '';
+                const ce = t.contractEnd || '9999-12-31';
+                return cs && cs <= yearEnd && ce >= yearStart;
+            });
+            const depositSum = active.reduce((s,t) => s + (t.deposit || 0), 0);
+            // 간주임대료 (간소화: 3억 초과분만, 보유기간 1년 가정, 60% 적용)
+            // 정확한 계산은 보증금적수·건설비 등 복잡하므로 근사치만 제공
+            const THRESHOLD = 300000000; // 3억
+            const excess = Math.max(0, depositSum - THRESHOLD);
+            const deemed = Math.round(excess * 0.60 * (_taxDepositRate / 100));
+            return { active, depositSum, excess, deemed };
+        }
+
+        // ── 렌더링 ──
+        function renderTaxFiling() {
+            document.getElementById('taxYearLabel').textContent = _taxYear + '년';
+            const content = document.getElementById('taxFilingContent');
+            if (!content) return;
+            if (_taxActiveTab === 'summary') content.innerHTML = _renderTaxSummary();
+            else if (_taxActiveTab === 'income') content.innerHTML = _renderTaxIncome();
+            else if (_taxActiveTab === 'expense') content.innerHTML = _renderTaxExpense();
+            else if (_taxActiveTab === 'tenants') content.innerHTML = _renderTaxTenants();
+        }
+        function _renderTaxSummary() {
+            const inc = _taxCollectIncome();
+            const exp = _taxCollectExpenses();
+            const dep = _taxCollectDeposits();
+            const taxBase = inc.totalIncluded + dep.deemed - exp.deductibleTotal;
+            const buildingsCount = appData.buildings.length;
+            const tenantsCount = (appData.tenants||[]).filter(t => {
+                const cs = t.contractStart || '';
+                const ce = t.contractEnd || '9999-12-31';
+                return cs && cs <= _taxYear + '-12-31' && ce >= _taxYear + '-01-01';
+            }).length;
+
+            return ''
+                + '<div class="tax-summary-grid">'
+                + '  <div class="tax-card"><div class="tax-card-title">임대 수입 (포함)</div><div class="tax-card-amt" style="color:#2563EB;">' + _taxFmt(inc.totalIncluded) + '</div></div>'
+                + '  <div class="tax-card"><div class="tax-card-title">필요 경비</div><div class="tax-card-amt" style="color:#DC2626;">' + _taxFmt(exp.deductibleTotal) + '</div></div>'
+                + '  <div class="tax-card"><div class="tax-card-title">간주임대료 (개산)</div><div class="tax-card-amt" style="color:#7C3AED;">' + _taxFmt(dep.deemed) + '</div></div>'
+                + '  <div class="tax-card"><div class="tax-card-title">대상 세입자</div><div class="tax-card-amt">' + tenantsCount + '명</div></div>'
+                + '</div>'
+                + '<div class="tax-final">'
+                + '  <div class="tax-card-title">📊 임대소득금액 (수입 + 간주임대료 − 필요경비)</div>'
+                + '  <div class="tax-card-amt">' + _taxFmt(taxBase) + '</div>'
+                + '  <div style="margin-top:6px;font-size:11px;color:rgba(255,255,255,0.85);">※ 종합소득세 신고 시 다른 소득과 합산되어 누진세율 적용. 본 화면은 임대 부분만 계산합니다.</div>'
+                + '</div>'
+                + '<div class="tax-card" style="margin-top:14px;">'
+                + '  <div class="tax-card-title">🏦 간주임대료 설정</div>'
+                + '  <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:6px 0;"><span>해당 연도 보증금 합계</span><span class="tax-row-amt">' + _taxFmt(dep.depositSum) + '</span></div>'
+                + '  <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:6px 0;"><span>3억원 초과분</span><span class="tax-row-amt">' + _taxFmt(dep.excess) + '</span></div>'
+                + '  <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:6px 0;gap:8px;"><span>정기예금 이자율 (%)</span><input type="number" step="0.1" min="0" max="20" value="' + _taxDepositRate + '" onchange="_taxUpdateRate(this.value)" class="tax-deposit-input" style="width:90px;text-align:right;"></div>'
+                + '  <div style="font-size:11px;color:#94A3B8;margin-top:6px;line-height:1.5;">※ 간주임대료 = (보증금 − 3억) × 60% × 이자율. 본 계산은 단순 근사치이며, 실제 신고 시 보증금적수 등 정확한 계산이 필요합니다.</div>'
+                + '</div>'
+                + (buildingsCount === 0 ? '<div style="text-align:center;padding:20px;color:#94A3B8;font-size:13px;">등록된 건물이 없습니다.</div>' : '')
+                + (inc.paidRents.length === 0 && exp.yearExp.length === 0 ? '<div style="text-align:center;padding:20px;color:#94A3B8;font-size:13px;">' + _taxYear + '년 데이터가 없습니다.</div>' : '');
+        }
+        function _renderTaxIncome() {
+            const inc = _taxCollectIncome();
+            if (inc.paidRents.length === 0) return '<div style="text-align:center;padding:30px;color:#94A3B8;">' + _taxYear + '년 납부 완료된 월세 기록이 없습니다.</div>';
+            let html = '<div style="font-size:12px;color:#64748B;margin-bottom:10px;line-height:1.5;">체크된 항목만 신고 자료에 포함됩니다. 세입자 단위로 일괄 토글 가능합니다.</div>';
+            html += '<div style="display:flex;justify-content:space-between;padding:10px 14px;background:#0F766E;color:white;border-radius:8px;margin-bottom:8px;font-weight:800;font-size:14px;"><span>총 임대수입 (포함)</span><span>' + _taxFmt(inc.totalIncluded) + ' / ' + _taxFmt(inc.totalGross) + '</span></div>';
+            // 세입자별 그룹
+            Object.values(inc.byTenant).forEach(g => {
+                const tenant = g.tenant;
+                const room = appData.rooms.find(r => r.id === tenant.roomId);
+                const building = appData.buildings.find(b => b.id === tenant.buildingId);
+                const roomLabel = (building ? building.name + ' · ' : '') + (room ? room.roomNumber + '호' : '');
+                const allOn = g.rents.every(r => !_taxExcludedRents.has(r.id));
+                html += '<div class="tax-group-header">'
+                     + '<span>' + escapeHTML(tenant.name) + ' <span style="font-weight:500;color:#64748B;font-size:11px;">(' + escapeHTML(roomLabel) + ')</span></span>'
+                     + '<span style="display:flex;align-items:center;gap:8px;"><span style="font-size:12px;color:#475569;">' + _taxFmt(g.included) + '/' + _taxFmt(g.total) + '</span>'
+                     + '<button onclick="_taxToggleAllRentsByTenant(\'' + tenant.id + '\',' + (!allOn) + ')" style="font-size:11px;padding:3px 8px;background:white;border:1px solid #CBD5E1;border-radius:6px;cursor:pointer;">' + (allOn ? '전체해제' : '전체선택') + '</button></span></div>';
+                g.rents.forEach(r => {
+                    const checked = !_taxExcludedRents.has(r.id);
+                    html += '<div class="tax-row">'
+                         + '<label><input type="checkbox" ' + (checked?'checked':'') + ' onchange="_taxToggleIncomeRent(\'' + r.id + '\')">'
+                         + '<span>' + r.month + (r.paidDate ? ' · ' + r.paidDate : '') + (r.memo ? ' · ' + escapeHTML(r.memo.slice(0,30)) : '') + '</span></label>'
+                         + '<span class="tax-row-amt' + (checked?'':' excluded') + '">' + _taxFmt(r.amount) + '</span></div>';
+                });
+            });
+            return html;
+        }
+        function _renderTaxExpense() {
+            const exp = _taxCollectExpenses();
+            if (exp.yearExp.length === 0) return '<div style="text-align:center;padding:30px;color:#94A3B8;">' + _taxYear + '년 지출 기록이 없습니다.</div>';
+            let html = '<div style="font-size:12px;color:#64748B;margin-bottom:10px;line-height:1.5;">카테고리 배지를 눌러 필요경비/비필요경비를 변경할 수 있습니다.</div>';
+            html += '<div style="display:flex;justify-content:space-between;padding:10px 14px;background:#0F766E;color:white;border-radius:8px;margin-bottom:8px;font-weight:800;font-size:14px;"><span>필요경비 합계</span><span>' + _taxFmt(exp.deductibleTotal) + '</span></div>';
+            // 카테고리별 그룹
+            Object.keys(exp.byCategory).sort().forEach(cat => {
+                const g = exp.byCategory[cat];
+                html += '<div class="tax-group-header"><span>' + escapeHTML(cat) + '</span><span style="font-size:12px;color:#475569;">필요 ' + _taxFmt(g.deductible) + (g.non>0?' · 비필요 ' + _taxFmt(g.non):'') + '</span></div>';
+                g.items.forEach(e => {
+                    const isDed = _taxIsDeductible(e);
+                    const included = !_taxExcludedExpenses.has(e.id);
+                    const pillClass = isDed ? '' : 'non';
+                    const pillText = isDed ? '필요경비' : '비필요';
+                    html += '<div class="tax-row">'
+                         + '<label><input type="checkbox" ' + (included?'checked':'') + ' onchange="_taxToggleExpenseInclude(\'' + e.id + '\')">'
+                         + '<span>' + escapeHTML(e.title || '(제목없음)') + ' · ' + (e.date||'-') + '</span>'
+                         + '<span class="tax-cat-pill ' + pillClass + '" onclick="event.preventDefault();_taxToggleCategory(\'' + e.id + '\')">' + pillText + '</span></label>'
+                         + '<span class="tax-row-amt' + (included?'':' excluded') + '">' + _taxFmt(e.amount) + '</span></div>';
+                });
+            });
+            return html;
+        }
+        function _renderTaxTenants() {
+            const yp = _taxYearPrefix();
+            const yearStart = _taxYear + '-01-01';
+            const yearEnd = _taxYear + '-12-31';
+            const tenants = (appData.tenants || []).filter(t => {
+                const cs = t.contractStart || '';
+                const ce = t.contractEnd || '9999-12-31';
+                return cs && cs <= yearEnd && ce >= yearStart;
+            });
+            if (tenants.length === 0) return '<div style="text-align:center;padding:30px;color:#94A3B8;">' + _taxYear + '년 임대 중이었던 세입자가 없습니다.</div>';
+            let html = '<div style="font-size:12px;color:#64748B;margin-bottom:10px;line-height:1.5;">국세청 신고 시 세입자 명세 양식의 기본 데이터입니다.</div>';
+            tenants.forEach(t => {
+                const room = appData.rooms.find(r => r.id === t.roomId);
+                const building = appData.buildings.find(b => b.id === t.buildingId);
+                const roomLabel = (building ? building.name + ' ' : '') + (room ? room.roomNumber + '호' : '');
+                const yearRents = (appData.rents || []).filter(r => r.tenantId === t.id && r.status === 'paid' && r.month && r.month.startsWith(yp) && (!r.type || r.type === 'monthly'));
+                const annualPaid = yearRents.reduce((s,r) => s + (r.amount||0), 0);
+                const rid = t.residentId ? t.residentId.slice(0,8) + '******' : '-';
+                html += '<div class="tax-card" style="background:white;border:1px solid #E2E8F0;">'
+                     + '<div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:6px;"><div style="font-weight:800;font-size:15px;">' + escapeHTML(t.name) + '</div><div style="font-size:11px;color:#94A3B8;">' + escapeHTML(roomLabel) + '</div></div>'
+                     + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:12px;color:#475569;">'
+                     + '<div>주민번호: ' + rid + '</div>'
+                     + '<div>전화: ' + escapeHTML(t.phone || '-') + '</div>'
+                     + '<div>계약: ' + escapeHTML(t.contractStart || '-') + ' ~ ' + escapeHTML(t.contractEnd || '-') + '</div>'
+                     + '<div>월세: ₩' + (t.monthlyRent||0).toLocaleString() + (t.managementFee>0 ? ' + 관리비 ₩' + t.managementFee.toLocaleString() : '') + '</div>'
+                     + '<div>보증금: ₩' + (t.deposit||0).toLocaleString() + '</div>'
+                     + '<div style="font-weight:800;color:#0F766E;">연간 임대수입: ₩' + annualPaid.toLocaleString() + '</div>'
+                     + '</div></div>';
+            });
+            return html;
+        }
+
+        // ── 내보내기 ──
+        function exportTaxFilingCSV() {
+            const inc = _taxCollectIncome();
+            const exp = _taxCollectExpenses();
+            const dep = _taxCollectDeposits();
+            const taxBase = inc.totalIncluded + dep.deemed - exp.deductibleTotal;
+            let csv = '﻿'; // UTF-8 BOM
+            csv += '## ' + _taxYear + '년 종합소득세 임대소득 신고 자료\n';
+            csv += '생성일,' + new Date().toISOString().split('T')[0] + '\n\n';
+            csv += '## 요약\n';
+            csv += '항목,금액\n';
+            csv += '임대수입 합계,' + inc.totalIncluded + '\n';
+            csv += '간주임대료 (개산),' + dep.deemed + '\n';
+            csv += '필요경비 합계,' + exp.deductibleTotal + '\n';
+            csv += '임대소득금액,' + taxBase + '\n\n';
+            csv += '## 세입자별 명세\n';
+            csv += '세입자명,주민번호,호실,계약시작,계약종료,월세,관리비,보증금,연간임대수입\n';
+            const yearStart = _taxYear + '-01-01';
+            const yearEnd = _taxYear + '-12-31';
+            (appData.tenants || []).filter(t => {
+                const cs = t.contractStart || '';
+                const ce = t.contractEnd || '9999-12-31';
+                return cs && cs <= yearEnd && ce >= yearStart;
+            }).forEach(t => {
+                const room = appData.rooms.find(r => r.id === t.roomId);
+                const building = appData.buildings.find(b => b.id === t.buildingId);
+                const roomLabel = (building ? building.name + ' ' : '') + (room ? room.roomNumber + '호' : '');
+                const yearRents = (appData.rents || []).filter(r => r.tenantId === t.id && r.status === 'paid' && r.month && r.month.startsWith(_taxYearPrefix()) && !_taxExcludedRents.has(r.id) && (!r.type || r.type === 'monthly'));
+                const annualPaid = yearRents.reduce((s,r) => s + (r.amount||0), 0);
+                csv += '"' + (t.name||'') + '","' + (t.residentId||'') + '","' + roomLabel + '","' + (t.contractStart||'') + '","' + (t.contractEnd||'') + '",' + (t.monthlyRent||0) + ',' + (t.managementFee||0) + ',' + (t.deposit||0) + ',' + annualPaid + '\n';
+            });
+            csv += '\n## 임대수입 상세 (포함된 항목)\n';
+            csv += '세입자,월,수납일,금액,메모\n';
+            inc.paidRents.filter(r => !_taxExcludedRents.has(r.id)).forEach(r => {
+                const t = appData.tenants.find(t => t.id === r.tenantId) || {};
+                csv += '"' + (t.name||'-') + '","' + r.month + '","' + (r.paidDate||'') + '",' + (r.amount||0) + ',"' + (r.memo||'').replace(/"/g,'""') + '"\n';
+            });
+            csv += '\n## 필요경비 상세\n';
+            csv += '날짜,분류,항목,금액,건물,호실,필요경비여부\n';
+            exp.yearExp.filter(e => !_taxExcludedExpenses.has(e.id)).forEach(e => {
+                const b = appData.buildings.find(x => x.id === e.buildingId);
+                const r = appData.rooms.find(x => x.id === e.roomId);
+                csv += '"' + (e.date||'') + '","' + (e.category||'') + '","' + (e.title||'').replace(/"/g,'""') + '",' + (e.amount||0) + ',"' + (b?.name||'') + '","' + (r?.roomNumber||'') + '","' + (_taxIsDeductible(e) ? '필요경비' : '비필요') + '"\n';
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = '종합소득세_임대소득_' + _taxYear + '년_' + new Date().toISOString().split('T')[0] + '.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('✅ CSV 파일이 다운로드되었습니다');
+        }
+        function printTaxFiling() {
+            const inc = _taxCollectIncome();
+            const exp = _taxCollectExpenses();
+            const dep = _taxCollectDeposits();
+            const taxBase = inc.totalIncluded + dep.deemed - exp.deductibleTotal;
+            const yearStart = _taxYear + '-01-01';
+            const yearEnd = _taxYear + '-12-31';
+            const tenants = (appData.tenants || []).filter(t => {
+                const cs = t.contractStart || '';
+                const ce = t.contractEnd || '9999-12-31';
+                return cs && cs <= yearEnd && ce >= yearStart;
+            });
+            let html = '<html><head><meta charset="utf-8"><title>' + _taxYear + '년 종합소득세 임대소득 신고 자료</title>'
+                + '<style>body{font-family:"Malgun Gothic",sans-serif;margin:0;padding:24px;color:#1E293B;}'
+                + 'h1{font-size:20px;margin:0 0 4px;}h2{font-size:15px;margin:18px 0 8px;border-bottom:2px solid #0F766E;padding-bottom:4px;color:#0F766E;}'
+                + 'table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:12px;}'
+                + 'th,td{border:1px solid #CBD5E1;padding:6px 8px;text-align:left;}'
+                + 'th{background:#F1F5F9;font-weight:700;}'
+                + '.total-row{background:#F0FDFA;font-weight:700;}'
+                + '.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:8px 0;}'
+                + '.summary-card{border:1px solid #CBD5E1;border-radius:6px;padding:10px;}'
+                + '.summary-label{font-size:10px;color:#64748B;margin-bottom:4px;}'
+                + '.summary-amt{font-size:14px;font-weight:800;}'
+                + '.final{background:#0F766E;color:white;padding:12px;border-radius:8px;text-align:center;margin:12px 0;}'
+                + '.final .summary-amt{font-size:20px;color:white;}'
+                + '.final .summary-label{color:rgba(255,255,255,0.85);}'
+                + '@media print{body{padding:12px;}}</style></head><body>';
+            html += '<h1>' + _taxYear + '년 종합소득세 임대소득 신고 자료</h1>';
+            html += '<div style="font-size:11px;color:#64748B;">생성일: ' + new Date().toISOString().split('T')[0] + '</div>';
+
+            html += '<h2>📊 요약</h2>';
+            html += '<div class="summary-grid">'
+                  + '<div class="summary-card"><div class="summary-label">임대수입</div><div class="summary-amt">₩' + inc.totalIncluded.toLocaleString() + '</div></div>'
+                  + '<div class="summary-card"><div class="summary-label">간주임대료</div><div class="summary-amt">₩' + dep.deemed.toLocaleString() + '</div></div>'
+                  + '<div class="summary-card"><div class="summary-label">필요경비</div><div class="summary-amt">₩' + exp.deductibleTotal.toLocaleString() + '</div></div>'
+                  + '<div class="summary-card"><div class="summary-label">대상 세입자</div><div class="summary-amt">' + tenants.length + '명</div></div>'
+                  + '</div>';
+            html += '<div class="final"><div class="summary-label">📊 임대소득금액 (수입 + 간주임대료 − 필요경비)</div><div class="summary-amt">₩' + taxBase.toLocaleString() + '</div></div>';
+
+            html += '<h2>👥 세입자별 명세</h2>';
+            html += '<table><thead><tr><th>세입자</th><th>주민번호</th><th>호실</th><th>계약기간</th><th>월세</th><th>관리비</th><th>보증금</th><th>연간임대수입</th></tr></thead><tbody>';
+            tenants.forEach(t => {
+                const room = appData.rooms.find(r => r.id === t.roomId);
+                const building = appData.buildings.find(b => b.id === t.buildingId);
+                const roomLabel = (building ? building.name + ' ' : '') + (room ? room.roomNumber + '호' : '');
+                const yearRents = (appData.rents || []).filter(r => r.tenantId === t.id && r.status === 'paid' && r.month && r.month.startsWith(_taxYearPrefix()) && !_taxExcludedRents.has(r.id) && (!r.type || r.type === 'monthly'));
+                const annualPaid = yearRents.reduce((s,r) => s + (r.amount||0), 0);
+                html += '<tr><td>' + (t.name||'') + '</td><td>' + (t.residentId||'-') + '</td><td>' + roomLabel + '</td>'
+                     + '<td>' + (t.contractStart||'') + '~' + (t.contractEnd||'') + '</td>'
+                     + '<td style="text-align:right;">₩' + (t.monthlyRent||0).toLocaleString() + '</td>'
+                     + '<td style="text-align:right;">₩' + (t.managementFee||0).toLocaleString() + '</td>'
+                     + '<td style="text-align:right;">₩' + (t.deposit||0).toLocaleString() + '</td>'
+                     + '<td style="text-align:right;font-weight:700;">₩' + annualPaid.toLocaleString() + '</td></tr>';
+            });
+            html += '</tbody></table>';
+
+            html += '<h2>💰 임대수입 상세</h2>';
+            html += '<table><thead><tr><th>세입자</th><th>월</th><th>수납일</th><th>금액</th></tr></thead><tbody>';
+            inc.paidRents.filter(r => !_taxExcludedRents.has(r.id)).forEach(r => {
+                const t = appData.tenants.find(t => t.id === r.tenantId) || {};
+                html += '<tr><td>' + (t.name||'-') + '</td><td>' + r.month + '</td><td>' + (r.paidDate||'-') + '</td><td style="text-align:right;">₩' + (r.amount||0).toLocaleString() + '</td></tr>';
+            });
+            html += '<tr class="total-row"><td colspan="3">합계</td><td style="text-align:right;">₩' + inc.totalIncluded.toLocaleString() + '</td></tr></tbody></table>';
+
+            html += '<h2>📋 필요경비 상세</h2>';
+            html += '<table><thead><tr><th>날짜</th><th>분류</th><th>항목</th><th>건물/호실</th><th>금액</th></tr></thead><tbody>';
+            exp.yearExp.filter(e => !_taxExcludedExpenses.has(e.id) && _taxIsDeductible(e)).forEach(e => {
+                const b = appData.buildings.find(x => x.id === e.buildingId);
+                const r = appData.rooms.find(x => x.id === e.roomId);
+                html += '<tr><td>' + (e.date||'') + '</td><td>' + (e.category||'') + '</td><td>' + (e.title||'') + '</td>'
+                     + '<td>' + (b?.name||'') + ' ' + (r?.roomNumber||'') + '</td><td style="text-align:right;">₩' + (e.amount||0).toLocaleString() + '</td></tr>';
+            });
+            html += '<tr class="total-row"><td colspan="4">합계</td><td style="text-align:right;">₩' + exp.deductibleTotal.toLocaleString() + '</td></tr></tbody></table>';
+
+            html += '<script>window.onload=function(){window.print();}<\/script></body></html>';
+            const w = window.open('', '_blank');
+            if (!w) { showToast('팝업이 차단되었습니다. 브라우저 설정을 확인하세요.'); return; }
+            w.document.write(html);
+            w.document.close();
+        }
+
         function exportToCSV() {
             let csv = '건물명,주소,세대수\n';
             appData.buildings.forEach(b => {
@@ -4202,7 +6016,7 @@
             appData.tenants.forEach(t => {
                 const building = appData.buildings.find(b => b.id === t.buildingId);
                 const room = appData.rooms.find(r => r.id === t.roomId);
-                csv += `${t.name},${building?.name},${room?.roomNumber},${t.monthlyRent},${t.deposit},${t.contractStart},${t.contractEnd}\n`;
+                csv += `${t.name},${building?.name ?? ''},${room?.roomNumber ?? ''},${t.monthlyRent ?? ''},${t.deposit ?? ''},${t.contractStart ?? ''},${t.contractEnd ?? ''}\n`;
             });
             csv += '\n월세수납,세입자,건물,금액,월,상태\n';
             appData.rents.forEach(r => {
@@ -4686,7 +6500,7 @@
         function rollbackToSnapshot(docId, label) {
             if (!_db) { showToast('⚠️ Firebase 연결 필요'); return; }
             var msg = (label ? label + ' 시점' : '선택한 시점') + '의 데이터로 복원할까요?\n현재 상태는 이력에 자동 저장됩니다.';
-            if (!confirm(msg)) return;
+            showConfirm(msg, function() {
             _db.collection('rentalAppChangelog').doc(docId).get()
                 .then(function(doc) {
                     if (!doc.exists) { showToast('⚠️ 해당 이력을 찾을 수 없습니다'); return; }
@@ -4721,6 +6535,7 @@
                 .catch(function(e) {
                     showToast('⚠️ 복원 실패: ' + e.message);
                 });
+            }, '복원', false);
         }
 
         /** 디바운스 대기 중인 Firestore 저장을 즉시 시도 (탭 종료·백그라운드 전환 시 유실 완화) */
@@ -4954,7 +6769,10 @@
         // ============ SEARCH ============
         document.addEventListener('DOMContentLoaded', () => {
             loadData();
-            cleanupInvalidRents();
+            if (cleanupInvalidRents()) {
+                // 잘못된 레코드가 제거됐으면 localStorage에 즉시 반영 (다음 로딩 때도 깨끗하게)
+                localStorage.setItem('appData', JSON.stringify(appData));
+            }
             _syncPrevSaveSnapshot();
             renderDashboard();
             const tenantSearch = document.getElementById('tenantSearch');
@@ -4996,6 +6814,13 @@
             });
             window.addEventListener('pagehide', _flushFirestorePending);
             window.addEventListener('beforeunload', _flushFirestorePending);
+            // Android 하드웨어 뒤로가기 → 열린 모달 닫기
+            window.addEventListener('popstate', function(e) {
+                const active = document.querySelector('.modal-overlay.active, .td-overlay.active');
+                if (active) {
+                    closeModal(active.id);
+                }
+            });
             document.addEventListener('visibilitychange', function() {
                 if (document.visibilityState === 'hidden') _flushFirestorePending();
             });
@@ -5029,7 +6854,7 @@
             const today = new Date().toISOString().split('T')[0];
             const data = appData;
             const pastTenants = (appData.tenants || []).filter(function(t) {
-                return t.status !== 'active' || (t.contractEnd && t.contractEnd < today);
+                return t.status === 'inactive' || (t.status === 'active' && t.contractEnd && t.contractEnd < today);
             });
             if (pastTenants.length === 0) {
                 listEl.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📋</div><p>과거 세입자가 없습니다</p></div>';
@@ -5051,17 +6876,26 @@
                 const badgeText = t.status !== 'active' ? '퇴거' : '계약만료';
                 const card = document.createElement('div');
                 card.className = 'tc-past-card';
+                card.style.cursor = 'pointer';
                 card.innerHTML =
                     '<div class="tc-past-header">' +
-                        '<div>' +
+                        '<div style="flex:1;min-width:0;">' +
                             '<div class="tc-past-name">' + escapeHTML(t.name) + '</div>' +
                             '<div class="tc-past-room">🏢 ' + escapeHTML((bldName ? bldName + ' ' : '') + roomNum) + '</div>' +
                         '</div>' +
-                        '<span class="tc-past-badge">' + badgeText + '</span>' +
+                        '<div style="display:flex;align-items:center;gap:8px;">' +
+                            '<span class="tc-past-badge">' + badgeText + '</span>' +
+                            '<span style="color:#CBD5E1;font-size:20px;line-height:1;">›</span>' +
+                        '</div>' +
                     '</div>' +
                     '<div class="tc-past-dates">📅 ' + escapeHTML(start) + ' ~ ' + escapeHTML(end) + '</div>' +
                     (t.deposit > 0 ? '<div style="margin-top:8px;font-size:12px;color:#6B7280;">🏦 보증금 ₩' + t.deposit.toLocaleString() + (t.depositRefunded ? ' <span style="color:#16A34A;font-weight:700;">반환완료</span>' : ' <span style="color:#DC2626;font-weight:700;">미반환</span>') + '</div>' : '') +
                     (isExpiredActive ? '<div style="margin-top:10px;"><button class="tc-btn-outline" style="width:100%;" data-tid="' + t.id + '">계약 갱신</button></div>' : '');
+                // 카드 클릭 → 세부정보 보기
+                card.addEventListener('click', function(e) {
+                    if (e.target.closest('[data-tid]')) return; // 갱신 버튼은 별도 처리
+                    showTenantDetail(t.id);
+                });
                 if (isExpiredActive) {
                     card.querySelector('[data-tid]').addEventListener('click', function(e) {
                         e.stopPropagation(); openRenewModal(t.id);
@@ -5075,49 +6909,19 @@
         function openRenewModal(tenantId) {
             var tenant = (appData.tenants || []).find(function(t) { return t.id === tenantId; });
             if (!tenant) return;
-            const existing = document.getElementById('renewModal');
-            if (existing) existing.remove();
-            
             const oldEnd = tenant.contractEnd || new Date().toISOString().split('T')[0];
-            const newStart = oldEnd;
-            const newEndDate = new Date(newStart);
+            const newEndDate = new Date(oldEnd);
             newEndDate.setFullYear(newEndDate.getFullYear() + 1);
-            const newEnd = newEndDate.toISOString().split('T')[0];
-            
-            const modal = document.createElement('div');
-            modal.id = 'renewModal';
-            modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;';
-            
-            modal.innerHTML = `
-                <div style="background:white;border-radius:16px;padding:24px;width:100%;max-width:380px;max-height:85vh;overflow-y:auto;">
-                    <h3 style="margin:0 0 4px;font-size:18px;font-weight:700;">계약 갱신</h3>
-                    <p style="margin:0 0 20px;color:#6b7280;font-size:14px;">${escapeHTML(tenant.name)}</p>
-                    <div style="margin-bottom:14px;">
-                        <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">신규 시작일</label>
-                        <input type="date" id="renewStart" value="${newStart}" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;box-sizing:border-box;">
-                    </div>
-                    <div style="margin-bottom:14px;">
-                        <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">만료일</label>
-                        <input type="date" id="renewEnd" value="${newEnd}" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;box-sizing:border-box;">
-                    </div>
-                    <div style="margin-bottom:14px;">
-                        <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">월 임대료 (원)</label>
-                        <input type="number" id="renewRent" value="${tenant.monthlyRent || 0}" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;box-sizing:border-box;">
-                    </div>
-                    <div style="margin-bottom:20px;">
-                        <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">관리비 (원)</label>
-                        <input type="number" id="renewFee" value="${tenant.managementFee || 0}" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;box-sizing:border-box;">
-                    </div>
-                    <div style="display:flex;gap:10px;">
-                        <button onclick="document.getElementById('renewModal').remove()" style="flex:1;padding:12px;background:#f3f4f6;color:#374151;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;">취소</button>
-                        <button onclick="submitRenewal('${tenantId}')" style="flex:2;padding:12px;background:#2563eb;color:white;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;">갱신 저장</button>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(modal);
-            modal.onclick = function(e) { if (e.target === modal) modal.remove(); };
+            document.getElementById('renewTenantId').value = tenantId;
+            document.getElementById('renewModalTenantName').textContent = tenant.name;
+            document.getElementById('renewStart').value = oldEnd;
+            document.getElementById('renewEnd').value = newEndDate.toISOString().split('T')[0];
+            document.getElementById('renewRent').value = tenant.monthlyRent || 0;
+            document.getElementById('renewFee').value = tenant.managementFee || 0;
+            openModal('renewContractModal');
         }
-        function submitRenewal(tenantId) {
+        function submitRenewal() {
+            const tenantId = document.getElementById('renewTenantId').value;
             const newStart = document.getElementById('renewStart').value;
             const newEnd = document.getElementById('renewEnd').value;
             const newRent = parseInt(document.getElementById('renewRent').value) || 0;
@@ -5126,14 +6930,34 @@
             if (newStart >= newEnd) { showToast('⚠️ 만료일이 시작일보다 나중이어야 합니다.'); return; }
             const idx = appData.tenants.findIndex(t => t.id === tenantId);
             if (idx === -1) { showToast('⚠️ 세입자를 찾을 수 없습니다.'); return; }
+            const _prev = appData.tenants[idx];
+            // 월세 인상 이력 기록 (이전 계약 한 줄)
+            const _oldRent = _prev.monthlyRent || 0;
+            const _oldFee = _prev.managementFee || 0;
+            if (_oldRent !== newRent || _oldFee !== newFee) {
+                _prev.rentHistory = (_prev.rentHistory || []).concat([{
+                    monthlyRent: _oldRent,
+                    managementFee: _oldFee,
+                    from: _prev.contractStart || '',
+                    to: newStart, // 새 계약 시작일을 종료시점으로 사용
+                    reason: 'renew'
+                }]);
+            }
             appData.tenants[idx].contractStart = newStart;
             appData.tenants[idx].contractEnd = newEnd;
             appData.tenants[idx].monthlyRent = newRent;
             appData.tenants[idx].managementFee = newFee;
             appData.tenants[idx].status = 'active';
+            // 새 계약 시작월과 겹치는 기존 pending/overdue 월세 기록 제거 (중복 방지)
+            const newStartMonth = newStart.slice(0, 7);
+            appData.rents = appData.rents.filter(r => {
+                if (r.tenantId !== tenantId) return true;
+                if (!(!r.type || r.type === 'monthly')) return true;
+                if (r.status !== 'pending' && r.status !== 'overdue') return true;
+                return r.month !== newStartMonth;
+            });
             saveData();
-            const modal = document.getElementById('renewModal');
-            if (modal) modal.remove();
+            closeModal('renewContractModal');
             renderTenants();
             renderDashboard();
             showToast('✅ 계약이 갱신되었습니다!');
@@ -5193,15 +7017,15 @@
             navigator.clipboard.readText().then(text => {
               document.getElementById('smsInput').value = text;
             }).catch(() => {
-              alert('클립보드 접근이 거부되었습니다.\n직접 붙여넣기(길게 누르기)를 사용해 주세요.');
+              showToast('클립보드 접근이 거부되었습니다. 직접 붙여넣기를 사용해 주세요.', 3000);
             });
           } else {
-            alert('직접 붙여넣기(길게 누르기)를 사용해 주세요.');
+            showToast('직접 붙여넣기(길게 누르기)를 사용해 주세요.', 2500);
           }
         }
         function analyzeSms() {
           const sms = document.getElementById('smsInput').value.trim();
-          if (!sms) { alert('문자를 먼저 붙여넣어 주세요.'); return; }
+          if (!sms) { showToast('⚠️ 문자를 먼저 붙여넣어 주세요.', 2500); return; }
           const result = { amount: null, sender: null, bank: '알 수 없음' };
           // 은행 감지
           if (sms.includes('국민') || sms.includes('KB')) result.bank = 'KB국민은행';
@@ -5212,10 +7036,15 @@
           else if (sms.includes('IBK') || sms.includes('기업')) result.bank = 'IBK기업은행';
           else if (sms.includes('카카오')) result.bank = '카카오뱅크';
           else if (sms.includes('토스')) result.bank = '토스뱅크';
-          // 금액 추출 (잔액 제외하고 첫번째 금액)
-          const noBalance = sms.replace(/잔액[\d,\s원]*/g, '');
-          const amtM = noBalance.match(/(\d[\d,]{2,})\s*원/);
-          if (amtM) result.amount = parseInt(amtM[1].replace(/,/g, ''));
+          // 금액 추출: "입금 NNN원" 우선, 없으면 잔액 제외 후 첫번째 금액
+          const depositM = sms.match(/입금\s+([\d,]+)\s*원/);
+          if (depositM) {
+            result.amount = parseInt(depositM[1].replace(/,/g, ''));
+          } else {
+            const noBalance = sms.replace(/잔액[\d,\s원]*/g, '');
+            const amtM = noBalance.match(/(\d[\d,]{2,})\s*원/);
+            if (amtM) result.amount = parseInt(amtM[1].replace(/,/g, ''));
+          }
           // 입금자 이름 추출 (한글 2~4자)
           const namePatterns = [
             /([가-힣]{2,4})\s+[\d,]+원/,
@@ -5228,7 +7057,8 @@
             const m = sms.match(p);
             if (m && m[1] && !skipWords.includes(m[1])) { result.sender = m[1]; break; }
           }
-          if (!result.amount) { alert('금액을 찾지 못했습니다.\n문자 내용을 확인해 주세요.'); return; }
+          if (!result.amount) { showToast('⚠️ 금액을 찾지 못했습니다. 문자 내용을 확인해 주세요.', 3000); return; }
+          if (result.bank === '알 수 없음') { showToast('⚠️ 은행을 인식하지 못했습니다. 직접 확인 후 저장해 주세요.', 3500); }
           _smsParsed = result;
           document.getElementById('smsResBank').textContent = result.bank;
           document.getElementById('smsResAmount').textContent = result.amount.toLocaleString() + '원';
@@ -5238,55 +7068,63 @@
           sel.innerHTML = '<option value="">-- 세입자를 선택하세요 --</option>';
           // Use global appData directly (do not shadow with local const)
           const rooms = appData.rooms || [];
-          (appData.tenants || []).filter(t => t.status === 'active').forEach(t => {
+          const activeTenants = (appData.tenants || []).filter(t => t.status === 'active');
+          const amtMatches = activeTenants.filter(t =>
+            t.monthlyRent + (t.managementFee || 0) === result.amount || t.monthlyRent === result.amount
+          );
+          activeTenants.forEach(t => {
             const opt = document.createElement('option');
             const room = rooms.find(r => r.id === t.roomId);
             opt.value = t.id;
             opt.textContent = t.name + ' (' + (room ? room.roomNumber : '?') + '호)';
-            if (t.monthlyRent + (t.managementFee || 0) === result.amount || t.monthlyRent === result.amount) {
-              opt.selected = true;
-            }
+            // 동일 금액 세입자가 정확히 1명일 때만 자동 선택
+            if (amtMatches.length === 1 && amtMatches[0].id === t.id) opt.selected = true;
             sel.appendChild(opt);
           });
+          if (amtMatches.length > 1) showToast('⚠️ 동일 금액 세입자가 ' + amtMatches.length + '명입니다. 직접 선택해 주세요.', 3500);
           document.getElementById('smsStep1').style.display = 'none';
           document.getElementById('smsStep2').style.display = '';
         }
         function confirmSmsPayment() {
           const tenantId = document.getElementById('smsTenantSel').value;
-          if (!tenantId) { alert('세입자를 선택해 주세요.'); return; }
-          if (!_smsParsed || !_smsParsed.amount) { alert('분석 결과가 없습니다.'); return; }
+          if (!tenantId) { showToast('⚠️ 세입자를 선택해 주세요.', 2500); return; }
+          if (!_smsParsed || !_smsParsed.amount) { showToast('⚠️ 분석 결과가 없습니다.', 2500); return; }
           const tenant = (appData.tenants || []).find(function(t) { return t.id === tenantId; });
-          if (!tenant) { alert('세입자 정보를 찾을 수 없습니다.'); return; }
+          if (!tenant) { showToast('⚠️ 세입자 정보를 찾을 수 없습니다.', 2500); return; }
           const now = new Date();
           const month = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
           const paidDate = now.toISOString().split('T')[0];
           const existing = (appData.rents || []).find(function(r) {
             return r.tenantId === tenantId && r.month === month && r.status === 'paid' && (!r.type || r.type === 'monthly');
           });
-          if (existing) {
-            if (!confirm(tenant.name + '님의 ' + month + ' 수납이 이미 처리되어 있습니다.\n그래도 추가하시겠습니까?')) return;
+          function _doSave() {
+            const newRent = {
+              id: String(Date.now()),
+              type: 'monthly',
+              tenantId: tenantId,
+              roomId: tenant.roomId,
+              buildingId: tenant.buildingId,
+              month: month,
+              amount: _smsParsed.amount,
+              rentAmount: _smsParsed.amount,
+              managementFee: 0,
+              paidDate: paidDate,
+              status: 'paid',
+              memo: 'SMS 자동: ' + _smsParsed.bank + (_smsParsed.sender ? ' / ' + _smsParsed.sender : '')
+            };
+            if (!appData.rents) appData.rents = [];
+            appData.rents.push(newRent);
+            saveData();
+            closeSmsModal();
+            if (typeof renderRents === 'function') renderRents();
+            if (typeof renderDashboard === 'function') renderDashboard();
+            showToast('✅ ' + tenant.name + '님 ' + month + ' 수납 완료! ₩' + newRent.amount.toLocaleString());
           }
-          const newRent = {
-            id: String(Date.now()),
-            type: 'monthly',
-            tenantId: tenantId,
-            roomId: tenant.roomId,
-            buildingId: tenant.buildingId,
-            month: month,
-            amount: _smsParsed.amount,
-            rentAmount: _smsParsed.amount,
-            managementFee: 0,
-            paidDate: paidDate,
-            status: 'paid',
-            memo: 'SMS 자동: ' + _smsParsed.bank + (_smsParsed.sender ? ' / ' + _smsParsed.sender : '')
-          };
-          if (!appData.rents) appData.rents = [];
-          appData.rents.push(newRent);
-          saveData();
-          closeSmsModal();
-          if (typeof renderRents === 'function') renderRents();
-          if (typeof renderDashboard === 'function') renderDashboard();
-          showToast('✅ ' + tenant.name + '님 ' + month + ' 수납 완료! ₩' + newRent.amount.toLocaleString());
+          if (existing) {
+            showConfirm(tenant.name + '님의 ' + month + ' 수납이 이미 처리되어 있습니다.\n그래도 추가하시겠습니까?', _doSave, '추가', true);
+          } else {
+            _doSave();
+          }
         }
         // ===== SMS 기능 끝 =====
         // 대시보드 월 라벨 동적 업데이트
@@ -5366,7 +7204,13 @@
                 var paidAmt    = paidRents.reduce(function(s, r) { return s + r.amount; }, 0);
 
                 var expectedAmt = (appData.tenants || [])
-                    .filter(function(t) { return t.status === 'active'; })
+                    .filter(function(t) {
+                        if (t.status !== 'active') return false;
+                        // 아직 입주하지 않은 세입자(미래 moveInDate) 제외
+                        var mi = (t.moveInDate || '').slice(0, 7);
+                        if (mi && mi > monthStr) return false;
+                        return true;
+                    })
                     .reduce(function(sum, t) {
                         if ((t.rentType || 'monthly') === 'annual') {
                             var renewMM = (t.contractStart || '').slice(5, 7);
@@ -5503,7 +7347,12 @@
                         var hStr = hy + '-' + String(hm).padStart(2, '0');
                         var hRents = (appData.rents || []).filter(function(r) { return r.month === hStr; });
                         var hPaid  = hRents.filter(function(r) { return r.status === 'paid'; }).length;
-                        var hUnpaidRents = hRents.filter(function(r) { return (r.status === 'pending' || r.status === 'overdue') && (!r.type || r.type === 'monthly'); });
+                        var hUnpaidRents = hRents.filter(function(r) {
+                            if (!((r.status === 'pending' || r.status === 'overdue') && (!r.type || r.type === 'monthly'))) return false;
+                            var t = (appData.tenants || []).find(function(t) { return t.id === r.tenantId; });
+                            var tEnd = t ? (t.contractEnd || '').slice(0, 7) : '';
+                            return !tEnd || hStr <= tEnd; // 계약종료 이후 월은 미납으로 표시 안 함
+                        });
                         var hUnpaid = hUnpaidRents.length;
                         historyUnpaidTotal += hUnpaid;
                         var hTotal = hRents.length;
@@ -5567,7 +7416,7 @@
                 var expiringList = (appData.tenants || []).filter(function(t) {
                     if (t.status !== 'active') return false;
                     var d = Math.floor((new Date(t.contractEnd) - today) / 86400000);
-                    return d >= 0 && d <= 60;
+                    return d >= 0 && d <= 30;
                 }).sort(function(a, b) {
                     return new Date(a.contractEnd) - new Date(b.contractEnd);
                 });
@@ -5615,14 +7464,17 @@
                             mainListNew.innerHTML = mainRoomsNew.map(function(r) {
                                 var b = (appData.buildings || []).find(function(bl) { return bl.id === r.buildingId; });
                                 var bName = b ? b.name + ' ' : '';
-                                var memo = r.memo || '수리 내용 미기재';
+                                var memo = r.maintMemo || r.memo || '수리 내용 미기재';
+                                var dateStr = r.maintStartDate ? ' · ' + r.maintStartDate.replace(/-/g, '.') : '';
+                                var estStr = r.maintEstCost > 0 ? ' · 예상 ₩' + r.maintEstCost.toLocaleString() : '';
                                 return '<div class="info-row">' +
-                                    '<div class="info-row-left">' +
+                                    '<div class="info-row-left" onclick="openMaintenanceModal(\'' + r.id + '\')" style="cursor:pointer;">' +
                                     '<span class="info-row-room">' + bName + r.roomNumber + '호</span>' +
-                                    '<div class="info-row-desc">' + memo + '</div>' +
+                                    '<div class="info-row-desc">' + escapeHTML(memo) + dateStr + estStr + '</div>' +
                                     '</div>' +
-                                    '<div class="info-row-right">' +
+                                    '<div class="info-row-right" style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;">' +
                                     '<span class="info-row-badge ibadge-yellow">🔧 수리중</span>' +
+                                    '<button onclick="openMaintenanceCompleteModal(\'' + r.id + '\')" style="font-size:11px;padding:3px 10px;background:#16A34A;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:700;">완료</button>' +
                                     '</div></div>';
                             }).join('');
                         }
@@ -5630,6 +7482,105 @@
                         mainSectionNew.style.display = 'none';
                     }
                 }
+
+                /* ────────────────────────────────────────────────
+                   ⑦ 보증금 미반환 카드
+                ──────────────────────────────────────────────── */
+                var todayStr = today.toISOString().split('T')[0];
+                var depositPendingSection = document.getElementById('depositPendingSection');
+                var depositPendingList    = document.getElementById('depositPendingList');
+                var depositPendingTenants = (appData.tenants || []).filter(function(t) {
+                    if (!t.deposit || t.deposit <= 0) return false;
+                    if (t.depositRefunded) return false;
+                    // 계약 종료일이 오늘 이전인 세입자만
+                    return t.contractEnd && t.contractEnd < todayStr;
+                });
+                if (depositPendingSection) {
+                    if (depositPendingTenants.length > 0) {
+                        depositPendingSection.style.display = '';
+                        if (depositPendingList) {
+                            depositPendingList.innerHTML = depositPendingTenants.map(function(t) {
+                                var room = (appData.rooms || []).find(function(r) { return r.id === t.roomId; });
+                                var b    = (appData.buildings || []).find(function(bl) { return bl.id === t.buildingId; });
+                                var loc  = (b ? b.name + ' ' : '') + (room ? room.roomNumber + '호 ' : '');
+                                return '<div class="info-row" onclick="showTenantDetail(\'' + t.id + '\')" style="cursor:pointer;">' +
+                                    '<div class="info-row-left">' +
+                                    '<span class="info-row-room">' + t.name + '</span>' +
+                                    '<div class="info-row-desc">' + loc + '· ₩' + (t.deposit || 0).toLocaleString() + '</div>' +
+                                    '</div>' +
+                                    '<div class="info-row-right">' +
+                                    '<span class="info-row-badge ibadge-warning">미반환</span>' +
+                                    '</div></div>';
+                            }).join('');
+                        }
+                    } else {
+                        depositPendingSection.style.display = 'none';
+                    }
+                }
+
+                /* ────────────────────────────────────────────────
+                   ⑧ 공실 현황 카드
+                ──────────────────────────────────────────────── */
+                var vacantSectionNew = document.getElementById('vacantSectionNew');
+                var vacantListNew    = document.getElementById('vacantListNew');
+                var vacantRoomsNew   = (appData.rooms || []).filter(function(r) { return r.status === 'vacant'; });
+                if (vacantSectionNew) {
+                    if (vacantRoomsNew.length > 0) {
+                        vacantSectionNew.style.display = '';
+                        if (vacantListNew) {
+                            vacantListNew.innerHTML = vacantRoomsNew.map(function(r) {
+                                var b = (appData.buildings || []).find(function(bl) { return bl.id === r.buildingId; });
+                                var bName = b ? b.name + ' ' : '';
+                                return '<div class="info-row">' +
+                                    '<div class="info-row-left">' +
+                                    '<span class="info-row-room">' + bName + r.roomNumber + '호</span>' +
+                                    (r.memo ? '<div class="info-row-desc">' + r.memo + '</div>' : '') +
+                                    '</div>' +
+                                    '<div class="info-row-right">' +
+                                    '<span class="info-row-badge ibadge-gray">공실</span>' +
+                                    '</div></div>';
+                            }).join('');
+                        }
+                    } else {
+                        vacantSectionNew.style.display = 'none';
+                    }
+                }
+
+                /* ────────────────────────────────────────────────
+                   ⑧ 연간 요약 카드 업데이트
+                ──────────────────────────────────────────────── */
+                var yearPrefix = y + '-';
+                var annualPaidAmt = (appData.rents || []).filter(function(r) {
+                    return r.status === 'paid' && r.month && r.month.startsWith(yearPrefix);
+                }).reduce(function(s, r) { return s + (r.amount || 0); }, 0);
+                var annualExpenseAmt = (appData.expenses || []).filter(function(e) {
+                    return e.date && e.date.startsWith(yearPrefix);
+                }).reduce(function(s, e) { return s + (e.amount || 0); }, 0);
+                var annualNet = annualPaidAmt - annualExpenseAmt;
+                var totalRooms = (appData.rooms || []).length;
+                var occupiedRooms = (appData.rooms || []).filter(function(r) { return r.status === 'occupied'; }).length;
+                var occRate = totalRooms > 0 ? Math.round(occupiedRooms / totalRooms * 100) : 0;
+
+                var annualTitleEl = document.getElementById('annualSummaryTitle');
+                if (annualTitleEl) annualTitleEl.textContent = y + '년 요약';
+                var annualIncomeEl = document.getElementById('annualIncome');
+                var annualExpenseEl = document.getElementById('annualExpense');
+                var annualProfitEl = document.getElementById('annualProfit');
+                var annualOccEl = document.getElementById('annualOccupancy');
+                function _fmtShort(n) {
+                    if (n >= 100000000) return (n / 100000000).toFixed(1).replace(/\.0$/, '') + '억';
+                    if (n >= 10000000)  return (n / 10000000).toFixed(1).replace(/\.0$/, '') + '천만';
+                    if (n >= 1000000)   return (n / 1000000).toFixed(1).replace(/\.0$/, '') + '백만';
+                    if (n >= 10000)     return (n / 10000).toFixed(1).replace(/\.0$/, '') + '만';
+                    return n.toLocaleString();
+                }
+                if (annualIncomeEl)  annualIncomeEl.textContent  = '₩' + _fmtShort(annualPaidAmt);
+                if (annualExpenseEl) annualExpenseEl.textContent = '₩' + _fmtShort(annualExpenseAmt);
+                if (annualProfitEl) {
+                    annualProfitEl.textContent = (annualNet >= 0 ? '₩' : '-₩') + _fmtShort(Math.abs(annualNet));
+                    annualProfitEl.className = 'annual-stat-val annual-profit' + (annualNet < 0 ? ' loss' : '');
+                }
+                if (annualOccEl) annualOccEl.innerHTML = occRate + '%<span style="display:block;font-size:10px;font-weight:600;color:#7C3AED;opacity:0.75;margin-top:1px;">' + occupiedRooms + '/' + totalRooms + '실</span>';
 
                 /* ── 하위호환: subtitle, 배지 업데이트 ── */
                 var sub = document.getElementById('dashSubtitleLine');
