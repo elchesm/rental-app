@@ -7143,18 +7143,7 @@
           };
         }
     </script>
-    <script>
-        if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
-            window.addEventListener('load', async () => {
-                try {
-                    const reg = await navigator.serviceWorker.register('/rental-app/sw.js');
-                    reg.update();
-                } catch (swErr) {
-                    console.warn('Service worker 등록 생략:', swErr);
-                }
-            });
-        }
-    </script>
+    <!-- Service Worker 등록은 sw.js 자산이 없어 제거됨 (PWA 매니페스트 + 홈화면 추가는 그대로 동작) -->
     <!-- ═══════ UI PATCH: new dashboard elements + nav updates ═══════ -->
     <script>
     (function() {
