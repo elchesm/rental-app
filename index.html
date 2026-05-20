@@ -1479,6 +1479,31 @@
         .quick-btn:active { background: #EEF2FF; border-color: var(--primary); transform: scale(0.96); }
         .quick-btn span:first-child { font-size: 24px; line-height: 1; }
         .quick-btn span:last-child { font-size: 12px; font-weight: 700; color: var(--text-primary); }
+        /* SMS 입금문자 빠른 진입용 강조 버튼 */
+        .quick-btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            border-color: var(--primary);
+            color: white;
+            box-shadow: 0 4px 14px rgba(30,64,175,0.22);
+        }
+        .quick-btn-primary span:last-child { color: white; }
+        .quick-btn-primary:active { background: var(--primary); border-color: var(--primary); }
+        /* 수납 페이지 상단 SMS 진입 버튼 */
+        .rent-sms-bar {
+            display: flex; align-items: center; gap: 8px;
+            margin: 10px 12px 0;
+        }
+        .rent-sms-btn {
+            flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 11px 14px; border-radius: var(--radius-md);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white; border: none; cursor: pointer;
+            font-size: 14px; font-weight: 700;
+            box-shadow: 0 4px 14px rgba(30,64,175,0.22);
+            transition: transform 0.12s ease;
+            touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+        }
+        .rent-sms-btn:active { transform: scale(0.97); }
         /* ── 변경 이력 (Changelog) ── */
         .changelog-entry {
             background: #F8FAFC; border: 1px solid var(--border-color);
@@ -1749,6 +1774,9 @@
                         <span class="dash-section-label">빠른 메뉴</span>
                     </div>
                     <div class="dashboard-actions-new">
+                        <button class="quick-btn quick-btn-primary" onclick="openSmsModal()" aria-label="입금문자 붙여넣기로 수납 처리">
+                            <span>📱</span><span>입금문자</span>
+                        </button>
                         <button class="quick-btn" onclick="openModal('addTenantModal')">
                             <span>👤</span><span>세입자 추가</span>
                         </button>
@@ -1819,6 +1847,12 @@
 
             <!-- ════════════ 수납 ════════════ -->
             <div class="page" id="rentPage">
+                <div class="rent-sms-bar">
+                    <button type="button" class="rent-sms-btn" onclick="openSmsModal()" aria-label="입금문자 붙여넣기로 수납 처리">
+                        <span style="font-size:18px;">📱</span>
+                        <span>입금문자 붙여넣기 → 자동 수납</span>
+                    </button>
+                </div>
                 <div class="month-selector">
                     <button onclick="previousYear()">◀</button>
                     <span id="yearDisplay">2026년</span>
