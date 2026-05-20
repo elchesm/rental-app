@@ -655,6 +655,16 @@
             font-size: 13px; color: var(--text-tertiary); cursor: pointer;
             display: flex; align-items: center; gap: 2px;
         }
+        /* 공실 KPI 인라인 배지 */
+        .vacant-kpi-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            margin-left: 8px;
+            padding: 2px 8px; border-radius: 999px;
+            background: #FEF3C7; color: #92400E;
+            font-size: 11px; font-weight: 700;
+            white-space: nowrap; letter-spacing: -0.2px;
+        }
+        .vacant-kpi-badge.hidden { display: none; }
         /* Annual summary grid */
         .annual-stat-grid {
             display: grid; grid-template-columns: 1fr 1fr 1fr 1fr;
@@ -1750,7 +1760,7 @@
                 <!-- ⑤ 공실 현황 -->
                 <div class="dash-section" id="vacantSectionNew" style="display:none;margin-top:14px;">
                     <div class="dash-section-header">
-                        <span class="dash-section-label">🏠 공실 현황</span>
+                        <span class="dash-section-label">🏠 공실 현황<span id="vacantKpiBadge" class="vacant-kpi-badge hidden" aria-live="polite"></span></span>
                         <span class="dash-section-more" onclick="openModal('addTenantModal')">세입자 추가 ›</span>
                     </div>
                     <div class="info-card-wrap">
@@ -7632,14 +7642,27 @@
                 }
 
                 /* ────────────────────────────────────────────────
-                   ⑧ 공실 현황 카드
+                   ⑧ 공실 현황 카드 + 공실 KPI 배지
                 ──────────────────────────────────────────────── */
                 var vacantSectionNew = document.getElementById('vacantSectionNew');
                 var vacantListNew    = document.getElementById('vacantListNew');
+                var vacantKpiBadge   = document.getElementById('vacantKpiBadge');
                 var vacantRoomsNew   = (appData.rooms || []).filter(function(r) { return r.status === 'vacant'; });
                 if (vacantSectionNew) {
                     if (vacantRoomsNew.length > 0) {
                         vacantSectionNew.style.display = '';
+                        // 예상 월 손실 = 공실인 방의 room.monthlyRent 합 (정보 미입력 방은 0 처리)
+                        var expectedLoss = vacantRoomsNew.reduce(function(s, r) {
+                            var v = parseInt(r && r.monthlyRent, 10);
+                            return s + (Number.isFinite(v) && v > 0 ? v : 0);
+                        }, 0);
+                        if (vacantKpiBadge) {
+                            vacantKpiBadge.classList.remove('hidden');
+                            vacantKpiBadge.textContent = '공실 ' + vacantRoomsNew.length + '개 · 예상 손실 ₩' + expectedLoss.toLocaleString();
+                            vacantKpiBadge.title = expectedLoss > 0
+                                ? '방마다 등록된 월세 합계 기준'
+                                : '방에 월세 정보가 비어 있어 손실 추정이 0원으로 표시됩니다';
+                        }
                         if (vacantListNew) {
                             vacantListNew.innerHTML = vacantRoomsNew.map(function(r) {
                                 var b = (appData.buildings || []).find(function(bl) { return bl.id === r.buildingId; });
@@ -7656,6 +7679,10 @@
                         }
                     } else {
                         vacantSectionNew.style.display = 'none';
+                        if (vacantKpiBadge) {
+                            vacantKpiBadge.classList.add('hidden');
+                            vacantKpiBadge.textContent = '';
+                        }
                     }
                 }
 
