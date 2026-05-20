@@ -32,3 +32,6 @@ config.local.js
 # 주의: rent_app.html 안의 FIREBASE_CONFIG 값은
 # 이 파일이 private 저장소에 있을 때만 안전합니다.
 # 절대 public 저장소로 전환하지 마세요.
+
+# Firebase local deploy cache
+.firebase/

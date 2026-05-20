@@ -399,6 +399,21 @@
             display: flex; align-items: flex-start; gap: 6px;
             padding: 0 14px 10px; font-size: 12.5px; color: #64748B;
         }
+        /* 누적 미납 행 (보증금 제외) */
+        .tc-unpaid-row {
+            display: flex; align-items: center; gap: 6px;
+            margin: 0 14px 10px;
+            padding: 8px 12px;
+            border-radius: 10px;
+            background: #FEF2F2;
+            border: 1px solid #FECACA;
+            color: #B91C1C;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: -0.2px;
+        }
+        .tc-unpaid-row .tc-unpaid-icon { font-size: 14px; line-height: 1; }
+        .tc-unpaid-row .tc-unpaid-amount { margin-left: auto; font-variant-numeric: tabular-nums; }
         .tc-actions { display: flex; gap: 8px; padding: 0 14px 14px; }
         .tc-btn-outline {
             flex: 1; padding: 10px 0;
@@ -655,6 +670,16 @@
             font-size: 13px; color: var(--text-tertiary); cursor: pointer;
             display: flex; align-items: center; gap: 2px;
         }
+        /* 공실 KPI 인라인 배지 */
+        .vacant-kpi-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            margin-left: 8px;
+            padding: 2px 8px; border-radius: 999px;
+            background: #FEF3C7; color: #92400E;
+            font-size: 11px; font-weight: 700;
+            white-space: nowrap; letter-spacing: -0.2px;
+        }
+        .vacant-kpi-badge.hidden { display: none; }
         /* Annual summary grid */
         .annual-stat-grid {
             display: grid; grid-template-columns: 1fr 1fr 1fr 1fr;
@@ -1479,6 +1504,31 @@
         .quick-btn:active { background: #EEF2FF; border-color: var(--primary); transform: scale(0.96); }
         .quick-btn span:first-child { font-size: 24px; line-height: 1; }
         .quick-btn span:last-child { font-size: 12px; font-weight: 700; color: var(--text-primary); }
+        /* SMS 입금문자 빠른 진입용 강조 버튼 */
+        .quick-btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            border-color: var(--primary);
+            color: white;
+            box-shadow: 0 4px 14px rgba(30,64,175,0.22);
+        }
+        .quick-btn-primary span:last-child { color: white; }
+        .quick-btn-primary:active { background: var(--primary); border-color: var(--primary); }
+        /* 수납 페이지 상단 SMS 진입 버튼 */
+        .rent-sms-bar {
+            display: flex; align-items: center; gap: 8px;
+            margin: 10px 12px 0;
+        }
+        .rent-sms-btn {
+            flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 11px 14px; border-radius: var(--radius-md);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white; border: none; cursor: pointer;
+            font-size: 14px; font-weight: 700;
+            box-shadow: 0 4px 14px rgba(30,64,175,0.22);
+            transition: transform 0.12s ease;
+            touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+        }
+        .rent-sms-btn:active { transform: scale(0.97); }
         /* ── 변경 이력 (Changelog) ── */
         .changelog-entry {
             background: #F8FAFC; border: 1px solid var(--border-color);
@@ -1725,7 +1775,7 @@
                 <!-- ⑤ 공실 현황 -->
                 <div class="dash-section" id="vacantSectionNew" style="display:none;margin-top:14px;">
                     <div class="dash-section-header">
-                        <span class="dash-section-label">🏠 공실 현황</span>
+                        <span class="dash-section-label">🏠 공실 현황<span id="vacantKpiBadge" class="vacant-kpi-badge hidden" aria-live="polite"></span></span>
                         <span class="dash-section-more" onclick="openModal('addTenantModal')">세입자 추가 ›</span>
                     </div>
                     <div class="info-card-wrap">
@@ -1749,6 +1799,9 @@
                         <span class="dash-section-label">빠른 메뉴</span>
                     </div>
                     <div class="dashboard-actions-new">
+                        <button class="quick-btn quick-btn-primary" onclick="openSmsModal()" aria-label="입금문자 붙여넣기로 수납 처리">
+                            <span>📱</span><span>입금문자</span>
+                        </button>
                         <button class="quick-btn" onclick="openModal('addTenantModal')">
                             <span>👤</span><span>세입자 추가</span>
                         </button>
@@ -1819,6 +1872,12 @@
 
             <!-- ════════════ 수납 ════════════ -->
             <div class="page" id="rentPage">
+                <div class="rent-sms-bar">
+                    <button type="button" class="rent-sms-btn" onclick="openSmsModal()" aria-label="입금문자 붙여넣기로 수납 처리">
+                        <span style="font-size:18px;">📱</span>
+                        <span>입금문자 붙여넣기 → 자동 수납</span>
+                    </button>
+                </div>
                 <div class="month-selector">
                     <button onclick="previousYear()">◀</button>
                     <span id="yearDisplay">2026년</span>
@@ -2621,6 +2680,44 @@
                 return true;
             });
             return appData.rents.length < before; // 실제로 제거된 레코드가 있으면 true
+        }
+        /**
+         * pending → overdue 자동 전환.
+         * 월세(type === 'monthly' 또는 미지정)이면서 status === 'pending'인 레코드를
+         * 'tenant.payDay + graceDays' 가 지난 경우 overdue로 표시한다.
+         * - 보증금(type === 'deposit') 등 비월세 항목은 건드리지 않는다.
+         * - tenant.payDay가 비어 있으면 1일로 간주, 31처럼 그달에 없는 날은 말일로 클램프.
+         * @param {number} graceDays 납부일 이후 유예 일수 (기본 5일)
+         * @returns {number} 전환된 레코드 수
+         */
+        function transitionPendingToOverdue(graceDays) {
+            if (graceDays == null) graceDays = 5;
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const nowIso = new Date().toISOString();
+            let transitions = 0;
+            appData.rents.forEach(function(r) {
+                if (r.status !== 'pending') return;
+                if (r.type && r.type !== 'monthly') return; // 보증금 등 비월세 항목 보호
+                if (!r.month || !/^\d{4}-\d{2}$/.test(r.month)) return;
+                const tenant = appData.tenants.find(function(t) { return t.id === r.tenantId; });
+                if (!tenant) return;
+                const year = parseInt(r.month.slice(0, 4), 10);
+                const monthIdx = parseInt(r.month.slice(5, 7), 10) - 1;
+                const lastDay = new Date(year, monthIdx + 1, 0).getDate();
+                let payDay = parseInt(tenant.payDay, 10);
+                if (!Number.isFinite(payDay) || payDay < 1) payDay = 1;
+                if (payDay > lastDay) payDay = lastDay;
+                const deadline = new Date(year, monthIdx, payDay);
+                deadline.setDate(deadline.getDate() + graceDays);
+                deadline.setHours(0, 0, 0, 0);
+                if (today > deadline) {
+                    r.status = 'overdue';
+                    r.updatedAt = nowIso;
+                    transitions++;
+                }
+            });
+            return transitions;
         }
         function loadData() {
             const stored = localStorage.getItem('appData');
@@ -3551,6 +3648,21 @@
                 html += '<div class="tc-memo-row"><span style="font-size:13px;flex-shrink:0;">📝</span>' +
                     '<span style="color:'+(tenant.memo?'#374151':'#94A3B8')+';">' + (safeMemo||'메모 없음') + '</span>' +
                     '</div>';
+                // 누적 미납 (보증금 제외)
+                var unpaidRecords = (appData.rents || []).filter(function(r) {
+                    return r.tenantId === tenant.id
+                        && (r.status === 'pending' || r.status === 'overdue')
+                        && r.type !== 'deposit';
+                });
+                if (unpaidRecords.length > 0) {
+                    var unpaidTotal = unpaidRecords.reduce(function(s, r) { return s + (r.amount || 0); }, 0);
+                    var hasOverdue = unpaidRecords.some(function(r) { return r.status === 'overdue'; });
+                    html += '<div class="tc-unpaid-row" title="' + (hasOverdue ? '연체 포함 누적 미납 (보증금 제외)' : '누적 미납 (보증금 제외)') + '">' +
+                        '<span class="tc-unpaid-icon">' + (hasOverdue ? '🚨' : '⚠️') + '</span>' +
+                        '<span>누적 미납 ' + unpaidRecords.length + '건' + (hasOverdue ? ' · 연체 있음' : '') + '</span>' +
+                        '<span class="tc-unpaid-amount">₩' + unpaidTotal.toLocaleString() + '</span>' +
+                        '</div>';
+                }
                 // 버튼
                 html += '<div class="tc-actions">' +
                     '<button class="tc-btn-outline" data-action="renew">계약 갱신</button>' +
@@ -3992,6 +4104,54 @@
                 showToast('이미 생성된 월세 기록이 있습니다');
             }
             _generatingMonthlyRents = false;
+        }
+        /**
+         * 이번달 월세 기록이 누락된 active 월세 세입자 수를 세어 반환.
+         * generateAllMonthlyRents가 실제로 처리하는 동일한 조건을 따른다.
+         */
+        function countMissingCurrentMonthRents() {
+            const month = getMonthStr(new Date());
+            let missing = 0;
+            appData.tenants.forEach(function(tenant) {
+                if (!tenant || tenant.status !== 'active') return;
+                if ((tenant.rentType || 'monthly') !== 'monthly') return;
+                const _tmi = (tenant.moveInDate || '').slice(0,7);
+                const _tcs = (tenant.contractStart || '').slice(0,7);
+                const tStart = _tmi && _tcs ? (_tmi > _tcs ? _tmi : _tcs) : (_tmi || _tcs);
+                if (tStart && month < tStart) return;
+                if (isAfterContractEndMonth(tenant, month)) return;
+                const exists = appData.rents.find(function(r) {
+                    return r.tenantId === tenant.id && r.month === month && (!r.type || r.type === 'monthly');
+                });
+                if (!exists) missing++;
+            });
+            return missing;
+        }
+        /**
+         * 앱 로드 시 이번달 누락 월세를 사용자에게 한 번만 안내하고 생성 동의를 받는다.
+         * - 사용자가 동의/거절한 달은 localStorage에 기록되어 같은 달에 재차 묻지 않는다.
+         * - 실제 생성은 기존 generateAllMonthlyRents()를 그대로 호출하므로 중복 방지 로직(`exists` 검사)이 그대로 적용된다.
+         */
+        function maybePromptCurrentMonthRentGeneration() {
+            try {
+                const missing = countMissingCurrentMonthRents();
+                if (missing <= 0) return;
+                const currentYM = getMonthStr(new Date());
+                const lastPromptYM = localStorage.getItem('_lastMonthlyRentPromptYM');
+                if (lastPromptYM === currentYM) return; // 이번달엔 이미 한 번 물어봤음
+                // 초기 페인트가 끝난 뒤 묻도록 약간 지연
+                setTimeout(function() {
+                    const confirmed = window.confirm(
+                        '이번달(' + currentYM + ') 월세 기록 ' + missing + '건이 비어 있습니다.\n' +
+                        '지금 자동 생성할까요?\n\n' +
+                        '(이미 생성된 세입자는 자동으로 건너뜁니다)'
+                    );
+                    try { localStorage.setItem('_lastMonthlyRentPromptYM', currentYM); } catch (e) {}
+                    if (confirmed) generateAllMonthlyRents();
+                }, 500);
+            } catch (e) {
+                console.warn('이번달 월세 자동 생성 프롬프트 실패:', e);
+            }
         }
         let _markRentSourceTenantId = null;
         let _markRentOpening = false; // 이중 탭 방지 플래그
@@ -6769,12 +6929,15 @@
         // ============ SEARCH ============
         document.addEventListener('DOMContentLoaded', () => {
             loadData();
-            if (cleanupInvalidRents()) {
-                // 잘못된 레코드가 제거됐으면 localStorage에 즉시 반영 (다음 로딩 때도 깨끗하게)
+            const _cleaned = cleanupInvalidRents();
+            const _transitioned = transitionPendingToOverdue();
+            if (_cleaned || _transitioned > 0) {
+                // 잘못된 레코드 제거 또는 미납 자동 전환 결과를 localStorage에 즉시 반영
                 localStorage.setItem('appData', JSON.stringify(appData));
             }
             _syncPrevSaveSnapshot();
             renderDashboard();
+            maybePromptCurrentMonthRentGeneration();
             const tenantSearch = document.getElementById('tenantSearch');
             if (tenantSearch) {
                 tenantSearch.addEventListener('input', renderTenants);
@@ -6806,6 +6969,7 @@
                     if (!requiredKeys.every(function(k) { return Array.isArray(parsed[k]); })) return;
                     appData = parsed;
                     cleanupInvalidRents();
+                    transitionPendingToOverdue();
                     _syncPrevSaveSnapshot();
                     updateUI();
                 } catch (err) {
@@ -7143,18 +7307,7 @@
           };
         }
     </script>
-    <script>
-        if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
-            window.addEventListener('load', async () => {
-                try {
-                    const reg = await navigator.serviceWorker.register('/rental-app/sw.js');
-                    reg.update();
-                } catch (swErr) {
-                    console.warn('Service worker 등록 생략:', swErr);
-                }
-            });
-        }
-    </script>
+    <!-- Service Worker 등록은 sw.js 자산이 없어 제거됨 (PWA 매니페스트 + 홈화면 추가는 그대로 동작) -->
     <!-- ═══════ UI PATCH: new dashboard elements + nav updates ═══════ -->
     <script>
     (function() {
@@ -7519,14 +7672,27 @@
                 }
 
                 /* ────────────────────────────────────────────────
-                   ⑧ 공실 현황 카드
+                   ⑧ 공실 현황 카드 + 공실 KPI 배지
                 ──────────────────────────────────────────────── */
                 var vacantSectionNew = document.getElementById('vacantSectionNew');
                 var vacantListNew    = document.getElementById('vacantListNew');
+                var vacantKpiBadge   = document.getElementById('vacantKpiBadge');
                 var vacantRoomsNew   = (appData.rooms || []).filter(function(r) { return r.status === 'vacant'; });
                 if (vacantSectionNew) {
                     if (vacantRoomsNew.length > 0) {
                         vacantSectionNew.style.display = '';
+                        // 예상 월 손실 = 공실인 방의 room.monthlyRent 합 (정보 미입력 방은 0 처리)
+                        var expectedLoss = vacantRoomsNew.reduce(function(s, r) {
+                            var v = parseInt(r && r.monthlyRent, 10);
+                            return s + (Number.isFinite(v) && v > 0 ? v : 0);
+                        }, 0);
+                        if (vacantKpiBadge) {
+                            vacantKpiBadge.classList.remove('hidden');
+                            vacantKpiBadge.textContent = '공실 ' + vacantRoomsNew.length + '개 · 예상 손실 ₩' + expectedLoss.toLocaleString();
+                            vacantKpiBadge.title = expectedLoss > 0
+                                ? '방마다 등록된 월세 합계 기준'
+                                : '방에 월세 정보가 비어 있어 손실 추정이 0원으로 표시됩니다';
+                        }
                         if (vacantListNew) {
                             vacantListNew.innerHTML = vacantRoomsNew.map(function(r) {
                                 var b = (appData.buildings || []).find(function(bl) { return bl.id === r.buildingId; });
@@ -7543,6 +7709,10 @@
                         }
                     } else {
                         vacantSectionNew.style.display = 'none';
+                        if (vacantKpiBadge) {
+                            vacantKpiBadge.classList.add('hidden');
+                            vacantKpiBadge.textContent = '';
+                        }
                     }
                 }
 
