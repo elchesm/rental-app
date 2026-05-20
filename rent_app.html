@@ -2656,6 +2656,44 @@
             });
             return appData.rents.length < before; // 실제로 제거된 레코드가 있으면 true
         }
+        /**
+         * pending → overdue 자동 전환.
+         * 월세(type === 'monthly' 또는 미지정)이면서 status === 'pending'인 레코드를
+         * 'tenant.payDay + graceDays' 가 지난 경우 overdue로 표시한다.
+         * - 보증금(type === 'deposit') 등 비월세 항목은 건드리지 않는다.
+         * - tenant.payDay가 비어 있으면 1일로 간주, 31처럼 그달에 없는 날은 말일로 클램프.
+         * @param {number} graceDays 납부일 이후 유예 일수 (기본 5일)
+         * @returns {number} 전환된 레코드 수
+         */
+        function transitionPendingToOverdue(graceDays) {
+            if (graceDays == null) graceDays = 5;
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const nowIso = new Date().toISOString();
+            let transitions = 0;
+            appData.rents.forEach(function(r) {
+                if (r.status !== 'pending') return;
+                if (r.type && r.type !== 'monthly') return; // 보증금 등 비월세 항목 보호
+                if (!r.month || !/^\d{4}-\d{2}$/.test(r.month)) return;
+                const tenant = appData.tenants.find(function(t) { return t.id === r.tenantId; });
+                if (!tenant) return;
+                const year = parseInt(r.month.slice(0, 4), 10);
+                const monthIdx = parseInt(r.month.slice(5, 7), 10) - 1;
+                const lastDay = new Date(year, monthIdx + 1, 0).getDate();
+                let payDay = parseInt(tenant.payDay, 10);
+                if (!Number.isFinite(payDay) || payDay < 1) payDay = 1;
+                if (payDay > lastDay) payDay = lastDay;
+                const deadline = new Date(year, monthIdx, payDay);
+                deadline.setDate(deadline.getDate() + graceDays);
+                deadline.setHours(0, 0, 0, 0);
+                if (today > deadline) {
+                    r.status = 'overdue';
+                    r.updatedAt = nowIso;
+                    transitions++;
+                }
+            });
+            return transitions;
+        }
         function loadData() {
             const stored = localStorage.getItem('appData');
             if (stored) {
@@ -6803,8 +6841,10 @@
         // ============ SEARCH ============
         document.addEventListener('DOMContentLoaded', () => {
             loadData();
-            if (cleanupInvalidRents()) {
-                // 잘못된 레코드가 제거됐으면 localStorage에 즉시 반영 (다음 로딩 때도 깨끗하게)
+            const _cleaned = cleanupInvalidRents();
+            const _transitioned = transitionPendingToOverdue();
+            if (_cleaned || _transitioned > 0) {
+                // 잘못된 레코드 제거 또는 미납 자동 전환 결과를 localStorage에 즉시 반영
                 localStorage.setItem('appData', JSON.stringify(appData));
             }
             _syncPrevSaveSnapshot();
@@ -6840,6 +6880,7 @@
                     if (!requiredKeys.every(function(k) { return Array.isArray(parsed[k]); })) return;
                     appData = parsed;
                     cleanupInvalidRents();
+                    transitionPendingToOverdue();
                     _syncPrevSaveSnapshot();
                     updateUI();
                 } catch (err) {
