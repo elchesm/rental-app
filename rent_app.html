@@ -4065,6 +4065,54 @@
             }
             _generatingMonthlyRents = false;
         }
+        /**
+         * 이번달 월세 기록이 누락된 active 월세 세입자 수를 세어 반환.
+         * generateAllMonthlyRents가 실제로 처리하는 동일한 조건을 따른다.
+         */
+        function countMissingCurrentMonthRents() {
+            const month = getMonthStr(new Date());
+            let missing = 0;
+            appData.tenants.forEach(function(tenant) {
+                if (!tenant || tenant.status !== 'active') return;
+                if ((tenant.rentType || 'monthly') !== 'monthly') return;
+                const _tmi = (tenant.moveInDate || '').slice(0,7);
+                const _tcs = (tenant.contractStart || '').slice(0,7);
+                const tStart = _tmi && _tcs ? (_tmi > _tcs ? _tmi : _tcs) : (_tmi || _tcs);
+                if (tStart && month < tStart) return;
+                if (isAfterContractEndMonth(tenant, month)) return;
+                const exists = appData.rents.find(function(r) {
+                    return r.tenantId === tenant.id && r.month === month && (!r.type || r.type === 'monthly');
+                });
+                if (!exists) missing++;
+            });
+            return missing;
+        }
+        /**
+         * 앱 로드 시 이번달 누락 월세를 사용자에게 한 번만 안내하고 생성 동의를 받는다.
+         * - 사용자가 동의/거절한 달은 localStorage에 기록되어 같은 달에 재차 묻지 않는다.
+         * - 실제 생성은 기존 generateAllMonthlyRents()를 그대로 호출하므로 중복 방지 로직(`exists` 검사)이 그대로 적용된다.
+         */
+        function maybePromptCurrentMonthRentGeneration() {
+            try {
+                const missing = countMissingCurrentMonthRents();
+                if (missing <= 0) return;
+                const currentYM = getMonthStr(new Date());
+                const lastPromptYM = localStorage.getItem('_lastMonthlyRentPromptYM');
+                if (lastPromptYM === currentYM) return; // 이번달엔 이미 한 번 물어봤음
+                // 초기 페인트가 끝난 뒤 묻도록 약간 지연
+                setTimeout(function() {
+                    const confirmed = window.confirm(
+                        '이번달(' + currentYM + ') 월세 기록 ' + missing + '건이 비어 있습니다.\n' +
+                        '지금 자동 생성할까요?\n\n' +
+                        '(이미 생성된 세입자는 자동으로 건너뜁니다)'
+                    );
+                    try { localStorage.setItem('_lastMonthlyRentPromptYM', currentYM); } catch (e) {}
+                    if (confirmed) generateAllMonthlyRents();
+                }, 500);
+            } catch (e) {
+                console.warn('이번달 월세 자동 생성 프롬프트 실패:', e);
+            }
+        }
         let _markRentSourceTenantId = null;
         let _markRentOpening = false; // 이중 탭 방지 플래그
         function markRentPaid(rentId) {
@@ -6849,6 +6897,7 @@
             }
             _syncPrevSaveSnapshot();
             renderDashboard();
+            maybePromptCurrentMonthRentGeneration();
             const tenantSearch = document.getElementById('tenantSearch');
             if (tenantSearch) {
                 tenantSearch.addEventListener('input', renderTenants);
