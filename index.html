@@ -5906,6 +5906,30 @@
             return null;
         }
 
+        // ── Firestore per-user doc reference helpers ──
+        // Returns a Firestore DocumentReference for this user's app data.
+        // Returns null if _db is not ready or user is not authenticated.
+        // SECURITY: Never write to 'rentalApp/main' (shared global path).
+        function _getUserDataDocRef() {
+            if (!_db) return null;
+            try {
+                var u = firebase.auth && firebase.auth().currentUser;
+                if (u && u.uid) return _db.collection('userData').doc(u.uid);
+            } catch(e) {}
+            return null;
+        }
+
+        // Returns a Firestore CollectionReference for this user's changelog subcollection.
+        // Returns null if _db is not ready or user is not authenticated.
+        function _getUserChangelogColRef() {
+            if (!_db) return null;
+            try {
+                var u = firebase.auth && firebase.auth().currentUser;
+                if (u && u.uid) return _db.collection('userChangelog').doc(u.uid).collection('entries');
+            } catch(e) {}
+            return null;
+        }
+
         // Returns scoped storage path for an authenticated user.
         // Returns null (never a fallback global path) if uid is unavailable.
         // SECURITY: No file should ever be written to taxDocuments/{year}/... (unscoped).
@@ -7600,21 +7624,54 @@
             return FIREBASE_CONFIG.projectId && !FIREBASE_CONFIG.projectId.includes('여기에');
         }
 
-        /** Firestore 규칙(request.auth)과 맞추기: 익명 로그인(콘솔에서 켜야 함) */
+        /** Firebase Auth 세션 확인. currentUser가 있으면 resolve, 없으면 설정 필요 화면 표시 후 reject. */
         function _ensureFirebaseAuth() {
             return new Promise(function(resolve, reject) {
                 try {
                     var auth = firebase.auth();
-                    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(function() {});
+                    // Keep session alive across browser restarts on the same device.
+                    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(function(e) {
+                        console.warn('[Auth] setPersistence failed:', e);
+                    });
                     if (auth.currentUser) {
                         resolve(auth.currentUser);
                         return;
                     }
-                    auth.signInAnonymously().then(function(cred) { resolve(cred.user); }).catch(reject);
+                    // No active session — this device has not been set up yet.
+                    // Ryan must sign in manually once on this device.
+                    // Do NOT sign in anonymously — that would create an unscoped throwaway UID.
+                    console.warn('[Auth] No currentUser. App requires a real signed-in session.');
+                    _showAuthRequiredScreen();
+                    reject(new Error('auth-required'));
                 } catch (e) {
+                    console.error('[Auth] _ensureFirebaseAuth error:', e);
+                    _showAuthRequiredScreen();
                     reject(e);
                 }
             });
+        }
+
+        /** 인증 세션이 없을 때 표시하는 한국어 안내 화면. Firebase 오류 상세는 노출하지 않음. */
+        function _showAuthRequiredScreen() {
+            try {
+                document.body.innerHTML = [
+                    '<div style="display:flex;flex-direction:column;align-items:center;',
+                    'justify-content:center;height:100vh;padding:32px;',
+                    'font-family:-apple-system,BlinkMacSystemFont,sans-serif;',
+                    'text-align:center;background:#F8FAFC;">',
+                    '<div style="font-size:52px;margin-bottom:20px;">🔒</div>',
+                    '<div style="font-size:19px;font-weight:700;color:#1E293B;margin-bottom:12px;line-height:1.4;">',
+                    '앱 사용 준비가 필요합니다',
+                    '</div>',
+                    '<div style="font-size:16px;color:#475569;line-height:1.7;">',
+                    'Ryan에게 연락해 주세요.',
+                    '</div>',
+                    '</div>'
+                ].join('');
+            } catch(e) {
+                // If DOM manipulation fails, nothing more we can do.
+                console.error('[Auth] _showAuthRequiredScreen DOM error:', e);
+            }
         }
 
         function initFirebase() {
@@ -7775,6 +7832,13 @@
 
         function _startFirestoreListener() {
             if (_fbUnsubscribe) _fbUnsubscribe();
+            // Require authenticated uid — never listen on the old shared rentalApp/main path.
+            var docRef = _getUserDataDocRef();
+            if (!docRef) {
+                console.warn('[Firestore] _startFirestoreListener: no uid — skipping listener');
+                _showFbStatus('error');
+                return;
+            }
             // 1초 후에도 연결 중이면 배지 표시, 5초 후 자동 숨김
             var _connectingTimer = setTimeout(function() {
                 _showFbStatus('connecting');
@@ -7783,7 +7847,7 @@
                     if (el && el.textContent.indexOf('연결 중') !== -1) el.style.display = 'none';
                 }, 5000);
             }, 1000);
-            _fbUnsubscribe = _db.collection('rentalApp').doc('main').onSnapshot(function(doc) {
+            _fbUnsubscribe = docRef.onSnapshot(function(doc) {
                 clearTimeout(_connectingTimer);
                 // hasPendingWrites=true → 방금 우리가 쓴 것, 화면 업데이트 불필요
                 if (doc.metadata.hasPendingWrites) return;
@@ -7905,6 +7969,12 @@
 
         function _saveToFirestore(retryAttempt) {
             if (!_db) return Promise.resolve();
+            // Require authenticated uid — never write to shared rentalApp/main path.
+            var docRef = _getUserDataDocRef();
+            if (!docRef) {
+                console.warn('[Firestore] _saveToFirestore: no uid — skipping write');
+                return Promise.resolve();
+            }
             retryAttempt = retryAttempt || 0;
             // Firestore 문서 1MB 제한 → 영수증 base64 이미지 제거 후 저장
             var cloudData = JSON.parse(JSON.stringify(appData));
@@ -7917,7 +7987,7 @@
             try {
                 cloudData._deviceLabel = new Date().getTimezoneOffset() <= -480 ? '🇰🇷 한국 폰' : '🇨🇦 캐나다 폰';
             } catch(e0) {}
-            return _db.collection('rentalApp').doc('main').set(cloudData)
+            return docRef.set(cloudData)
                 .then(function() {
                     try {
                         sessionStorage.setItem('_fbSuppressRemoteToastOnce', '1');
@@ -7981,16 +8051,21 @@
             return parts.length ? parts.join(' / ') : '변경 없음';
         }
 
-        /** Firestore rentalAppChangelog 컬렉션에 스냅샷 저장 */
+        /** 사용자 전용 changelog 컬렉션에 스냅샷 저장 */
         function _saveChangelogEntry(summary) {
             if (!_db || !summary || summary === '변경 없음') return;
+            var colRef = _getUserChangelogColRef();
+            if (!colRef) {
+                console.warn('[Changelog] _saveChangelogEntry: no uid — skipping');
+                return;
+            }
             var cloudData = JSON.parse(JSON.stringify(appData));
             cloudData.expenses = (cloudData.expenses || []).map(function(e) {
                 var c = Object.assign({}, e); delete c.receipts; return c;
             });
             var tz = new Date().getTimezoneOffset(); // 한국: -540, 캐나다: +240~+300
             var deviceLabel = tz <= -480 ? '🇰🇷 한국' : '🇨🇦 캐나다';
-            _db.collection('rentalAppChangelog').add({
+            colRef.add({
                 ts: Date.now(),
                 summary: summary,
                 device: deviceLabel,
@@ -7998,14 +8073,16 @@
             }).then(function() {
                 _trimChangelog();
             }).catch(function(e) {
-                console.warn('Changelog save failed:', e);
+                console.warn('[Changelog] save failed:', e);
             });
         }
 
         /** 20개 초과 시 오래된 항목 삭제 */
         function _trimChangelog() {
             if (!_db) return;
-            _db.collection('rentalAppChangelog').orderBy('ts','asc').get().then(function(snap) {
+            var colRef = _getUserChangelogColRef();
+            if (!colRef) return;
+            colRef.orderBy('ts','asc').get().then(function(snap) {
                 if (snap.size > _changelogMax) {
                     snap.docs.slice(0, snap.size - _changelogMax).forEach(function(d) {
                         d.ref.delete().catch(function(){});
@@ -8023,7 +8100,12 @@
                 return;
             }
             container.innerHTML = '<p class="changelog-empty"><span class="spinner" style="width:14px;height:14px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:6px;"></span> 불러오는 중...</p>';
-            _db.collection('rentalAppChangelog').orderBy('ts','desc').limit(_changelogMax).get()
+            var _clColRef = _getUserChangelogColRef();
+            if (!_clColRef) {
+                container.innerHTML = '<p class="changelog-empty">Firebase가 연결되지 않았습니다.</p>';
+                return;
+            }
+            _clColRef.orderBy('ts','desc').limit(_changelogMax).get()
                 .then(function(snap) {
                     if (snap.empty) {
                         container.innerHTML = '<p class="changelog-empty">변경 이력이 없습니다.<br>데이터를 수정하면 자동으로 기록됩니다.</p>';
@@ -8054,9 +8136,11 @@
         /** 선택한 스냅샷으로 appData 복원 */
         function rollbackToSnapshot(docId, label) {
             if (!_db) { showToast('⚠️ Firebase 연결 필요'); return; }
+            var _rbColRef = _getUserChangelogColRef();
+            if (!_rbColRef) { showToast('⚠️ 로그인 후 이용 가능합니다'); return; }
             var msg = (label ? label + ' 시점' : '선택한 시점') + '의 데이터로 복원할까요?\n현재 상태는 이력에 자동 저장됩니다.';
             showConfirm(msg, function() {
-            _db.collection('rentalAppChangelog').doc(docId).get()
+            _rbColRef.doc(docId).get()
                 .then(function(doc) {
                     if (!doc.exists) { showToast('⚠️ 해당 이력을 찾을 수 없습니다'); return; }
                     var snap = doc.data() && doc.data().snapshot;
@@ -8067,7 +8151,8 @@
                         var c = Object.assign({}, e); delete c.receipts; return c;
                     });
                     var tzNow = new Date().getTimezoneOffset();
-                    _db.collection('rentalAppChangelog').add({
+                    var _rbColRef2 = _getUserChangelogColRef();
+                    if (_rbColRef2) _rbColRef2.add({
                         ts: Date.now(),
                         summary: '복원 전 자동 백업',
                         device: tzNow <= -480 ? '🇰🇷 한국' : '🇨🇦 캐나다',
