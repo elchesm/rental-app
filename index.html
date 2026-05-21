@@ -2339,8 +2339,12 @@
                         </div>
                     </div>
                     <!-- 보안 면책 공지 -->
-                    <div style="background:#FFFBEB; border:1px solid #FDE68A; border-radius:8px; padding:9px 12px; margin-bottom:10px; font-size:10.5px; color:#92400E; line-height:1.5;">
+                    <div style="background:#FFFBEB; border:1px solid #FDE68A; border-radius:8px; padding:9px 12px; margin-bottom:6px; font-size:10.5px; color:#92400E; line-height:1.5;">
                         🔒 세금서류에는 계약서, 계좌내역, 영수증 등 민감정보가 포함될 수 있습니다. 클라우드 저장소 보안 규칙을 반드시 확인하세요. 본 앱의 세금 계산 및 분류는 참고용이며, 최종 신고 전 세무 전문가 확인을 권장합니다.
+                    </div>
+                    <!-- UID 경로 보안 공지 -->
+                    <div style="background:#FEF2F2; border:1px solid #FECACA; border-radius:8px; padding:9px 12px; margin-bottom:10px; font-size:10.5px; color:#991B1B; line-height:1.5;">
+                        🔐 클라우드 서류는 로그인된 사용자 UID 경로에만 저장됩니다. 로그인 정보가 없으면 업로드/교체/삭제가 차단됩니다. 서류 체크리스트(메타데이터)는 로그인 없이도 작성 가능합니다.
                     </div>
                     <div id="taxVaultStorageWarning" class="tax-vault-storage-warn" style="display:none;">
                         ⚠️ Firebase Storage SDK 로드 실패 — 파일 업로드가 비활성화됩니다. 서류 메타데이터는 정상적으로 저장됩니다. (지원 형식: PDF, JPEG, PNG · 최대 10MB)
@@ -5890,18 +5894,26 @@
             }
             return { ok: true };
         }
-        function _taxGetDocumentStoragePath(year, documentId, sanitizedFileName) {
-            var uid = null;
+        // Returns the current Firebase Auth UID, or null if unauthenticated.
+        // All cloud file operations MUST call this and abort if it returns null.
+        function _taxVaultGetCurrentUid() {
             try {
                 if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length) {
                     var u = firebase.auth && firebase.auth().currentUser;
-                    if (u) uid = u.uid;
+                    if (u && u.uid) return u.uid;
                 }
             } catch(e) {}
-            var base = uid
-                ? 'users/' + uid + '/taxDocuments/' + year + '/' + documentId
-                : 'taxDocuments/' + year + '/' + documentId;
-            return base + '/' + documentId + '_' + Date.now() + '_' + sanitizedFileName;
+            return null;
+        }
+
+        // Returns scoped storage path for an authenticated user.
+        // Returns null (never a fallback global path) if uid is unavailable.
+        // SECURITY: No file should ever be written to taxDocuments/{year}/... (unscoped).
+        function _taxGetDocumentStoragePath(year, documentId, sanitizedFileName) {
+            var uid = _taxVaultGetCurrentUid();
+            if (!uid) return null; // caller must block upload when null
+            return 'users/' + uid + '/taxDocuments/' + year + '/' + documentId
+                + '/' + documentId + '_' + Date.now() + '_' + sanitizedFileName;
         }
         function _taxGetActiveTaxDocuments() {
             if (!appData.taxProfile || !appData.taxProfile.documents) return [];
@@ -6001,8 +6013,17 @@
             var doc = appData.taxProfile.documents.find(function(d) { return d.id === docId; });
             if (!doc) return;
             if (!confirm('서류 "' + (doc.title || doc.category) + '"을(를) 삭제하시겠습니까?\n업로드된 파일도 함께 삭제됩니다.')) return;
+            // Cloud Storage deletion requires authenticated uid
             if (doc.storagePath && _taxVaultStorageAvailable()) {
-                try { _taxVaultInitStorage().ref(doc.storagePath).delete().catch(function(){}); } catch(e) {}
+                var uid = _taxVaultGetCurrentUid();
+                if (!uid) {
+                    showToast('⚠️ 클라우드 파일 삭제는 로그인 후 가능합니다. 메타데이터만 삭제합니다.');
+                } else if (doc.storagePath.startsWith('taxDocuments/')) {
+                    // Legacy unscoped path — skip cloud deletion, warn
+                    showToast('⚠️ 레거시 경로의 파일은 클라우드에서 자동 삭제되지 않습니다. Firebase Console에서 직접 삭제하세요.');
+                } else {
+                    try { _taxVaultInitStorage().ref(doc.storagePath).delete().catch(function(){}); } catch(e) {}
+                }
             }
             var idx = appData.taxProfile.documents.indexOf(doc);
             if (idx !== -1) appData.taxProfile.documents.splice(idx, 1);
@@ -6014,6 +6035,10 @@
         function _taxVaultUploadFile(docId) {
             if (!_taxVaultStorageAvailable()) {
                 showToast('⚠️ Firebase Storage SDK를 사용할 수 없습니다. 메타데이터만 저장 가능합니다.');
+                return;
+            }
+            if (!_taxVaultGetCurrentUid()) {
+                showToast('🔒 클라우드 서류 업로드는 로그인 후 사용할 수 있습니다.');
                 return;
             }
             var input = document.createElement('input');
@@ -6032,6 +6057,10 @@
         function _taxVaultReplaceFile(docId) {
             if (!_taxVaultStorageAvailable()) {
                 showToast('⚠️ Firebase Storage SDK를 사용할 수 없습니다.');
+                return;
+            }
+            if (!_taxVaultGetCurrentUid()) {
+                showToast('🔒 클라우드 서류 교체는 로그인 후 사용할 수 있습니다.');
                 return;
             }
             var input = document.createElement('input');
@@ -6053,11 +6082,21 @@
             if (!doc) return;
             var storage = _taxVaultInitStorage();
             if (!storage) { showToast('⚠️ Firebase Storage를 초기화할 수 없습니다.'); return; }
+            // SECURITY: require authenticated uid — never write to global path
+            if (!_taxVaultGetCurrentUid()) {
+                showToast('🔒 클라우드 서류 업로드는 로그인 후 사용할 수 있습니다.');
+                return;
+            }
             var v = _taxValidateDocumentFile(file);
             if (!v.ok) { showToast('⚠️ ' + v.error); return; }
             var year = _taxYear || doc.year || new Date().getFullYear();
             var safeFile = _taxSanitizeFileName(file.name);
             var storagePath = _taxGetDocumentStoragePath(year, docId, safeFile);
+            if (!storagePath) {
+                // Extra guard: _taxGetDocumentStoragePath returns null without uid
+                showToast('🔒 클라우드 서류 업로드는 로그인 후 사용할 수 있습니다.');
+                return;
+            }
             showToast('📤 업로드 준비 중...');
             if (isReplace && doc.storagePath) {
                 try { storage.ref(doc.storagePath).delete().catch(function(){}); } catch(e) {}
@@ -6099,8 +6138,14 @@
             var doc = appData.taxProfile.documents.find(function(d) { return d.id === docId; });
             if (!doc) return;
             if (doc.downloadURL) {
+                // Cached signed URL — open directly (no additional auth check required)
                 window.open(doc.downloadURL, '_blank');
             } else if (doc.storagePath && _taxVaultStorageAvailable()) {
+                // Resolving URL from storagePath requires authentication
+                if (!_taxVaultGetCurrentUid()) {
+                    showToast('🔒 파일 URL 재취득은 로그인 후 가능합니다.');
+                    return;
+                }
                 showToast('🔗 파일 URL 취득 중...');
                 _taxVaultInitStorage().ref(doc.storagePath).getDownloadURL()
                     .then(function(url) {
@@ -6130,6 +6175,10 @@
             if (doc.downloadURL) {
                 doDownload(doc.downloadURL);
             } else if (doc.storagePath && _taxVaultStorageAvailable()) {
+                if (!_taxVaultGetCurrentUid()) {
+                    showToast('🔒 파일 다운로드는 로그인 후 가능합니다.');
+                    return;
+                }
                 showToast('📥 다운로드 URL 취득 중...');
                 _taxVaultInitStorage().ref(doc.storagePath).getDownloadURL()
                     .then(function(url) {
@@ -6738,6 +6787,12 @@
                 if ((d.storagePath || d.fileName) && !d.downloadURL && d.status !== '미확보') {
                     rows.push('<div class="tax-vault-missing-row" style="border-left-color:#64748B;background:#F8FAFC;"><span>ℹ️</span><span>'
                         + escapeHTML(d.title || d.category) + ' — 메타데이터는 있으나 다운로드 URL이 없습니다. 파일 열기 시 재취득됩니다.</span></div>');
+                }
+                // Legacy unscoped path warning: file was uploaded before UID-scoping was enforced
+                if (d.storagePath && d.storagePath.startsWith('taxDocuments/')) {
+                    rows.push('<div class="tax-vault-missing-row" style="border-left-color:#EF4444;background:#FEF2F2;"><span>🔓</span><span>'
+                        + '<strong>[보안]</strong> ' + escapeHTML(d.title || d.category)
+                        + ' — 레거시 공유 경로(taxDocuments/...)에 저장된 파일입니다. 파일을 교체하여 사용자 전용 경로로 이전해 주세요.</span></div>');
                 }
             });
             return rows.join('');
