@@ -1687,6 +1687,48 @@
             gap: 6px;
         }
 
+        /* --- 세금서류 보관함 (Tax Document Vault) --- */
+        .tax-vault-card {
+            cursor: pointer;
+            background: white;
+            border: 1px solid #E2E8F0;
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            transition: box-shadow 0.15s, border-color 0.15s;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        .tax-vault-card:active { box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-color: #CBD5E1; transform: scale(0.99); }
+        .tax-vault-status-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .tax-vault-s-미확보 { background:#FEF2F2; color:#EF4444; border:1px solid rgba(239,68,68,0.25); }
+        .tax-vault-s-준비중 { background:#FEF9C3; color:#D97706; border:1px solid rgba(217,119,6,0.25); }
+        .tax-vault-s-업로드완료 { background:#F0FDFA; color:#0F766E; border:1px solid rgba(15,118,110,0.25); }
+        .tax-vault-s-제출완료 { background:#EFF6FF; color:#1D4ED8; border:1px solid rgba(29,78,216,0.25); }
+        .tax-vault-storage-warn {
+            background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 8px;
+            padding: 8px 12px; font-size: 11.5px; color: #92400E; margin-bottom: 10px; line-height: 1.5;
+        }
+        .tax-vault-missing-row {
+            display: flex; align-items: center; gap: 8px;
+            background: #FEF2F2; border-left: 3px solid #EF4444;
+            border-radius: 6px; padding: 7px 10px; margin-bottom: 6px;
+            font-size: 12px; color: #991B1B;
+        }
+        /* Modal used by vault */
+        #taxVaultModal .modal { max-height: 88vh; overflow-y: auto; }
+
         /* 빠른 메뉴 (새 버튼 그리드) */
         .dashboard-actions-new {
             display: grid; grid-template-columns: repeat(3, 1fr);
@@ -2287,15 +2329,18 @@
                     </details>
                 </div>
 
-                <!-- 5. 필요서류 보관함 -->
+                <!-- 5. 세금서류 보관함 (Tax Document Vault) -->
                 <div class="tax-page-card" style="margin:10px 12px;" id="taxDocumentsSection">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <div class="tax-page-card-title">📁 필요서류 보관함</div>
-                        <button class="btn btn-secondary" style="font-size:11px; padding:4px 8px; min-width:auto;" onclick="addCustomDocument()">➕ 사용자 정의 서류 추가</button>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <div class="tax-page-card-title">🗄️ 세금서류 보관함</div>
+                        <button class="btn btn-primary" style="font-size:11px; padding:5px 10px; min-width:auto; background:#0F766E;" onclick="_taxVaultAddDoc()">📎 서류 추가</button>
                     </div>
-                    <div id="taxDocumentsContainer" style="margin-top:12px;">
-                        <!-- Render documents checklist dynamically -->
+                    <div id="taxVaultStorageWarning" class="tax-vault-storage-warn" style="display:none;">
+                        ⚠️ Firebase Storage SDK 로드 실패 — 파일 업로드가 비활성화됩니다. 서류 메타데이터는 정상적으로 저장됩니다.
                     </div>
+                    <div id="taxVaultMissingWarnings"></div>
+                    <div id="taxVaultDocList"></div>
+                    <div id="taxVaultStats" style="margin-top:8px; padding:7px 10px; background:#F8FAFC; border-radius:8px; font-size:11.5px; color:#64748B;"></div>
                 </div>
 
                 <!-- 6. 신고 절차 가이드 -->
@@ -2325,6 +2370,20 @@
                     <button class="btn btn-primary" style="background:#0F766E;" onclick="exportTaxFilingPackage()">📥 준비 패키지 JSON 내보내기</button>
                     <button class="btn btn-secondary" onclick="exportTaxFilingCSV()">📊 CSV 내보내기</button>
                     <button class="btn btn-secondary" style="grid-column: 1 / -1;" onclick="printTaxBundleForAccountant()">🖨️ 세무사 제출용 묶음 PDF 출력</button>
+                </div>
+            </div>
+
+            <!-- ════════════════════════════════════ -->
+            <!-- Tax Vault Document Detail / Edit Modal -->
+            <!-- ════════════════════════════════════ -->
+            <div class="modal-overlay" id="taxVaultModal">
+                <div class="modal">
+                    <div class="modal-header" style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid #E2E8F0;">
+                        <h3 style="margin:0; font-size:16px; font-weight:800; color:#1E293B;">📄 서류 상세 / 편집</h3>
+                        <button onclick="_taxVaultCloseModal()" style="background:none; border:none; font-size:20px; cursor:pointer; color:#64748B; padding:2px 6px; line-height:1;">✕</button>
+                    </div>
+                    <div class="modal-body" id="taxVaultModalBody" style="padding:14px 16px; overflow-y:auto; max-height:calc(88vh - 60px);">
+                    </div>
                 </div>
             </div>
 
@@ -2957,6 +3016,9 @@
     <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
+    <!-- Firebase Storage SDK (세금서류 보관함 파일 업로드/다운로드) -->
+    <!-- TODO Storage Security Rules: allow read, write: if request.auth != null; -->
+    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-storage-compat.js"></script>
     <script src="https://alcdn.msauth.net/browser/2.38.0/js/msal-browser.min.js"></script>
     <script>
         // ============================================================
@@ -5667,15 +5729,26 @@
                 commercialBuildings: [],
                 otherProperties: [],
                 otherIncome: [],
-                documents: [
-                    { name: '임대차계약서 사본', checked: false, description: '전 세대의 계약서 사본 확보 여부 확인', custom: false },
-                    { name: '월세 수납 통장 내역 / 입금 증빙', checked: false, description: '금융기관 이체 내역 또는 증빙 수집', custom: false },
-                    { name: '건물 재산세 납부고지서 / 영수증', checked: false, description: '필요경비 반영을 위한 재산세 내역', custom: false },
-                    { name: '수선비, 유지보수비 영수증', checked: false, description: '세금계산서, 현금영수증 등 적격증빙', custom: false },
-                    { name: '중개수수료 현금영수증 / 세금계산서', checked: false, description: '임대차 계약 시 지급한 수수료', custom: false },
-                    { name: '화재보험료 납부 확인서', checked: false, description: '해당 건물 화재보험료 필요경비용', custom: false },
-                    { name: '대출이자 납부 확인서', checked: false, description: '임대건물 관련 대출금 이자 비용', custom: false }
-                ],
+                documents: (function(y) {
+                    var now = new Date().toISOString().split('T')[0];
+                    var make = function(cat, title, req, notes) {
+                        return { id: 'tvd_def_' + Math.random().toString(36).substr(2,8), year: y,
+                            category: cat, title: title, required: req, status: '미확보',
+                            linkedBuildingId: null, linkedTenantId: null, amount: null, taxCategory: null,
+                            notes: notes, fileName: null, originalFileName: null, fileType: null, fileSize: null,
+                            storagePath: null, downloadURL: null,
+                            uploadedAt: null, updatedAt: now, replacedAt: null, deletedAt: null };
+                    };
+                    return [
+                        make('임대차계약서',     '임대차계약서 사본',         true,  '전 세대의 계약서 사본 확보'),
+                        make('월세 입금내역',    '월세 수납 통장 내역',        true,  '금융기관 이체 내역 또는 증빙 수집'),
+                        make('재산세 납부내역',  '건물 재산세 납부고지서',     true,  '필요경비 반영을 위한 재산세 내역'),
+                        make('수리비 영수증',    '수선비·유지보수비 영수증',   false, '세금계산서, 현금영수증 등 적격증빙'),
+                        make('중개수수료',       '중개수수료 현금영수증',       false, '임대차 계약 시 지급한 수수료'),
+                        make('보험료',           '화재보험료 납부 확인서',      false, '해당 건물 화재보험료 필요경비용'),
+                        make('대출이자 납입증명','대출이자 납부 확인서',        false, '임대건물 관련 대출금 이자 비용')
+                    ];
+                })(year),
                 procedures: [
                     { step: 1, checked: false },
                     { step: 2, checked: false },
@@ -5711,6 +5784,8 @@
             } else {
                 appData.taxProfile.depositRate = _taxDepositRate;
             }
+            // Migrate any legacy {name,checked} documents to new vault schema
+            if (typeof _taxVaultEnsureMigrated === 'function') _taxVaultEnsureMigrated();
         }
         function updateTaxProfileField(path, value) {
             if (!appData.taxProfile) return;
@@ -5765,31 +5840,313 @@
             saveData();
             renderTaxPage();
         }
-        function toggleTaxDocument(index) {
-            if (!appData.taxProfile || !appData.taxProfile.documents || !appData.taxProfile.documents[index]) return;
-            appData.taxProfile.documents[index].checked = !appData.taxProfile.documents[index].checked;
-            saveData();
-            renderTaxPage();
+        // ══════════════════════════════════════════════════════
+        // 🗄️  세금서류 보관함 (Tax Document Vault)
+        // ══════════════════════════════════════════════════════
+        let _taxStorage = null; // Firebase Storage instance (lazy-init)
+
+        const _TAX_VAULT_CATEGORIES = [
+            '임대차계약서','월세 입금내역','보증금 내역','수리비 영수증',
+            '관리비/공과금','재산세 납부내역','대출이자 납입증명','보험료',
+            '중개수수료','상가 임대 관련 서류','기타 소득 증빙','기타 비용 증빙',
+            '세무사 전달 메모'
+        ];
+        const _TAX_VAULT_STATUSES = ['미확보','준비중','업로드완료','제출완료'];
+
+        function _taxVaultInitStorage() {
+            if (_taxStorage) return _taxStorage;
+            try {
+                if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length && firebase.storage) {
+                    _taxStorage = firebase.storage();
+                }
+            } catch(e) { console.warn('[TaxVault] Storage init:', e); }
+            return _taxStorage;
         }
-        function addCustomDocument() {
-            if (!appData.taxProfile) return;
-            const docName = prompt("추가할 서류 이름을 입력하세요:");
-            if (!docName || !docName.trim()) return;
-            if (!appData.taxProfile.documents) appData.taxProfile.documents = [];
-            appData.taxProfile.documents.push({
-                name: docName.trim(),
-                checked: false,
-                description: '사용자 정의 추가 서류',
-                custom: true
-            });
-            saveData();
-            renderTaxPage();
+        function _taxVaultStorageAvailable() { return !!_taxVaultInitStorage(); }
+
+        function _taxVaultGenerateId() {
+            return 'tvd_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
         }
-        function deleteCustomDocument(index) {
+        function _taxVaultMakeDefaultDoc(year) {
+            var now = new Date().toISOString().split('T')[0];
+            return { id: _taxVaultGenerateId(), year: year, category: '기타 비용 증빙', title: '',
+                required: false, status: '미확보', linkedBuildingId: null, linkedTenantId: null,
+                amount: null, taxCategory: null, notes: '', fileName: null, originalFileName: null,
+                fileType: null, fileSize: null, storagePath: null, downloadURL: null,
+                uploadedAt: null, updatedAt: now, replacedAt: null, deletedAt: null };
+        }
+        function _taxVaultGuessCategory(name) {
+            var n = (name || '').toLowerCase();
+            if (n.includes('계약서')) return '임대차계약서';
+            if (n.includes('월세') || n.includes('입금') || n.includes('수납')) return '월세 입금내역';
+            if (n.includes('보증금')) return '보증금 내역';
+            if (n.includes('수리') || n.includes('수선') || n.includes('유지')) return '수리비 영수증';
+            if (n.includes('관리비') || n.includes('공과금')) return '관리비/공과금';
+            if (n.includes('재산세')) return '재산세 납부내역';
+            if (n.includes('대출') || n.includes('이자')) return '대출이자 납입증명';
+            if (n.includes('보험')) return '보험료';
+            if (n.includes('중개')) return '중개수수료';
+            if (n.includes('상가')) return '상가 임대 관련 서류';
+            return '기타 비용 증빙';
+        }
+        function _taxVaultIsNewSchema(doc) {
+            return !!(doc && doc.id && doc.status !== undefined && doc.updatedAt !== undefined);
+        }
+        function _taxVaultMigrateOldDoc(old, year) {
+            var now = new Date().toISOString().split('T')[0];
+            return { id: old.id || _taxVaultGenerateId(), year: year,
+                category: _taxVaultGuessCategory(old.name || ''), title: old.name || '',
+                required: !old.custom, status: old.checked ? '업로드완료' : '미확보',
+                linkedBuildingId: null, linkedTenantId: null, amount: null, taxCategory: null,
+                notes: old.description || '', fileName: null, originalFileName: null,
+                fileType: null, fileSize: null, storagePath: null, downloadURL: null,
+                uploadedAt: null, updatedAt: now, replacedAt: null, deletedAt: null };
+        }
+        function _taxVaultEnsureMigrated() {
             if (!appData.taxProfile || !appData.taxProfile.documents) return;
-            appData.taxProfile.documents.splice(index, 1);
+            var year = _taxYear || new Date().getFullYear();
+            var docs = appData.taxProfile.documents;
+            var migrated = false;
+            for (var i = 0; i < docs.length; i++) {
+                if (!_taxVaultIsNewSchema(docs[i])) {
+                    docs[i] = _taxVaultMigrateOldDoc(docs[i], year);
+                    migrated = true;
+                }
+            }
+            if (migrated) {
+                if (_taxYear && appData.taxProfiles) appData.taxProfiles[_taxYear] = appData.taxProfile;
+                saveData();
+            }
+        }
+
+        function _taxVaultAddDoc() {
+            if (!appData.taxProfile) return;
+            if (!appData.taxProfile.documents) appData.taxProfile.documents = [];
+            var year = _taxYear || new Date().getFullYear();
+            var newDoc = _taxVaultMakeDefaultDoc(year);
+            newDoc.title = '새 서류';
+            appData.taxProfile.documents.push(newDoc);
+            if (_taxYear && appData.taxProfiles) appData.taxProfiles[_taxYear] = appData.taxProfile;
             saveData();
             renderTaxPage();
+            var docId = newDoc.id;
+            setTimeout(function() { _taxVaultOpenModal(docId); }, 80);
+        }
+        function _taxVaultUpdateDocField(docId, field, value) {
+            if (!appData.taxProfile || !appData.taxProfile.documents) return;
+            var doc = appData.taxProfile.documents.find(function(d) { return d.id === docId; });
+            if (!doc) return;
+            doc[field] = value;
+            doc.updatedAt = new Date().toISOString().split('T')[0];
+            if (_taxYear && appData.taxProfiles) appData.taxProfiles[_taxYear] = appData.taxProfile;
+            saveData();
+            _renderTaxDocumentVault();
+            var mb = document.getElementById('taxVaultModalBody');
+            if (mb && mb.dataset.docId === docId) _taxVaultRenderModalBody(docId);
+        }
+        function _taxVaultDeleteDoc(docId) {
+            if (!appData.taxProfile || !appData.taxProfile.documents) return;
+            var doc = appData.taxProfile.documents.find(function(d) { return d.id === docId; });
+            if (!doc) return;
+            if (!confirm('서류 "' + (doc.title || doc.category) + '"을(를) 삭제하시겠습니까?\n업로드된 파일도 함께 삭제됩니다.')) return;
+            if (doc.storagePath && _taxVaultStorageAvailable()) {
+                try { _taxVaultInitStorage().ref(doc.storagePath).delete().catch(function(){}); } catch(e) {}
+            }
+            var idx = appData.taxProfile.documents.indexOf(doc);
+            if (idx !== -1) appData.taxProfile.documents.splice(idx, 1);
+            if (_taxYear && appData.taxProfiles) appData.taxProfiles[_taxYear] = appData.taxProfile;
+            saveData();
+            _taxVaultCloseModal();
+            renderTaxPage();
+        }
+        function _taxVaultUploadFile(docId) {
+            if (!_taxVaultStorageAvailable()) {
+                showToast('⚠️ Firebase Storage SDK를 사용할 수 없습니다. 메타데이터만 저장 가능합니다.');
+                return;
+            }
+            var input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*,application/pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.hwp';
+            input.onchange = function(e) {
+                var file = e.target.files[0];
+                if (file) _taxVaultDoUpload(docId, file, false);
+            };
+            input.click();
+        }
+        function _taxVaultReplaceFile(docId) {
+            if (!_taxVaultStorageAvailable()) {
+                showToast('⚠️ Firebase Storage SDK를 사용할 수 없습니다.');
+                return;
+            }
+            var input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*,application/pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.hwp';
+            input.onchange = function(e) {
+                var file = e.target.files[0];
+                if (file) _taxVaultDoUpload(docId, file, true);
+            };
+            input.click();
+        }
+        function _taxVaultDoUpload(docId, file, isReplace) {
+            if (!appData.taxProfile || !appData.taxProfile.documents) return;
+            var doc = appData.taxProfile.documents.find(function(d) { return d.id === docId; });
+            if (!doc) return;
+            var storage = _taxVaultInitStorage();
+            if (!storage) { showToast('⚠️ Firebase Storage를 초기화할 수 없습니다.'); return; }
+            if (file.size > 20 * 1024 * 1024) { showToast('⚠️ 파일 크기가 20MB를 초과합니다. 더 작은 파일을 사용해주세요.'); return; }
+            var year = _taxYear || doc.year || new Date().getFullYear();
+            var ext = file.name.split('.').pop() || 'bin';
+            var safeFile = docId + '_' + Date.now() + '.' + ext;
+            var storagePath = 'taxDocuments/' + year + '/' + docId + '/' + safeFile;
+            showToast('📤 업로드 준비 중...');
+            if (isReplace && doc.storagePath) {
+                try { storage.ref(doc.storagePath).delete().catch(function(){}); } catch(e) {}
+            }
+            var uploadTask = storage.ref(storagePath).put(file);
+            uploadTask.on('state_changed',
+                function(snap) {
+                    var pct = Math.round(snap.bytesTransferred / snap.totalBytes * 100);
+                    showToast('📤 업로드 중 ' + pct + '%...');
+                },
+                function(err) {
+                    console.error('[TaxVault] Upload error:', err);
+                    showToast('❌ 업로드 실패: ' + (err.message || err.code || '알 수 없는 오류'));
+                },
+                function() {
+                    uploadTask.snapshot.ref.getDownloadURL().then(function(url) {
+                        var now = new Date().toISOString().split('T')[0];
+                        doc.fileName = safeFile;
+                        doc.originalFileName = file.name;
+                        doc.fileType = file.type || ext;
+                        doc.fileSize = file.size;
+                        doc.storagePath = storagePath;
+                        doc.downloadURL = url;
+                        doc.status = '업로드완료';
+                        doc.updatedAt = now;
+                        if (isReplace) doc.replacedAt = now; else doc.uploadedAt = now;
+                        if (_taxYear && appData.taxProfiles) appData.taxProfiles[_taxYear] = appData.taxProfile;
+                        saveData();
+                        renderTaxPage();
+                        showToast('✅ 파일 업로드 완료: ' + file.name);
+                        var mb = document.getElementById('taxVaultModalBody');
+                        if (mb && mb.dataset.docId === docId) _taxVaultRenderModalBody(docId);
+                    }).catch(function(e) { showToast('❌ 다운로드 URL 취득 실패: ' + (e.message || '')); });
+                }
+            );
+        }
+        function _taxVaultOpenFile(docId) {
+            if (!appData.taxProfile || !appData.taxProfile.documents) return;
+            var doc = appData.taxProfile.documents.find(function(d) { return d.id === docId; });
+            if (!doc) return;
+            if (doc.downloadURL) window.open(doc.downloadURL, '_blank');
+            else showToast('업로드된 파일이 없습니다. 먼저 파일을 업로드하세요.');
+        }
+        function _taxVaultOpenModal(docId) {
+            var modal = document.getElementById('taxVaultModal');
+            if (!modal) return;
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            _taxVaultRenderModalBody(docId);
+        }
+        function _taxVaultCloseModal() {
+            var modal = document.getElementById('taxVaultModal');
+            if (!modal) return;
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        function _taxVaultFmtBytes(b) {
+            if (!b) return '-';
+            if (b < 1024) return b + 'B';
+            if (b < 1048576) return (b/1024).toFixed(1) + 'KB';
+            return (b/1048576).toFixed(1) + 'MB';
+        }
+        function _taxVaultRenderModalBody(docId) {
+            var mb = document.getElementById('taxVaultModalBody');
+            if (!mb) return;
+            mb.dataset.docId = docId;
+            var doc = appData.taxProfile && appData.taxProfile.documents
+                ? appData.taxProfile.documents.find(function(d) { return d.id === docId; })
+                : null;
+            if (!doc) { mb.innerHTML = '<p style="color:#94A3B8;text-align:center;padding:20px;">서류를 찾을 수 없습니다.</p>'; return; }
+            var storageAvail = _taxVaultStorageAvailable();
+            var buildings = (appData.buildings || []);
+            var tenants = (appData.tenants || []);
+            var scMap = { '미확보':'#EF4444','준비중':'#D97706','업로드완료':'#0F766E','제출완료':'#1D4ED8' };
+            var catOpts = _TAX_VAULT_CATEGORIES.map(function(c) {
+                return '<option value="' + c + '"' + (doc.category === c ? ' selected' : '') + '>' + c + '</option>';
+            }).join('');
+            var stOpts = _TAX_VAULT_STATUSES.map(function(s) {
+                return '<option value="' + s + '"' + (doc.status === s ? ' selected' : '') + '>' + s + '</option>';
+            }).join('');
+            var bldOpts = '<option value="">건물 연결 (선택)</option>'
+                + buildings.map(function(b) { return '<option value="' + b.id + '"' + (doc.linkedBuildingId === b.id ? ' selected' : '') + '>' + escapeHTML(b.name || '') + '</option>'; }).join('');
+            var tntOpts = '<option value="">세입자/호실 연결 (선택)</option>'
+                + tenants.map(function(t) {
+                    var rm = (appData.rooms || []).find(function(r) { return r.id === t.roomId; });
+                    return '<option value="' + t.id + '"' + (doc.linkedTenantId === t.id ? ' selected' : '') + '>' + escapeHTML(t.name || '') + (rm ? ' (' + rm.roomNumber + '호)' : '') + '</option>';
+                }).join('');
+            var fileHTML = '';
+            if (doc.downloadURL) {
+                fileHTML = '<div style="background:#F0FDFA;border:1px solid #A7F3D0;border-radius:8px;padding:12px;margin-bottom:12px;">'
+                    + '<div style="font-size:11.5px;font-weight:700;color:#0F766E;margin-bottom:6px;">📎 업로드된 파일</div>'
+                    + '<div style="font-size:12.5px;color:#1E293B;font-weight:600;word-break:break-all;margin-bottom:3px;">' + escapeHTML(doc.originalFileName || doc.fileName || '') + '</div>'
+                    + '<div style="font-size:11px;color:#64748B;margin-bottom:8px;">'
+                    + escapeHTML(doc.fileType || '') + ' · ' + _taxVaultFmtBytes(doc.fileSize)
+                    + (doc.uploadedAt ? ' · 업로드: ' + doc.uploadedAt : '')
+                    + (doc.replacedAt ? ' · 교체: ' + doc.replacedAt : '')
+                    + '</div>'
+                    + '<div style="display:flex;gap:8px;">'
+                    + '<button class="btn btn-primary" style="flex:1;font-size:12px;padding:7px;" onclick="_taxVaultOpenFile(\'' + docId + '\')">🔗 파일 열기</button>'
+                    + (storageAvail ? '<button class="btn btn-secondary" style="flex:1;font-size:12px;padding:7px;" onclick="_taxVaultReplaceFile(\'' + docId + '\')">🔄 파일 교체</button>' : '')
+                    + '</div></div>';
+            } else {
+                fileHTML = '<div style="background:#F8FAFC;border:1.5px dashed #CBD5E1;border-radius:8px;padding:14px;margin-bottom:12px;text-align:center;">'
+                    + '<div style="font-size:12px;color:#94A3B8;margin-bottom:8px;">📭 업로드된 파일 없음</div>'
+                    + (storageAvail
+                        ? '<button class="btn btn-primary" style="font-size:12px;background:#0F766E;" onclick="_taxVaultUploadFile(\'' + docId + '\')">📎 서류 업로드 / 사진 촬영</button>'
+                        : '<div class="tax-vault-storage-warn" style="text-align:left;">⚠️ Firebase Storage SDK 미로드 — 파일 업로드 비활성화<br><span style="font-size:10.5px;">TODO: firebase-storage-compat.js 로드 및 Storage Rules 설정 필요</span></div>')
+                    + '</div>';
+            }
+            mb.innerHTML = '<div>'
+                // Title
+                + '<div style="margin-bottom:10px;"><label style="font-size:11px;color:#64748B;font-weight:700;display:block;margin-bottom:4px;">서류 제목</label>'
+                + '<input type="text" value="' + escapeHTML(doc.title || '') + '" placeholder="예: 2026년 재산세 납부영수증" onchange="_taxVaultUpdateDocField(\'' + docId + '\',\'title\',this.value)" style="width:100%;padding:8px;border:1px solid #E2E8F0;border-radius:8px;font-size:13px;box-sizing:border-box;"></div>'
+                // Category + Status
+                + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">'
+                + '<div><label style="font-size:11px;color:#64748B;font-weight:700;display:block;margin-bottom:4px;">카테고리</label>'
+                + '<select onchange="_taxVaultUpdateDocField(\'' + docId + '\',\'category\',this.value)" style="width:100%;padding:8px;border:1px solid #E2E8F0;border-radius:8px;font-size:12px;">' + catOpts + '</select></div>'
+                + '<div><label style="font-size:11px;color:#64748B;font-weight:700;display:block;margin-bottom:4px;">상태</label>'
+                + '<select onchange="_taxVaultUpdateDocField(\'' + docId + '\',\'status\',this.value)" style="width:100%;padding:8px;border:1px solid #E2E8F0;border-radius:8px;font-size:12px;font-weight:700;color:' + (scMap[doc.status] || '#334155') + ';">' + stOpts + '</select></div>'
+                + '</div>'
+                // Required + Amount
+                + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">'
+                + '<div style="display:flex;align-items:center;gap:8px;padding-top:14px;">'
+                + '<input type="checkbox" id="vr_' + docId + '" ' + (doc.required ? 'checked' : '') + ' onchange="_taxVaultUpdateDocField(\'' + docId + '\',\'required\',this.checked)" style="width:16px;height:16px;">'
+                + '<label for="vr_' + docId + '" style="font-size:12px;color:#475569;font-weight:600;cursor:pointer;">필수 서류</label></div>'
+                + '<div><label style="font-size:11px;color:#64748B;font-weight:700;display:block;margin-bottom:4px;">금액 (₩)</label>'
+                + '<input type="number" value="' + (doc.amount !== null ? doc.amount : '') + '" placeholder="0" onchange="_taxVaultUpdateDocField(\'' + docId + '\',\'amount\',parseInt(this.value)||null)" style="width:100%;padding:8px;border:1px solid #E2E8F0;border-radius:8px;font-size:12px;box-sizing:border-box;"></div>'
+                + '</div>'
+                // Building + Tenant
+                + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">'
+                + '<div><label style="font-size:11px;color:#64748B;font-weight:700;display:block;margin-bottom:4px;">연결 건물</label>'
+                + '<select onchange="_taxVaultUpdateDocField(\'' + docId + '\',\'linkedBuildingId\',this.value||null)" style="width:100%;padding:8px;border:1px solid #E2E8F0;border-radius:8px;font-size:12px;">' + bldOpts + '</select></div>'
+                + '<div><label style="font-size:11px;color:#64748B;font-weight:700;display:block;margin-bottom:4px;">세입자/호실</label>'
+                + '<select onchange="_taxVaultUpdateDocField(\'' + docId + '\',\'linkedTenantId\',this.value||null)" style="width:100%;padding:8px;border:1px solid #E2E8F0;border-radius:8px;font-size:12px;">' + tntOpts + '</select></div>'
+                + '</div>'
+                // Tax category + notes
+                + '<div style="margin-bottom:10px;"><label style="font-size:11px;color:#64748B;font-weight:700;display:block;margin-bottom:4px;">세무 분류 (선택)</label>'
+                + '<input type="text" value="' + escapeHTML(doc.taxCategory || '') + '" placeholder="예: 필요경비, 임대수입" onchange="_taxVaultUpdateDocField(\'' + docId + '\',\'taxCategory\',this.value||null)" style="width:100%;padding:8px;border:1px solid #E2E8F0;border-radius:8px;font-size:12px;box-sizing:border-box;"></div>'
+                + '<div style="margin-bottom:12px;"><label style="font-size:11px;color:#64748B;font-weight:700;display:block;margin-bottom:4px;">메모</label>'
+                + '<textarea onchange="_taxVaultUpdateDocField(\'' + docId + '\',\'notes\',this.value)" placeholder="세무사 전달 메모 또는 특이사항" style="width:100%;height:58px;padding:8px;border:1px solid #E2E8F0;border-radius:8px;font-size:12px;font-family:inherit;resize:none;box-sizing:border-box;">' + escapeHTML(doc.notes || '') + '</textarea></div>'
+                // File section
+                + fileHTML
+                // Metadata footer
+                + '<div style="font-size:10.5px;color:#94A3B8;border-top:1px solid #F1F5F9;padding-top:8px;margin-top:4px;">최종 수정: ' + (doc.updatedAt || '-') + ' · ID: ' + doc.id + '</div>'
+                // Delete
+                + '<div style="margin-top:12px;">'
+                + '<button class="btn" style="width:100%;background:#FEF2F2;color:#EF4444;border:1px solid #FECACA;font-size:12.5px;" onclick="_taxVaultDeleteDoc(\'' + docId + '\')">🗑️ 이 서류 삭제</button>'
+                + '</div>'
+                + '</div>';
         }
         function toggleTaxProcedureStep(index) {
             if (!appData.taxProfile || !appData.taxProfile.procedures) return;
@@ -6261,30 +6618,60 @@
             });
             container.innerHTML = html;
         }
-        function _renderTaxDocuments() {
-            const container = document.getElementById('taxDocumentsContainer');
-            if (!container) return;
-            const docs = appData.taxProfile.documents || [];
+        function _renderTaxDocumentVault() {
+            if (!appData.taxProfile) return;
+            _taxVaultEnsureMigrated();
+            var storageAvail = _taxVaultStorageAvailable();
+            // Storage availability warning
+            var warnEl = document.getElementById('taxVaultStorageWarning');
+            if (warnEl) warnEl.style.display = storageAvail ? 'none' : 'block';
+            // Active (non-deleted) docs
+            var docs = (appData.taxProfile.documents || []).filter(function(d) { return !d.deletedAt; });
+            // Stats bar
+            var statsEl = document.getElementById('taxVaultStats');
+            if (statsEl) {
+                var uploaded = docs.filter(function(d) { return d.status === '업로드완료' || d.status === '제출완료'; }).length;
+                var reqTotal = docs.filter(function(d) { return d.required; }).length;
+                var reqDone  = docs.filter(function(d) { return d.required && (d.status === '업로드완료' || d.status === '제출완료'); }).length;
+                statsEl.innerHTML = '총 ' + docs.length + '건 · 업로드완료 ' + uploaded + '건'
+                    + (reqTotal > 0 ? ' · 필수서류 ' + reqDone + '/' + reqTotal + '건 완료' : '');
+                statsEl.style.display = docs.length ? 'block' : 'none';
+            }
+            // Missing required document warnings
+            var missingEl = document.getElementById('taxVaultMissingWarnings');
+            if (missingEl) {
+                var missing = docs.filter(function(d) { return d.required && d.status === '미확보'; });
+                missingEl.innerHTML = missing.map(function(d) {
+                    return '<div class="tax-vault-missing-row"><span>🚨</span><span><strong>[필수]</strong> '
+                        + escapeHTML(d.title || d.category) + ' 서류가 미확보 상태입니다.</span></div>';
+                }).join('');
+            }
+            // Document list
+            var listEl = document.getElementById('taxVaultDocList');
+            if (!listEl) return;
             if (docs.length === 0) {
-                container.innerHTML = '<div style="font-size:12px;color:#94A3B8;text-align:center;padding:10px 0;">등록된 필요 서류가 없습니다.</div>';
+                listEl.innerHTML = '<div style="text-align:center;padding:20px 0;color:#94A3B8;font-size:13px;">등록된 서류가 없습니다.<br><span style="font-size:12px;">위 [서류 추가] 버튼으로 새 서류를 추가하세요.</span></div>';
                 return;
             }
-            let html = '';
-            docs.forEach((d, idx) => {
-                html += `
-                <div style="display:flex; align-items:center; justify-content:space-between; padding:8px 10px; background:#F8FAFC; border:1px solid #E2E8F0; border-radius:8px; margin-bottom:6px;">
-                    <div style="display:flex; align-items:center; gap:10px; flex:1;">
-                        <input type="checkbox" id="doc_check_${idx}" ${d.checked ? 'checked' : ''} onchange="toggleTaxDocument(${idx})" style="width:16px; height:16px; cursor:pointer;">
-                        <div style="display:flex; flex-direction:column;">
-                            <label for="doc_check_${idx}" style="font-size:12.5px; font-weight:700; color:#334155; text-decoration: ${d.checked ? 'line-through' : 'none'}; cursor:pointer; margin-bottom: 2px;">${escapeHTML(d.name)}</label>
-                            <span style="font-size:10px; color:#64748B;">${escapeHTML(d.description || '')}</span>
-                        </div>
-                    </div>
-                    ${d.custom ? `<button onclick="deleteCustomDocument(${idx})" style="background:none; border:none; color:#EF4444; font-size:12px; cursor:pointer; padding:4px 8px;">삭제</button>` : ''}
-                </div>
-                `;
-            });
-            container.innerHTML = html;
+            var scMap = { '미확보':'미확보','준비중':'준비중','업로드완료':'업로드완료','제출완료':'제출완료' };
+            listEl.innerHTML = docs.map(function(doc) {
+                var sCls = 'tax-vault-s-' + (scMap[doc.status] || '미확보');
+                var hasFile = !!doc.downloadURL;
+                return '<div class="tax-vault-card" onclick="_taxVaultOpenModal(\'' + doc.id + '\')">'
+                    + '<div style="flex:1;min-width:0;">'
+                    + '<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;flex-wrap:wrap;">'
+                    + '<span style="font-size:12.5px;font-weight:700;color:#1E293B;">' + escapeHTML(doc.title || doc.category || '(제목없음)') + '</span>'
+                    + (doc.required ? '<span style="font-size:10px;background:#FEF2F2;color:#EF4444;border:1px solid #FECACA;padding:1px 5px;border-radius:4px;font-weight:700;">필수</span>' : '')
+                    + '</div>'
+                    + '<div style="font-size:11px;color:#64748B;display:flex;flex-wrap:wrap;gap:6px;">'
+                    + '<span>' + escapeHTML(doc.category || '') + '</span>'
+                    + (doc.amount ? '<span>· ₩' + Number(doc.amount).toLocaleString() + '</span>' : '')
+                    + (hasFile ? '<span style="color:#0F766E;">· 📎 파일있음</span>' : '')
+                    + (doc.notes ? '<span style="color:#94A3B8;">· ' + escapeHTML(doc.notes.slice(0,30)) + (doc.notes.length>30?'…':'') + '</span>' : '')
+                    + '</div></div>'
+                    + '<div style="flex-shrink:0;"><span class="tax-vault-status-badge ' + sCls + '">' + escapeHTML(doc.status) + '</span></div>'
+                    + '</div>';
+            }).join('');
         }
         function _renderTaxProcedures() {
             const container = document.getElementById('taxProcedureContainer');
@@ -6655,7 +7042,7 @@
             _renderRepeatableSection('commercialBuildings', 'commercialBuildingsContainer');
             _renderRepeatableSection('otherProperties', 'otherPropertiesContainer');
             _renderRepeatableSection('otherIncome', 'otherIncomeContainer');
-            _renderTaxDocuments();
+            _renderTaxDocumentVault();
             _renderTaxProcedures();
             _taxPageSwitchTab(_taxPageDataTab || 'income');
         }
@@ -6946,6 +7333,12 @@
                 _ensureFirebaseAuth()
                     .then(function() {
                         _db = firebase.firestore();
+                        // Init Storage for Tax Document Vault (graceful fallback if SDK missing)
+                        try {
+                            if (typeof firebase.storage === 'function') {
+                                _taxStorage = firebase.storage();
+                            }
+                        } catch(e) { console.warn('[TaxVault] Storage unavailable:', e); }
                         return _db.enablePersistence({ synchronizeTabs: true });
                     })
                     .then(function() { _startFirestoreListener(); })
