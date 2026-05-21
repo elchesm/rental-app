@@ -2333,10 +2333,17 @@
                 <div class="tax-page-card" style="margin:10px 12px;" id="taxDocumentsSection">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                         <div class="tax-page-card-title">🗄️ 세금서류 보관함</div>
-                        <button class="btn btn-primary" style="font-size:11px; padding:5px 10px; min-width:auto; background:#0F766E;" onclick="_taxVaultAddDoc()">📎 서류 추가</button>
+                        <div style="display:flex; gap:6px; align-items:center;">
+                            <button class="btn btn-secondary" style="font-size:10px; padding:4px 8px; min-width:auto;" onclick="_exportTaxDocumentChecklistCSV()">📊 체크리스트 CSV</button>
+                            <button class="btn btn-primary" style="font-size:11px; padding:5px 10px; min-width:auto; background:#0F766E;" onclick="_taxVaultAddDoc()">📎 서류 추가</button>
+                        </div>
+                    </div>
+                    <!-- 보안 면책 공지 -->
+                    <div style="background:#FFFBEB; border:1px solid #FDE68A; border-radius:8px; padding:9px 12px; margin-bottom:10px; font-size:10.5px; color:#92400E; line-height:1.5;">
+                        🔒 세금서류에는 계약서, 계좌내역, 영수증 등 민감정보가 포함될 수 있습니다. 클라우드 저장소 보안 규칙을 반드시 확인하세요. 본 앱의 세금 계산 및 분류는 참고용이며, 최종 신고 전 세무 전문가 확인을 권장합니다.
                     </div>
                     <div id="taxVaultStorageWarning" class="tax-vault-storage-warn" style="display:none;">
-                        ⚠️ Firebase Storage SDK 로드 실패 — 파일 업로드가 비활성화됩니다. 서류 메타데이터는 정상적으로 저장됩니다.
+                        ⚠️ Firebase Storage SDK 로드 실패 — 파일 업로드가 비활성화됩니다. 서류 메타데이터는 정상적으로 저장됩니다. (지원 형식: PDF, JPEG, PNG · 최대 10MB)
                     </div>
                     <div id="taxVaultMissingWarnings"></div>
                     <div id="taxVaultDocList"></div>
@@ -5852,6 +5859,8 @@
             '세무사 전달 메모'
         ];
         const _TAX_VAULT_STATUSES = ['미확보','준비중','업로드완료','제출완료'];
+        const MAX_TAX_DOC_SIZE_MB = 10;
+        const _TAX_VAULT_ALLOWED_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
 
         function _taxVaultInitStorage() {
             if (_taxStorage) return _taxStorage;
@@ -5863,6 +5872,49 @@
             return _taxStorage;
         }
         function _taxVaultStorageAvailable() { return !!_taxVaultInitStorage(); }
+
+        // ── Validation & path helpers ──
+        function _taxSanitizeFileName(fileName) {
+            if (!fileName) return 'document';
+            // keep alphanumeric, Korean chars, hyphens, underscores, dots; strip everything else
+            return fileName.replace(/[^\wㄱ-ㆎ가-힣.\-]/g, '_').replace(/_+/g, '_').slice(0, 120);
+        }
+        function _taxValidateDocumentFile(file) {
+            if (!file) return { ok: false, error: '파일이 선택되지 않았습니다.' };
+            var allowed = _TAX_VAULT_ALLOWED_TYPES;
+            if (!allowed.includes(file.type)) {
+                return { ok: false, error: '지원하지 않는 파일 형식입니다. PDF, JPEG, PNG만 업로드 가능합니다. (선택한 형식: ' + (file.type || '알 수 없음') + ')' };
+            }
+            if (file.size > MAX_TAX_DOC_SIZE_MB * 1024 * 1024) {
+                return { ok: false, error: '파일 크기가 ' + MAX_TAX_DOC_SIZE_MB + 'MB를 초과합니다. (' + (file.size / 1048576).toFixed(1) + 'MB)' };
+            }
+            return { ok: true };
+        }
+        function _taxGetDocumentStoragePath(year, documentId, sanitizedFileName) {
+            var uid = null;
+            try {
+                if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length) {
+                    var u = firebase.auth && firebase.auth().currentUser;
+                    if (u) uid = u.uid;
+                }
+            } catch(e) {}
+            var base = uid
+                ? 'users/' + uid + '/taxDocuments/' + year + '/' + documentId
+                : 'taxDocuments/' + year + '/' + documentId;
+            return base + '/' + documentId + '_' + Date.now() + '_' + sanitizedFileName;
+        }
+        function _taxGetActiveTaxDocuments() {
+            if (!appData.taxProfile || !appData.taxProfile.documents) return [];
+            return appData.taxProfile.documents.filter(function(d) { return !d.deletedAt; });
+        }
+        function _taxSaveActiveTaxDocuments(documents) {
+            if (!appData.taxProfile) return;
+            // Preserve soft-deleted docs; replace the non-deleted portion
+            var deleted = (appData.taxProfile.documents || []).filter(function(d) { return !!d.deletedAt; });
+            appData.taxProfile.documents = documents.concat(deleted);
+            if (_taxYear && appData.taxProfiles) appData.taxProfiles[_taxYear] = appData.taxProfile;
+            saveData();
+        }
 
         function _taxVaultGenerateId() {
             return 'tvd_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
@@ -5966,10 +6018,14 @@
             }
             var input = document.createElement('input');
             input.type = 'file';
-            input.accept = 'image/*,application/pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.hwp';
+            input.accept = 'application/pdf,image/jpeg,image/png';
+            input.capture = 'environment'; // allow camera on mobile
             input.onchange = function(e) {
                 var file = e.target.files[0];
-                if (file) _taxVaultDoUpload(docId, file, false);
+                if (!file) return;
+                var v = _taxValidateDocumentFile(file);
+                if (!v.ok) { showToast('⚠️ ' + v.error); return; }
+                _taxVaultDoUpload(docId, file, false);
             };
             input.click();
         }
@@ -5980,10 +6036,14 @@
             }
             var input = document.createElement('input');
             input.type = 'file';
-            input.accept = 'image/*,application/pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.hwp';
+            input.accept = 'application/pdf,image/jpeg,image/png';
+            input.capture = 'environment';
             input.onchange = function(e) {
                 var file = e.target.files[0];
-                if (file) _taxVaultDoUpload(docId, file, true);
+                if (!file) return;
+                var v = _taxValidateDocumentFile(file);
+                if (!v.ok) { showToast('⚠️ ' + v.error); return; }
+                _taxVaultDoUpload(docId, file, true);
             };
             input.click();
         }
@@ -5993,11 +6053,11 @@
             if (!doc) return;
             var storage = _taxVaultInitStorage();
             if (!storage) { showToast('⚠️ Firebase Storage를 초기화할 수 없습니다.'); return; }
-            if (file.size > 20 * 1024 * 1024) { showToast('⚠️ 파일 크기가 20MB를 초과합니다. 더 작은 파일을 사용해주세요.'); return; }
+            var v = _taxValidateDocumentFile(file);
+            if (!v.ok) { showToast('⚠️ ' + v.error); return; }
             var year = _taxYear || doc.year || new Date().getFullYear();
-            var ext = file.name.split('.').pop() || 'bin';
-            var safeFile = docId + '_' + Date.now() + '.' + ext;
-            var storagePath = 'taxDocuments/' + year + '/' + docId + '/' + safeFile;
+            var safeFile = _taxSanitizeFileName(file.name);
+            var storagePath = _taxGetDocumentStoragePath(year, docId, safeFile);
             showToast('📤 업로드 준비 중...');
             if (isReplace && doc.storagePath) {
                 try { storage.ref(doc.storagePath).delete().catch(function(){}); } catch(e) {}
@@ -6017,7 +6077,7 @@
                         var now = new Date().toISOString().split('T')[0];
                         doc.fileName = safeFile;
                         doc.originalFileName = file.name;
-                        doc.fileType = file.type || ext;
+                        doc.fileType = file.type;
                         doc.fileSize = file.size;
                         doc.storagePath = storagePath;
                         doc.downloadURL = url;
@@ -6038,8 +6098,50 @@
             if (!appData.taxProfile || !appData.taxProfile.documents) return;
             var doc = appData.taxProfile.documents.find(function(d) { return d.id === docId; });
             if (!doc) return;
-            if (doc.downloadURL) window.open(doc.downloadURL, '_blank');
-            else showToast('업로드된 파일이 없습니다. 먼저 파일을 업로드하세요.');
+            if (doc.downloadURL) {
+                window.open(doc.downloadURL, '_blank');
+            } else if (doc.storagePath && _taxVaultStorageAvailable()) {
+                showToast('🔗 파일 URL 취득 중...');
+                _taxVaultInitStorage().ref(doc.storagePath).getDownloadURL()
+                    .then(function(url) {
+                        doc.downloadURL = url;
+                        if (_taxYear && appData.taxProfiles) appData.taxProfiles[_taxYear] = appData.taxProfile;
+                        saveData();
+                        window.open(url, '_blank');
+                    })
+                    .catch(function(e) { showToast('❌ 파일 URL 취득 실패: ' + (e.message || '')); });
+            } else {
+                showToast('업로드된 파일이 없습니다. 먼저 파일을 업로드하세요.');
+            }
+        }
+        function _taxVaultDownloadFile(docId) {
+            if (!appData.taxProfile || !appData.taxProfile.documents) return;
+            var doc = appData.taxProfile.documents.find(function(d) { return d.id === docId; });
+            if (!doc) return;
+            var doDownload = function(url) {
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = doc.originalFileName || doc.fileName || 'tax_document';
+                a.target = '_blank';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            };
+            if (doc.downloadURL) {
+                doDownload(doc.downloadURL);
+            } else if (doc.storagePath && _taxVaultStorageAvailable()) {
+                showToast('📥 다운로드 URL 취득 중...');
+                _taxVaultInitStorage().ref(doc.storagePath).getDownloadURL()
+                    .then(function(url) {
+                        doc.downloadURL = url;
+                        if (_taxYear && appData.taxProfiles) appData.taxProfiles[_taxYear] = appData.taxProfile;
+                        saveData();
+                        doDownload(url);
+                    })
+                    .catch(function(e) { showToast('❌ 다운로드 실패: ' + (e.message || '')); });
+            } else {
+                showToast('다운로드할 파일이 없습니다. 먼저 파일을 업로드하세요.');
+            }
         }
         function _taxVaultOpenModal(docId) {
             var modal = document.getElementById('taxVaultModal');
@@ -6086,7 +6188,8 @@
                     return '<option value="' + t.id + '"' + (doc.linkedTenantId === t.id ? ' selected' : '') + '>' + escapeHTML(t.name || '') + (rm ? ' (' + rm.roomNumber + '호)' : '') + '</option>';
                 }).join('');
             var fileHTML = '';
-            if (doc.downloadURL) {
+            if (doc.downloadURL || doc.storagePath) {
+                var hasURL = !!doc.downloadURL;
                 fileHTML = '<div style="background:#F0FDFA;border:1px solid #A7F3D0;border-radius:8px;padding:12px;margin-bottom:12px;">'
                     + '<div style="font-size:11.5px;font-weight:700;color:#0F766E;margin-bottom:6px;">📎 업로드된 파일</div>'
                     + '<div style="font-size:12.5px;color:#1E293B;font-weight:600;word-break:break-all;margin-bottom:3px;">' + escapeHTML(doc.originalFileName || doc.fileName || '') + '</div>'
@@ -6094,17 +6197,20 @@
                     + escapeHTML(doc.fileType || '') + ' · ' + _taxVaultFmtBytes(doc.fileSize)
                     + (doc.uploadedAt ? ' · 업로드: ' + doc.uploadedAt : '')
                     + (doc.replacedAt ? ' · 교체: ' + doc.replacedAt : '')
+                    + (!hasURL && doc.storagePath ? ' · <span style="color:#D97706;">⚠️ URL 만료됨 (열기 시 재취득)</span>' : '')
                     + '</div>'
-                    + '<div style="display:flex;gap:8px;">'
-                    + '<button class="btn btn-primary" style="flex:1;font-size:12px;padding:7px;" onclick="_taxVaultOpenFile(\'' + docId + '\')">🔗 파일 열기</button>'
-                    + (storageAvail ? '<button class="btn btn-secondary" style="flex:1;font-size:12px;padding:7px;" onclick="_taxVaultReplaceFile(\'' + docId + '\')">🔄 파일 교체</button>' : '')
-                    + '</div></div>';
+                    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;">'
+                    + '<button class="btn btn-primary" style="font-size:12px;padding:7px;" onclick="_taxVaultOpenFile(\'' + docId + '\')">🔗 파일 열기</button>'
+                    + '<button class="btn btn-secondary" style="font-size:12px;padding:7px;" onclick="_taxVaultDownloadFile(\'' + docId + '\')">📥 다운로드</button>'
+                    + '</div>'
+                    + (storageAvail ? '<button class="btn btn-secondary" style="width:100%;font-size:12px;padding:7px;" onclick="_taxVaultReplaceFile(\'' + docId + '\')">🔄 파일 교체</button>' : '')
+                    + '</div>';
             } else {
                 fileHTML = '<div style="background:#F8FAFC;border:1.5px dashed #CBD5E1;border-radius:8px;padding:14px;margin-bottom:12px;text-align:center;">'
-                    + '<div style="font-size:12px;color:#94A3B8;margin-bottom:8px;">📭 업로드된 파일 없음</div>'
+                    + '<div style="font-size:12px;color:#94A3B8;margin-bottom:8px;">📭 업로드된 파일 없음<br><span style="font-size:10.5px;">지원 형식: PDF, JPEG, PNG · 최대 ' + MAX_TAX_DOC_SIZE_MB + 'MB</span></div>'
                     + (storageAvail
                         ? '<button class="btn btn-primary" style="font-size:12px;background:#0F766E;" onclick="_taxVaultUploadFile(\'' + docId + '\')">📎 서류 업로드 / 사진 촬영</button>'
-                        : '<div class="tax-vault-storage-warn" style="text-align:left;">⚠️ Firebase Storage SDK 미로드 — 파일 업로드 비활성화<br><span style="font-size:10.5px;">TODO: firebase-storage-compat.js 로드 및 Storage Rules 설정 필요</span></div>')
+                        : '<div class="tax-vault-storage-warn" style="text-align:left;">⚠️ Firebase Storage SDK 미로드 — 파일 업로드 비활성화<br><span style="font-size:10.5px;">TODO: Storage SDK 로드 및 보안 규칙 설정 필요</span></div>')
                     + '</div>';
             }
             mb.innerHTML = '<div>'
@@ -6618,6 +6724,24 @@
             });
             container.innerHTML = html;
         }
+        function _renderTaxDocumentWarnings(docs) {
+            // docs: active (non-deleted) document array
+            var rows = [];
+            docs.forEach(function(d) {
+                if (d.required && d.status === '미확보') {
+                    rows.push('<div class="tax-vault-missing-row"><span>🚨</span><span><strong>[필수]</strong> '
+                        + escapeHTML(d.title || d.category) + ' 서류가 미확보 상태입니다.</span></div>');
+                } else if (d.required && (d.status === '준비중')) {
+                    rows.push('<div class="tax-vault-missing-row" style="border-left-color:#D97706;background:#FFFBEB;"><span>⚠️</span><span><strong>[필수]</strong> '
+                        + escapeHTML(d.title || d.category) + ' 서류가 준비중 상태입니다.</span></div>');
+                }
+                if ((d.storagePath || d.fileName) && !d.downloadURL && d.status !== '미확보') {
+                    rows.push('<div class="tax-vault-missing-row" style="border-left-color:#64748B;background:#F8FAFC;"><span>ℹ️</span><span>'
+                        + escapeHTML(d.title || d.category) + ' — 메타데이터는 있으나 다운로드 URL이 없습니다. 파일 열기 시 재취득됩니다.</span></div>');
+                }
+            });
+            return rows.join('');
+        }
         function _renderTaxDocumentVault() {
             if (!appData.taxProfile) return;
             _taxVaultEnsureMigrated();
@@ -6626,7 +6750,7 @@
             var warnEl = document.getElementById('taxVaultStorageWarning');
             if (warnEl) warnEl.style.display = storageAvail ? 'none' : 'block';
             // Active (non-deleted) docs
-            var docs = (appData.taxProfile.documents || []).filter(function(d) { return !d.deletedAt; });
+            var docs = _taxGetActiveTaxDocuments();
             // Stats bar
             var statsEl = document.getElementById('taxVaultStats');
             if (statsEl) {
@@ -6637,15 +6761,9 @@
                     + (reqTotal > 0 ? ' · 필수서류 ' + reqDone + '/' + reqTotal + '건 완료' : '');
                 statsEl.style.display = docs.length ? 'block' : 'none';
             }
-            // Missing required document warnings
+            // Warnings (missing + metadata-no-url)
             var missingEl = document.getElementById('taxVaultMissingWarnings');
-            if (missingEl) {
-                var missing = docs.filter(function(d) { return d.required && d.status === '미확보'; });
-                missingEl.innerHTML = missing.map(function(d) {
-                    return '<div class="tax-vault-missing-row"><span>🚨</span><span><strong>[필수]</strong> '
-                        + escapeHTML(d.title || d.category) + ' 서류가 미확보 상태입니다.</span></div>';
-                }).join('');
-            }
+            if (missingEl) missingEl.innerHTML = _renderTaxDocumentWarnings(docs);
             // Document list
             var listEl = document.getElementById('taxVaultDocList');
             if (!listEl) return;
@@ -6653,10 +6771,9 @@
                 listEl.innerHTML = '<div style="text-align:center;padding:20px 0;color:#94A3B8;font-size:13px;">등록된 서류가 없습니다.<br><span style="font-size:12px;">위 [서류 추가] 버튼으로 새 서류를 추가하세요.</span></div>';
                 return;
             }
-            var scMap = { '미확보':'미확보','준비중':'준비중','업로드완료':'업로드완료','제출완료':'제출완료' };
             listEl.innerHTML = docs.map(function(doc) {
-                var sCls = 'tax-vault-s-' + (scMap[doc.status] || '미확보');
-                var hasFile = !!doc.downloadURL;
+                var sCls = 'tax-vault-s-' + (doc.status || '미확보');
+                var hasFile = !!(doc.downloadURL || doc.storagePath);
                 return '<div class="tax-vault-card" onclick="_taxVaultOpenModal(\'' + doc.id + '\')">'
                     + '<div style="flex:1;min-width:0;">'
                     + '<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;flex-wrap:wrap;">'
@@ -6666,13 +6783,69 @@
                     + '<div style="font-size:11px;color:#64748B;display:flex;flex-wrap:wrap;gap:6px;">'
                     + '<span>' + escapeHTML(doc.category || '') + '</span>'
                     + (doc.amount ? '<span>· ₩' + Number(doc.amount).toLocaleString() + '</span>' : '')
-                    + (hasFile ? '<span style="color:#0F766E;">· 📎 파일있음</span>' : '')
+                    + (hasFile ? '<span style="color:#0F766E;">· 📎 ' + escapeHTML(doc.originalFileName || doc.fileName || '파일있음') + '</span>' : '')
                     + (doc.notes ? '<span style="color:#94A3B8;">· ' + escapeHTML(doc.notes.slice(0,30)) + (doc.notes.length>30?'…':'') + '</span>' : '')
                     + '</div></div>'
                     + '<div style="flex-shrink:0;"><span class="tax-vault-status-badge ' + sCls + '">' + escapeHTML(doc.status) + '</span></div>'
                     + '</div>';
             }).join('');
         }
+
+        // ── 서류 체크리스트 CSV 내보내기 ──
+        function _exportTaxDocumentChecklistCSV() {
+            var docs = _taxGetActiveTaxDocuments();
+            if (docs.length === 0) { showToast('내보낼 서류가 없습니다.'); return; }
+            var csv = '﻿'; // UTF-8 BOM
+            csv += '## ' + _taxYear + '년 세금서류 보관함 체크리스트\n';
+            csv += '생성일,' + new Date().toISOString().split('T')[0] + '\n\n';
+            csv += '제목,카테고리,상태,필수여부,금액,업로드파일,업로드일,교체일,세무분류,연결건물,연결세입자,메모,서류ID\n';
+            docs.forEach(function(d) {
+                var bld = d.linkedBuildingId ? ((appData.buildings || []).find(function(b) { return b.id === d.linkedBuildingId; }) || {}).name || '' : '';
+                var tnt = d.linkedTenantId ? ((appData.tenants || []).find(function(t) { return t.id === d.linkedTenantId; }) || {}).name || '' : '';
+                csv += '"' + (d.title || '').replace(/"/g,'""') + '",'
+                    + '"' + (d.category || '').replace(/"/g,'""') + '",'
+                    + '"' + (d.status || '') + '",'
+                    + '"' + (d.required ? '필수' : '선택') + '",'
+                    + (d.amount !== null && d.amount !== undefined ? d.amount : '') + ','
+                    + '"' + (d.originalFileName || d.fileName || '').replace(/"/g,'""') + '",'
+                    + '"' + (d.uploadedAt || '') + '",'
+                    + '"' + (d.replacedAt || '') + '",'
+                    + '"' + (d.taxCategory || '').replace(/"/g,'""') + '",'
+                    + '"' + bld.replace(/"/g,'""') + '",'
+                    + '"' + tnt.replace(/"/g,'""') + '",'
+                    + '"' + (d.notes || '').replace(/"/g,'""') + '",'
+                    + '"' + d.id + '"\n';
+            });
+            var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = '세금서류체크리스트_' + _taxYear + '년_' + new Date().toISOString().split('T')[0] + '.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('✅ 서류 체크리스트 CSV 다운로드 완료');
+        }
+
+        // ── Public API (spec-named aliases) ──
+        function initTaxDocuments() {
+            if (!appData.taxProfile) initTaxProfile();
+            _taxVaultEnsureMigrated();
+        }
+        function renderTaxDocumentVault() { _renderTaxDocumentVault(); }
+        function openTaxDocumentModal(documentId) { _taxVaultOpenModal(documentId); }
+        function closeTaxDocumentModal() { _taxVaultCloseModal(); }
+        function saveTaxDocumentMetadata() {
+            if (!appData.taxProfile) return;
+            if (_taxYear && appData.taxProfiles) appData.taxProfiles[_taxYear] = appData.taxProfile;
+            saveData();
+            _renderTaxDocumentVault();
+        }
+        function uploadTaxDocumentFile(docId) { _taxVaultUploadFile(docId); }
+        function replaceTaxDocumentFile(documentId) { _taxVaultReplaceFile(documentId); }
+        function deleteTaxDocument(documentId) { _taxVaultDeleteDoc(documentId); }
+        function openTaxDocumentFile(documentId) { _taxVaultOpenFile(documentId); }
+        function downloadTaxDocumentFile(documentId) { _taxVaultDownloadFile(documentId); }
+
         function _renderTaxProcedures() {
             const container = document.getElementById('taxProcedureContainer');
             if (!container) return;
@@ -7008,7 +7181,30 @@
             if (profile.notes) {
                 html += '<h2>📝 특이사항 메모</h2><div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:6px;padding:10px;">' + escapeHTML(profile.notes) + '</div>';
             }
-            html += '<div class="disclaimer">⚠️ 본 자료는 앱 기록 기반 단순 참고용입니다. 실제 세금신고는 세무사 또는 국세청 기준에 따라 최종 확인하시기 바랍니다.</div>';
+            // 세금서류 보관함 체크리스트
+            const vaultDocs = _taxGetActiveTaxDocuments();
+            if (vaultDocs.length > 0) {
+                const stColors = { '미확보':'#EF4444','준비중':'#D97706','업로드완료':'#0F766E','제출완료':'#1D4ED8' };
+                html += '<h2>🗄️ 세금서류 보관함 체크리스트</h2>';
+                const reqMissing = vaultDocs.filter(function(d) { return d.required && d.status === '미확보'; }).length;
+                if (reqMissing > 0) html += '<div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:6px;padding:7px;margin-bottom:8px;color:#B91C1C;font-weight:700;font-size:11px;">⚠️ 필수서류 미확보 ' + reqMissing + '건 — 세무사 전달 전 확인 필요</div>';
+                html += '<table><thead><tr><th>서류 제목</th><th>카테고리</th><th>상태</th><th>필수</th><th>업로드 파일명</th><th>업로드일</th><th>금액</th><th>메모</th></tr></thead><tbody>';
+                vaultDocs.forEach(function(d) {
+                    var sc = stColors[d.status] || '#64748B';
+                    html += '<tr>'
+                        + '<td>' + escapeHTML(d.title || d.category || '') + '</td>'
+                        + '<td style="font-size:10px;">' + escapeHTML(d.category || '') + '</td>'
+                        + '<td style="color:' + sc + ';font-weight:700;font-size:11px;">' + escapeHTML(d.status || '') + '</td>'
+                        + '<td>' + (d.required ? '필수' : '') + '</td>'
+                        + '<td style="font-size:10px;word-break:break-all;">' + escapeHTML(d.originalFileName || d.fileName || '-') + '</td>'
+                        + '<td style="font-size:10px;">' + (d.uploadedAt || '-') + '</td>'
+                        + '<td style="text-align:right;">' + (d.amount !== null && d.amount !== undefined ? '₩' + Number(d.amount).toLocaleString() : '') + '</td>'
+                        + '<td style="font-size:10px;">' + escapeHTML((d.notes || '').slice(0, 50)) + '</td>'
+                        + '</tr>';
+                });
+                html += '</tbody></table>';
+            }
+            html += '<div class="disclaimer">⚠️ 본 자료는 앱 기록 기반 단순 참고용입니다. 실제 세금신고는 세무사 또는 국세청 기준에 따라 최종 확인하시기 바랍니다.<br>세금서류에는 계약서, 계좌내역, 영수증 등 민감정보가 포함될 수 있습니다. 클라우드 저장소 보안 규칙을 반드시 확인하세요.</div>';
             html += '<scr' + 'ipt>window.onload=function(){window.print();}<\/scr' + 'ipt></body></html>';
             const w = window.open('', '_blank');
             if (!w) { showToast('팝업이 차단되었습니다. 브라우저 설정을 확인하세요.'); return; }
@@ -7173,6 +7369,24 @@
                 const r = appData.rooms.find(x => x.id === e.roomId);
                 csv += '"' + (e.date||'') + '","' + (e.category||'') + '","' + (e.title||'').replace(/"/g,'""') + '",' + (e.amount||0) + ',"' + (b?.name||'') + '","' + (r?.roomNumber||'') + '","' + (_taxIsDeductible(e) ? '필요경비' : '비필요') + '"\n';
             });
+            // 세금서류 보관함 체크리스트
+            const vaultDocs = _taxGetActiveTaxDocuments();
+            if (vaultDocs.length > 0) {
+                csv += '\n## 세금서류 보관함 체크리스트\n';
+                csv += '제목,카테고리,상태,필수여부,업로드파일,업로드일,금액,메모\n';
+                vaultDocs.forEach(function(d) {
+                    csv += '"' + (d.title||'').replace(/"/g,'""') + '",'
+                        + '"' + (d.category||'') + '",'
+                        + '"' + (d.status||'') + '",'
+                        + '"' + (d.required ? '필수' : '선택') + '",'
+                        + '"' + (d.originalFileName||d.fileName||'').replace(/"/g,'""') + '",'
+                        + '"' + (d.uploadedAt||'') + '",'
+                        + (d.amount !== null && d.amount !== undefined ? d.amount : '') + ','
+                        + '"' + (d.notes||'').replace(/"/g,'""') + '"\n';
+                });
+                const reqMissing = vaultDocs.filter(d => d.required && d.status === '미확보').length;
+                if (reqMissing > 0) csv += '# ⚠️ 필수서류 미확보 ' + reqMissing + '건\n';
+            }
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -7256,7 +7470,31 @@
             });
             html += '<tr class="total-row"><td colspan="4">합계</td><td style="text-align:right;">₩' + exp.deductibleTotal.toLocaleString() + '</td></tr></tbody></table>';
 
-            html += '<script>window.onload=function(){window.print();}<\/script></body></html>';
+            // 세금서류 보관함 체크리스트
+            const vaultDocs = _taxGetActiveTaxDocuments();
+            if (vaultDocs.length > 0) {
+                const stColors = { '미확보':'#EF4444','준비중':'#D97706','업로드완료':'#0F766E','제출완료':'#1D4ED8' };
+                html += '<h2>🗄️ 세금서류 보관함 체크리스트</h2>';
+                const reqMissing = vaultDocs.filter(d => d.required && d.status === '미확보').length;
+                if (reqMissing > 0) html += '<div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:6px;padding:8px;margin-bottom:8px;color:#B91C1C;font-weight:700;font-size:11px;">⚠️ 필수서류 미확보 ' + reqMissing + '건 — 신고 전 확인 필요</div>';
+                html += '<table><thead><tr><th>서류 제목</th><th>카테고리</th><th>상태</th><th>필수</th><th>파일명</th><th>업로드일</th><th>금액</th></tr></thead><tbody>';
+                vaultDocs.forEach(function(d) {
+                    var sc = stColors[d.status] || '#64748B';
+                    html += '<tr>'
+                        + '<td>' + escapeHTML(d.title || d.category || '') + '</td>'
+                        + '<td style="font-size:10px;">' + escapeHTML(d.category || '') + '</td>'
+                        + '<td style="color:' + sc + ';font-weight:700;font-size:11px;">' + escapeHTML(d.status || '') + '</td>'
+                        + '<td style="text-align:center;">' + (d.required ? '✅ 필수' : '') + '</td>'
+                        + '<td style="font-size:10px;word-break:break-all;">' + escapeHTML(d.originalFileName || d.fileName || '-') + '</td>'
+                        + '<td style="font-size:10px;">' + (d.uploadedAt || '-') + '</td>'
+                        + '<td style="text-align:right;">' + (d.amount !== null && d.amount !== undefined ? '₩' + Number(d.amount).toLocaleString() : '') + '</td>'
+                        + '</tr>';
+                });
+                html += '</tbody></table>';
+            }
+
+            html += '<div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:6px;padding:8px;font-size:10px;color:#B45309;margin-top:12px;">⚠️ 본 자료는 앱 기록 기반 단순 참고용입니다. 실제 세금신고는 세무사 또는 국세청 기준에 따라 최종 확인하시기 바랍니다.</div>';
+            html += '<scr' + 'ipt>window.onload=function(){window.print();}<\/scr' + 'ipt></body></html>';
             const w = window.open('', '_blank');
             if (!w) { showToast('팝업이 차단되었습니다. 브라우저 설정을 확인하세요.'); return; }
             w.document.write(html);
