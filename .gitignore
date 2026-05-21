@@ -35,3 +35,6 @@ config.local.js
 
 # Firebase local deploy cache
 .firebase/
+
+# 하위 디렉터리의 stale git repo (배포 아티팩트)
+Rental-App/
