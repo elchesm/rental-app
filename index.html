@@ -7438,7 +7438,7 @@
             var sec = document.getElementById('dashBuildingSummarySection');
             if (!sec) return;
             var buildings = (typeof appData !== 'undefined' && appData.buildings) ? appData.buildings : [];
-            if (buildings.length === 0) { sec.style.display = 'none'; return; }
+            if (buildings.length <= 1) { sec.style.display = 'none'; return; }
 
             var today = new Date();
             var mm = String(today.getMonth() + 1).padStart(2, '0');
