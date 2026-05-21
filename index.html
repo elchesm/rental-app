@@ -1504,6 +1504,33 @@
         .quick-btn:active { background: #EEF2FF; border-color: var(--primary); transform: scale(0.96); }
         .quick-btn span:first-child { font-size: 24px; line-height: 1; }
         .quick-btn span:last-child { font-size: 12px; font-weight: 700; color: var(--text-primary); }
+        /* ── 건물별 요약 카드 (대시보드) ── */
+        .dash-bld-card {
+            background: white; border: 1px solid var(--border-color);
+            border-radius: var(--radius-md); padding: 12px 14px;
+            margin: 0 12px 8px; box-shadow: var(--shadow-sm);
+        }
+        .dash-bld-card-title {
+            font-size: 14px; font-weight: 800; color: var(--text-primary);
+            margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
+            flex-wrap: wrap;
+        }
+        .dash-bld-metrics {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
+        }
+        .dash-bld-metric {
+            background: var(--bg-page); border-radius: var(--radius-sm);
+            padding: 7px 8px; text-align: center;
+        }
+        .dash-bld-metric-label {
+            font-size: 10px; color: var(--text-secondary); font-weight: 600; margin-bottom: 2px;
+        }
+        .dash-bld-metric-val {
+            font-size: 13px; font-weight: 800; color: var(--text-primary);
+        }
+        .dash-bld-metric-val.danger  { color: var(--danger); }
+        .dash-bld-metric-val.success { color: var(--success); }
+        .dash-bld-metric-val.warning { color: var(--warning); }
         /* SMS 입금문자 빠른 진입용 강조 버튼 */
         .quick-btn-primary {
             background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
@@ -1714,6 +1741,9 @@
                     </div>
                 </div>
 
+                <!-- 건물 필터 칩 (2개 이상 건물일 때만 표시, JS로 제어) -->
+                <div class="rent-building-filter" id="dashBuildingFilter" style="display:none;margin:8px 0 0;"></div>
+
                 <!-- ② 연간 요약 카드 -->
                 <div class="dash-section" style="margin-top:14px;">
                     <div class="dash-section-header">
@@ -1782,6 +1812,9 @@
                         <div id="vacantListNew"></div>
                     </div>
                 </div>
+
+                <!-- ⑥ 건물별 이번달 요약 (JS 렌더링) -->
+                <div class="dash-section" id="dashBuildingSummarySection" style="display:none;margin-top:14px;"></div>
 
                 <!-- ⑤ 수리 요청 현황 -->
                 <div class="dash-section" id="maintenanceSectionNew" style="display:none;margin-top:14px;">
@@ -2004,6 +2037,7 @@
                     <button class="btn btn-secondary" onclick="exportTaxFilingCSV()">📊 CSV</button>
                     <button class="btn btn-secondary" onclick="printTaxFiling()">🖨️ 인쇄/PDF</button>
                     <button class="btn btn-primary" style="grid-column:1/-1;background:#0F766E;" onclick="printTaxBundleForAccountant()">📁 세무사 전달용 묶음 PDF</button>
+                    <button class="btn btn-secondary" style="grid-column:1/-1;font-size:13px;" onclick="if(typeof openTaxFiling==='function')openTaxFiling();else alert('기능을 사용할 수 없습니다.');">🔍 수납·지출 항목 상세 검토 (모달)</button>
                 </div>
             </div>
 
@@ -2017,6 +2051,22 @@
                 <button class="btn btn-secondary btn-block" onclick="exportToJSON()">📥 JSON으로 내보내기</button>
                 <button class="btn btn-secondary btn-block" onclick="importFromJSON()">📤 JSON에서 가져오기</button>
                 <button class="btn btn-secondary btn-block" onclick="exportToCSV()">📊 CSV로 내보내기 (Excel)</button>
+
+                <!-- 영수증 사진 저장 경고 -->
+                <div class="card" style="margin-bottom:8px;background:#FFF7ED;border:1.5px solid #FED7AA;">
+                    <div style="display:flex;align-items:flex-start;gap:10px;">
+                        <span style="font-size:22px;flex-shrink:0;">📷</span>
+                        <div>
+                            <p style="font-size:14px;font-weight:700;color:#9A3412;margin:0 0 6px;">영수증 사진은 이 기기에만 저장됩니다</p>
+                            <p style="font-size:13px;color:#7C2D12;line-height:1.65;margin:0;">
+                                • 사진은 Firebase·OneDrive에 <strong>업로드되지 않습니다</strong><br>
+                                • 브라우저 데이터를 초기화하거나 앱을 재설치하면 사진이 <strong>영구 삭제</strong>됩니다<br>
+                                • 다른 기기에서는 사진이 <strong>자동으로 보이지 않습니다</strong><br>
+                                • 중요한 영수증은 위의 <strong>JSON 내보내기</strong>로 백업하세요
+                            </p>
+                        </div>
+                    </div>
+                </div>
 
                 <div class="settings-section-title">🔥 가족 공유 · 실시간 동기화</div>
                 <div class="card" style="margin-bottom:8px;background:linear-gradient(180deg,#EFF6FF 0%,#fff 60%);border-color:#BFDBFE;">
@@ -2794,6 +2844,21 @@
             } catch (e) {
                 showToast('⚠️ 저장 공간이 부족합니다. 오래된 사진 첨부를 삭제해 주세요.', 4000);
                 console.error('localStorage 저장 실패:', e);
+            }
+            // 저장 공간 크기 경고 (3MB 초과 시 세션당 1회만 표시)
+            if (!window._lsWarnShown) {
+                try {
+                    var _lsBytes = 0;
+                    for (var _lsKey in localStorage) {
+                        if (Object.prototype.hasOwnProperty.call(localStorage, _lsKey)) {
+                            _lsBytes += (_lsKey.length + (localStorage.getItem(_lsKey) || '').length) * 2;
+                        }
+                    }
+                    if (_lsBytes > 3 * 1024 * 1024) {
+                        window._lsWarnShown = true;
+                        showToast('⚠️ 저장 공간이 3MB를 넘었습니다. 영수증 사진이 많으면 JSON 내보내기 후 오래된 사진을 정리해 주세요.', 5000);
+                    }
+                } catch (_lsErr) { /* 크기 계산 실패 시 무시 */ }
             }
             if (_db) {
                 // Firebase 실시간 동기화 (디바운스: 연속 저장 시 1초 후 한 번만)
@@ -7331,6 +7396,140 @@
 
         /* showTenantSection now handles classList directly — no override needed */
 
+        /* ── 건물별 필터 & 요약 카드 (대시보드) ── */
+        window._dashBldFilter = null; // null = 전체
+
+        window.loadDashBuildingFilter = function() {
+            var wrap = document.getElementById('dashBuildingFilter');
+            if (!wrap) return;
+            var buildings = (typeof appData !== 'undefined' && appData.buildings) ? appData.buildings : [];
+            if (buildings.length <= 1) {
+                wrap.style.display = 'none';
+                window._dashBldFilter = null;
+                return;
+            }
+            wrap.style.display = 'flex';
+            wrap.innerHTML = '';
+            var allChip = document.createElement('button');
+            allChip.className = 'rent-bld-chip' + (window._dashBldFilter === null ? ' active' : '');
+            allChip.textContent = '전체';
+            allChip.onclick = function() {
+                window._dashBldFilter = null;
+                window.loadDashBuildingFilter();
+                window.renderBuildingSummaryCards(null);
+            };
+            wrap.appendChild(allChip);
+            buildings.forEach(function(b) {
+                var chip = document.createElement('button');
+                chip.className = 'rent-bld-chip' + (window._dashBldFilter === b.id ? ' active' : '');
+                chip.textContent = b.name || '-';
+                chip.onclick = (function(bid) {
+                    return function() {
+                        window._dashBldFilter = bid;
+                        window.loadDashBuildingFilter();
+                        window.renderBuildingSummaryCards(bid);
+                    };
+                })(b.id);
+                wrap.appendChild(chip);
+            });
+        };
+
+        window.renderBuildingSummaryCards = function(filterBid) {
+            var sec = document.getElementById('dashBuildingSummarySection');
+            if (!sec) return;
+            var buildings = (typeof appData !== 'undefined' && appData.buildings) ? appData.buildings : [];
+            if (buildings.length <= 1) { sec.style.display = 'none'; return; }
+
+            var today = new Date();
+            var mm = String(today.getMonth() + 1).padStart(2, '0');
+            var yy = String(today.getFullYear());
+            var monthStr = yy + '-' + mm;
+
+            var bldList = filterBid
+                ? buildings.filter(function(b) { return b.id === filterBid; })
+                : buildings;
+
+            var _fmtAmt = function(n) {
+                if (n >= 10000000) return (n / 10000000).toFixed(1).replace(/\.0$/, '') + '천만';
+                if (n >= 1000000)  return (n / 1000000).toFixed(1).replace(/\.0$/, '') + '백만';
+                if (n >= 10000)    return (n / 10000).toFixed(1).replace(/\.0$/, '') + '만';
+                return n > 0 ? n.toLocaleString() : '0';
+            };
+
+            var html = '<div class="dash-section-header" style="padding:0 12px 6px;">'
+                     + '<span class="dash-section-label">🏢 건물별 이번달 현황</span>'
+                     + '</div>';
+
+            bldList.forEach(function(b) {
+                var rooms = (appData.rooms || []).filter(function(r) { return r.buildingId === b.id; });
+                var totalRooms = rooms.length;
+                var occupiedRooms = rooms.filter(function(r) { return r.status === 'occupied'; }).length;
+
+                var activeTenants = (appData.tenants || []).filter(function(t) {
+                    return t.status === 'active' && t.buildingId === b.id;
+                });
+
+                // 이번달 받을 금액 (월세 + 관리비; 연세는 계약 시작월에만)
+                var expected = activeTenants.reduce(function(sum, t) {
+                    if ((t.rentType || 'monthly') === 'annual') {
+                        var renewMM = (t.contractStart || '').slice(5, 7);
+                        return renewMM === mm ? sum + (t.monthlyRent || 0) : sum;
+                    }
+                    return sum + (t.monthlyRent || 0) + (t.managementFee || 0);
+                }, 0);
+
+                // 이번달 받은 금액
+                var monthRents = (appData.rents || []).filter(function(r) {
+                    return r.buildingId === b.id && r.month === monthStr;
+                });
+                var collected = monthRents
+                    .filter(function(r) { return r.status === 'paid'; })
+                    .reduce(function(s, r) { return s + (r.amount || 0); }, 0);
+
+                // 미납 금액 (이번달 이전 포함, 계약 종료 이후 제외)
+                var unpaidAmt = (appData.rents || [])
+                    .filter(function(r) {
+                        if (r.buildingId !== b.id) return false;
+                        if (r.status !== 'pending' && r.status !== 'overdue') return false;
+                        if (!r.month || r.month > monthStr) return false;
+                        var t = (appData.tenants || []).find(function(t2) { return t2.id === r.tenantId; });
+                        var tEnd = t ? (t.contractEnd || '').slice(0, 7) : '';
+                        return !tEnd || r.month <= tEnd;
+                    })
+                    .reduce(function(s, r) { return s + (r.amount || 0); }, 0);
+
+                var rate = expected > 0 ? Math.round(collected / expected * 100) : -1;
+                var rateTxt = rate < 0 ? '-' : (rate + '%');
+                var rateClass = rate < 0 ? '' : (rate >= 100 ? 'success' : (rate >= 50 ? 'warning' : 'danger'));
+                var addrTxt = b.address
+                    ? '<span style="font-size:11px;font-weight:500;color:var(--text-tertiary);margin-left:4px;">' + b.address + '</span>'
+                    : '';
+
+                html += '<div class="dash-bld-card">'
+                      + '<div class="dash-bld-card-title">🏢 ' + (b.name || '-') + addrTxt + '</div>'
+                      + '<div class="dash-bld-metrics">'
+                      + '<div class="dash-bld-metric"><div class="dash-bld-metric-label">수납률</div>'
+                      +   '<div class="dash-bld-metric-val ' + rateClass + '">' + rateTxt + '</div></div>'
+                      + '<div class="dash-bld-metric"><div class="dash-bld-metric-label">받은금액</div>'
+                      +   '<div class="dash-bld-metric-val">₩' + _fmtAmt(collected) + '</div></div>'
+                      + '<div class="dash-bld-metric"><div class="dash-bld-metric-label">받을금액</div>'
+                      +   '<div class="dash-bld-metric-val">₩' + _fmtAmt(expected) + '</div></div>'
+                      + '<div class="dash-bld-metric"><div class="dash-bld-metric-label">미납금액</div>'
+                      +   '<div class="dash-bld-metric-val ' + (unpaidAmt > 0 ? 'danger' : '') + '">'
+                      +   (unpaidAmt > 0 ? '₩' + _fmtAmt(unpaidAmt) : '없음') + '</div></div>'
+                      + '<div class="dash-bld-metric"><div class="dash-bld-metric-label">입주</div>'
+                      +   '<div class="dash-bld-metric-val ' + (totalRooms > 0 && occupiedRooms === totalRooms ? 'success' : '') + '">'
+                      +   (totalRooms > 0 ? occupiedRooms + '/' + totalRooms : '-') + '</div></div>'
+                      + '<div class="dash-bld-metric"><div class="dash-bld-metric-label">세입자</div>'
+                      +   '<div class="dash-bld-metric-val">' + activeTenants.length + '명</div></div>'
+                      + '</div>'
+                      + '</div>';
+            });
+
+            sec.innerHTML = html;
+            sec.style.display = 'block';
+        };
+
         /* ── 3. Extend renderDashboard for new elements ── */
         var _origRD2 = typeof renderDashboard === 'function' ? renderDashboard : null;
         if (_origRD2) {
@@ -7763,6 +7962,12 @@
                 var yrEl = document.getElementById('dashYearNum');
                 if (mnEl) mnEl.textContent = m + '월';
                 if (yrEl) yrEl.textContent = y + '년';
+
+                /* ── 건물별 필터 & 요약 카드 ── */
+                if (typeof window.loadDashBuildingFilter === 'function') window.loadDashBuildingFilter();
+                if (typeof window.renderBuildingSummaryCards === 'function') {
+                    window.renderBuildingSummaryCards(window._dashBldFilter !== undefined ? window._dashBldFilter : null);
+                }
             };
         }
 
