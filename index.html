@@ -1947,6 +1947,17 @@
     <link rel="manifest" href="manifest.json">
 </head>
 <body>
+    <!-- Initial Loading Spinner for Firebase Synchronization -->
+    <div id="initialAppLoadingOverlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#ffffff;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,sans-serif;transition:opacity 0.3s ease;">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:16px;">
+            <div style="width:40px;height:40px;border:3px solid #E2E8F0;border-top-color:#0F766E;border-radius:50%;animation:spin 1s linear infinite;"></div>
+            <style>
+                @keyframes spin { to { transform: rotate(360deg); } }
+            </style>
+            <div style="font-size:15px;color:#0F766E;font-weight:600;letter-spacing:-0.01em;">데이터를 동기화하는 중입니다...</div>
+        </div>
+    </div>
+
     <!-- Firebase 동기화 상태 pill -->
     <div id="fbSyncPill" style="display:none;position:fixed;top:max(10px,env(safe-area-inset-top));right:12px;z-index:999;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;color:white;align-items:center;gap:4px;box-shadow:0 2px 8px rgba(0,0,0,0.2);pointer-events:none;"></div>
 
@@ -8251,6 +8262,24 @@
         let _fbDebounceTimer = null;
         let _fbStatusHideTimer = null;
         var _fbLastFamilyToastAt = 0;
+        var _firestoreInitialLoadComplete = false;
+        var _firestoreTimeoutTimer = null;
+
+        function _hideLoadingSpinnerAndRender() {
+            if (_firestoreTimeoutTimer) {
+                clearTimeout(_firestoreTimeoutTimer);
+                _firestoreTimeoutTimer = null;
+            }
+            var loader = document.getElementById('initialAppLoadingOverlay');
+            if (loader) {
+                loader.style.opacity = '0';
+                setTimeout(function() {
+                    if (loader.parentNode) loader.parentNode.removeChild(loader);
+                }, 300);
+            }
+            updateUI();
+            maybePromptCurrentMonthRentGeneration();
+        }
 
         function _fbConfigured() {
             // FIREBASE_CONFIG 값이 실제로 채워져 있는지 확인
@@ -8315,7 +8344,11 @@
             try {
                 firebase.auth().signInWithEmailAndPassword(email, password)
                     .then(function() {
-                        // 로그인 성공 시 페이지 새로고침하여 세션이 활성화된 상태로 앱 진입
+                        // 로그인 성공 시 플래그를 저장하고 페이지 새로고침
+                        try {
+                            localStorage.setItem('_justLoggedIn', '1');
+                            localStorage.removeItem('_fbSyncInit');
+                        } catch(e) {}
                         window.location.reload();
                     })
                     .catch(function(error) {
@@ -8560,13 +8593,31 @@
                     if (el && el.textContent.indexOf('연결 중') !== -1) el.style.display = 'none';
                 }, 5000);
             }, 1000);
+
+            // Safety timeout for initial firestore load: 5 seconds
+            if (!_firestoreInitialLoadComplete) {
+                _firestoreTimeoutTimer = setTimeout(function() {
+                    if (!_firestoreInitialLoadComplete) {
+                        console.warn('[Firestore] Initial load timed out. Falling back to local data.');
+                        _firestoreInitialLoadComplete = true;
+                        _hideLoadingSpinnerAndRender();
+                    }
+                }, 5000);
+            }
+
             _fbUnsubscribe = docRef.onSnapshot(function(doc) {
                 clearTimeout(_connectingTimer);
+                
                 // hasPendingWrites=true → 방금 우리가 쓴 것, 화면 업데이트 불필요
-                if (doc.metadata.hasPendingWrites) return;
+                if (doc.metadata.hasPendingWrites) {
+                    _firestoreInitialLoadComplete = true;
+                    _hideLoadingSpinnerAndRender();
+                    return;
+                }
 
                 if (!doc.exists) {
                     // ── Firestore가 비어있음 → 로컬 데이터 업로드 (최초 연결) ──
+                    _firestoreInitialLoadComplete = true;
                     var hasLocal = (appData.buildings||[]).length > 0
                                 || (appData.tenants||[]).length > 0
                                 || (appData.rooms||[]).length > 0;
@@ -8577,17 +8628,23 @@
                     }
                     _showFbStatus('connected');
                     _updateFirebaseSettingsUI();
+                    _hideLoadingSpinnerAndRender();
                     return;
                 }
 
                 // ── Firestore에 데이터 있음 → 병합 ──
+                _firestoreInitialLoadComplete = true;
                 _mergeRemoteData(doc.data(), { fromCache: doc.metadata.fromCache });
                 _showFbStatus('synced');
                 _updateFirebaseSettingsUI();
+                _hideLoadingSpinnerAndRender();
             }, function(err) {
                 console.error('Firestore listener error:', err);
                 _showFbStatus('error');
                 _updateFirebaseSettingsUI();
+                
+                _firestoreInitialLoadComplete = true;
+                _hideLoadingSpinnerAndRender();
             });
         }
 
@@ -8606,6 +8663,55 @@
             var keys = ['buildings', 'rooms', 'tenants', 'rents', 'expenses'];
             // 이미 한 번 이상 동기화가 완료된 기기인지 확인
             var synced = !!localStorage.getItem('_fbSyncInit');
+
+            // ── check if we should prioritize remote data as source of truth ──
+            var justLoggedIn = false;
+            try {
+                justLoggedIn = localStorage.getItem('_justLoggedIn') === '1';
+            } catch(e) {}
+
+            var remoteHasData = remote && (
+                (remote.buildings && remote.buildings.length > 0) ||
+                (remote.rooms && remote.rooms.length > 0) ||
+                (remote.tenants && remote.tenants.length > 0) ||
+                (remote.rents && remote.rents.length > 0) ||
+                (remote.expenses && remote.expenses.length > 0)
+            );
+
+            var localIsEmpty = !localData || (
+                (!localData.buildings || localData.buildings.length === 0) &&
+                (!localData.rooms || localData.rooms.length === 0) &&
+                (!localData.tenants || localData.tenants.length === 0) &&
+                (!localData.rents || localData.rents.length === 0) &&
+                (!localData.expenses || localData.expenses.length === 0)
+            );
+
+            if (remoteHasData && (justLoggedIn || localIsEmpty)) {
+                console.log('[Firestore] Prioritizing Firestore remote data as source of truth.');
+                appData = JSON.parse(JSON.stringify(remote));
+                if (!appData.taxProfiles) appData.taxProfiles = {};
+                keys.forEach(function(k) {
+                    if (!appData[k]) appData[k] = [];
+                });
+                try {
+                    localStorage.removeItem('_justLoggedIn');
+                    localStorage.setItem('_fbSyncInit', '1');
+                } catch(e) {}
+                
+                localStorage.setItem('appData', JSON.stringify(appData));
+                _syncPrevSaveSnapshot();
+                _refreshFbLastSyncUI();
+                _showFbStatus('synced');
+                _updateFirebaseSettingsUI();
+                updateUI();
+                return;
+            }
+
+            // Cleanup justLoggedIn flag if it wasn't matched
+            try {
+                localStorage.removeItem('_justLoggedIn');
+            } catch(e) {}
+
             var merged = {};
             var needUpload = false;
 
@@ -8704,6 +8810,10 @@
             var docRef = _getUserDataDocRef();
             if (!docRef) {
                 console.warn('[Firestore] _saveToFirestore: no uid — skipping write');
+                return Promise.resolve();
+            }
+            if (!_firestoreInitialLoadComplete) {
+                console.warn('[Firestore] _saveToFirestore: initial load not complete — blocking write to protect Firestore data.');
                 return Promise.resolve();
             }
             retryAttempt = retryAttempt || 0;
@@ -9147,8 +9257,11 @@
                 localStorage.setItem('appData', JSON.stringify(appData));
             }
             _syncPrevSaveSnapshot();
-            renderDashboard();
-            maybePromptCurrentMonthRentGeneration();
+            if (_fbConfigured()) {
+                console.log('[Init] Firebase is configured. Deferring initial render until snapshot load.');
+            } else {
+                _hideLoadingSpinnerAndRender();
+            }
             const tenantSearch = document.getElementById('tenantSearch');
             if (tenantSearch) {
                 tenantSearch.addEventListener('input', renderTenants);
@@ -10120,7 +10233,11 @@
         /* ── 4. initial call after DOM ready (in case DOMContentLoaded already fired) ── */
         if (document.readyState === 'complete' || document.readyState === 'interactive') {
             setTimeout(function() {
-                if (typeof renderDashboard === 'function') renderDashboard();
+                if (typeof _fbConfigured === 'function' && _fbConfigured()) {
+                    console.log('[Init] Deferring render in readyState complete/interactive check because Firebase is configured.');
+                } else {
+                    if (typeof renderDashboard === 'function') renderDashboard();
+                }
             }, 100);
         }
     })();
