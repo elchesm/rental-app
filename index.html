@@ -8257,7 +8257,7 @@
             return FIREBASE_CONFIG.projectId && !FIREBASE_CONFIG.projectId.includes('여기에');
         }
 
-        /** Firebase Auth 세션 확인. currentUser가 있으면 resolve, 없으면 설정 필요 화면 표시 후 reject. */
+        /** Firebase Auth 세션 확인. currentUser가 있으면 resolve, 없으면 로그인 화면 표시 후 reject. */
         function _ensureFirebaseAuth() {
             return new Promise(function(resolve, reject) {
                 try {
@@ -8266,16 +8266,29 @@
                     auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(function(e) {
                         console.warn('[Auth] setPersistence failed:', e);
                     });
-                    if (auth.currentUser) {
-                        resolve(auth.currentUser);
-                        return;
-                    }
-                    // No active session — this device has not been set up yet.
-                    // Ryan must sign in manually once on this device.
-                    // Do NOT sign in anonymously — that would create an unscoped throwaway UID.
-                    console.warn('[Auth] No currentUser. App requires a real signed-in session.');
-                    _showAuthRequiredScreen();
-                    reject(new Error('auth-required'));
+                    
+                    var resolved = false;
+                    var unsub = auth.onAuthStateChanged(function(user) {
+                        unsub();
+                        resolved = true;
+                        if (user) {
+                            resolve(user);
+                        } else {
+                            console.warn('[Auth] No currentUser. App requires a real signed-in session.');
+                            _showAuthRequiredScreen();
+                            reject(new Error('auth-required'));
+                        }
+                    });
+                    
+                    // Fallback safety timeout: 2.5 seconds
+                    setTimeout(function() {
+                        if (!resolved) {
+                            unsub();
+                            console.warn('[Auth] Auth state check timed out.');
+                            _showAuthRequiredScreen();
+                            reject(new Error('auth-timeout'));
+                        }
+                    }, 2500);
                 } catch (e) {
                     console.error('[Auth] _ensureFirebaseAuth error:', e);
                     _showAuthRequiredScreen();
@@ -8284,25 +8297,92 @@
             });
         }
 
-        /** 인증 세션이 없을 때 표시하는 한국어 안내 화면. Firebase 오류 상세는 노출하지 않음. */
+        /** 인증 세션이 없을 때 표시하는 로그인 화면 및 핸들러 */
+        window.handleAuthLogin = function(event) {
+            event.preventDefault();
+            var email = document.getElementById('loginEmail').value;
+            var password = document.getElementById('loginPassword').value;
+            var errEl = document.getElementById('loginErrorMsg');
+            var btn = document.getElementById('loginSubmitBtn');
+            
+            if (errEl) errEl.style.display = 'none';
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = '로그인 중...';
+                btn.style.opacity = '0.7';
+            }
+            
+            try {
+                firebase.auth().signInWithEmailAndPassword(email, password)
+                    .then(function() {
+                        // 로그인 성공 시 페이지 새로고침하여 세션이 활성화된 상태로 앱 진입
+                        window.location.reload();
+                    })
+                    .catch(function(error) {
+                        console.error('[Auth] Login failed:', error);
+                        if (btn) {
+                            btn.disabled = false;
+                            btn.textContent = '로그인';
+                            btn.style.opacity = '1';
+                        }
+                        if (errEl) {
+                            var msg = '로그인에 실패했습니다.';
+                            if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
+                                msg = '이메일 또는 비밀번호가 올바르지 않습니다.';
+                            } else if (error.code === 'auth/invalid-email') {
+                                msg = '올바르지 않은 이메일 형식입니다.';
+                            } else if (error.code === 'auth/user-disabled') {
+                                msg = '사용이 정지된 계정입니다.';
+                            } else if (error.code === 'auth/too-many-requests') {
+                                msg = '로그인 시도가 너무 많아 일시적으로 차단되었습니다. 잠시 후 다시 시도해 주세요.';
+                            } else if (error.message) {
+                                msg = error.message;
+                            }
+                            errEl.textContent = '⚠️ ' + msg;
+                            errEl.style.display = 'block';
+                        }
+                    });
+            } catch(e) {
+                console.error('[Auth] signInWithEmailAndPassword exception:', e);
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = '로그인';
+                    btn.style.opacity = '1';
+                }
+                if (errEl) {
+                    errEl.textContent = '⚠️ 로그인 처리 중 오류가 발생했습니다.';
+                    errEl.style.display = 'block';
+                }
+            }
+        };
+
         function _showAuthRequiredScreen() {
             try {
                 document.body.innerHTML = [
-                    '<div style="display:flex;flex-direction:column;align-items:center;',
-                    'justify-content:center;height:100vh;padding:32px;',
-                    'font-family:-apple-system,BlinkMacSystemFont,sans-serif;',
-                    'text-align:center;background:#F8FAFC;">',
-                    '<div style="font-size:52px;margin-bottom:20px;">🔒</div>',
-                    '<div style="font-size:19px;font-weight:700;color:#1E293B;margin-bottom:12px;line-height:1.4;">',
-                    '앱 사용 준비가 필요합니다',
-                    '</div>',
-                    '<div style="font-size:16px;color:#475569;line-height:1.7;">',
-                    'Ryan에게 연락해 주세요.',
-                    '</div>',
+                    '<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; padding:24px; font-family:-apple-system,BlinkMacSystemFont,sans-serif; background: linear-gradient(135deg, #F0FDFA 0%, #ECFDF5 100%);">',
+                    '  <div style="width: 100%; max-width: 400px; background: #ffffff; padding: 40px 32px; border-radius: 24px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02); border: 1px solid #E2E8F0; text-align: center;">',
+                    '    <div style="font-size: 48px; margin-bottom: 16px;">🔑</div>',
+                    '    <h2 style="font-size: 22px; font-weight: 800; color: #0F766E; margin: 0 0 8px 0; letter-spacing: -0.02em;">임대관리 앱 로그인</h2>',
+                    '    <p style="font-size: 14px; color: #64748B; margin: 0 0 28px 0; line-height: 1.5;">관리자 계정으로 로그인해 주세요.</p>',
+                    '    ',
+                    '    <div id="loginErrorMsg" style="display: none; background: #FEE2E2; border: 1.5px solid #FCA5A5; color: #B91C1C; padding: 12px 16px; border-radius: 12px; font-size: 13px; text-align: left; margin-bottom: 20px; line-height: 1.4;"></div>',
+                    '    ',
+                    '    <form id="loginForm" onsubmit="handleAuthLogin(event)" style="display: flex; flex-direction: column; gap: 16px;">',
+                    '      <div style="text-align: left;">',
+                    '        <label for="loginEmail" style="display: block; font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 6px; margin-left: 4px;">이메일 주소</label>',
+                    '        <input type="email" id="loginEmail" required placeholder="example@email.com" style="width: 100%; padding: 12px 16px; border: 1.5px solid #E2E8F0; border-radius: 12px; font-size: 14px; color: #1E293B; outline: none; transition: all 0.2s;" onfocus="this.style.borderColor=\'#0F766E\'; this.style.boxShadow=\'0 0 0 3px rgba(15, 118, 110, 0.15)\';" onblur="this.style.borderColor=\'#E2E8F0\'; this.style.boxShadow=\'none\';">',
+                    '      </div>',
+                    '      <div style="text-align: left;">',
+                    '        <label for="loginPassword" style="display: block; font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 6px; margin-left: 4px;">비밀번호</label>',
+                    '        <input type="password" id="loginPassword" required placeholder="비밀번호 입력" style="width: 100%; padding: 12px 16px; border: 1.5px solid #E2E8F0; border-radius: 12px; font-size: 14px; color: #1E293B; outline: none; transition: all 0.2s;" onfocus="this.style.borderColor=\'#0F766E\'; this.style.boxShadow=\'0 0 0 3px rgba(15, 118, 110, 0.15)\';" onblur="this.style.borderColor=\'#E2E8F0\'; this.style.boxShadow=\'none\';">',
+                    '      </div>',
+                    '      <button type="submit" id="loginSubmitBtn" style="width: 100%; margin-top: 8px; padding: 14px; background: linear-gradient(135deg, #0F766E, #0EA5A4); color: white; border: none; border-radius: 12px; font-size: 15px; font-weight: 800; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(15, 118, 110, 0.2);" onmouseover="this.style.opacity=\'0.95\'; this.style.transform=\'translateY(-1px)\';" onmouseout="this.style.opacity=\'1\'; this.style.transform=\'none\';">로그인</button>',
+                    '    </form>',
+                    '    <div style="font-size: 12px; color: #94A3B8; margin-top: 24px; line-height: 1.5;">계정 신규 발급 또는 분실 시<br>Ryan에게 문의해 주세요.</div>',
+                    '  </div>',
                     '</div>'
                 ].join('');
             } catch(e) {
-                // If DOM manipulation fails, nothing more we can do.
                 console.error('[Auth] _showAuthRequiredScreen DOM error:', e);
             }
         }
