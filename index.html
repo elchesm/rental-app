@@ -3205,8 +3205,6 @@
                 clearTimeout(_fbDebounceTimer);
                 _showFbStatus('syncing');
                 _fbDebounceTimer = setTimeout(function() { _saveToFirestore(0); }, 750);
-            } else {
-                debounceSync(); // OneDrive 동기화 (기존)
             }
             _syncPrevSaveSnapshot();
             // Changelog: 실제 변경이 있을 때만, 3초 디바운스로 연속 저장 묶기
@@ -9108,15 +9106,6 @@
         }
 
         // ============ ONEDRIVE SYNC ============
-        let syncTimer = null;
-        function debounceSync() {
-            clearTimeout(syncTimer);
-            syncTimer = setTimeout(() => {
-                if (account) {
-                    syncWithOneDrive({ silent: true, uploadAfterMerge: true });
-                }
-            }, 3000);
-        }
         function initMSAL() {
             const clientId = localStorage.getItem('azureClientId');
             if (!clientId) return;
@@ -9142,9 +9131,6 @@
             if (accounts.length > 0) {
                 account = accounts[0];
                 updateMSALUI('logged_in');
-                if (!options.skipAutoSync) {
-                    syncWithOneDrive({ silent: true, uploadAfterMerge: false });
-                }
             } else {
                 updateMSALUI('logged_out');
             }
@@ -9161,9 +9147,9 @@
                 showToast('로그인되었습니다. 기존 데이터를 확인 중입니다...');
                 const token = response && response.accessToken;
                 const loadPromise = token
-                    ? loadDataFromOneDrive(token, { uploadAfterMerge: true, afterLogin: true })
+                    ? loadDataFromOneDrive(token, { uploadAfterMerge: false, afterLogin: true })
                     : _getOneDriveAccessToken(true).then(accessToken => {
-                        return loadDataFromOneDrive(accessToken, { uploadAfterMerge: true, afterLogin: true });
+                        return loadDataFromOneDrive(accessToken, { uploadAfterMerge: false, afterLogin: true });
                     });
                 loadPromise.catch(err => console.error('OneDrive post-login load error:', err));
             }).catch(err => {
@@ -9259,7 +9245,7 @@
                 headers: { 'Authorization': 'Bearer ' + accessToken }
             }).then(response => {
                 if (response.status === 404) {
-                    if (_hasAnyAppData(appData)) {
+                    if (options.uploadAfterMerge && _hasAnyAppData(appData)) {
                         return saveDataToOneDrive(accessToken, { silent: true }).then(() => {
                             if (!options.silent) showToast('OneDrive에 현재 데이터를 처음 저장했습니다');
                             return false;
@@ -9280,13 +9266,6 @@
                     return saveDataToOneDrive(accessToken, { silent: true }).then(() => {
                         if (!options.silent) {
                             showToast(changed ? 'OneDrive 기존 데이터를 불러왔습니다' : 'OneDrive와 동기화 완료');
-                        }
-                        return changed;
-                    }).catch(err => {
-                        console.warn('OneDrive re-upload after merge failed:', err);
-                        updateMSALUI('logged_in');
-                        if (!options.silent) {
-                            showToast(changed ? 'OneDrive 기존 데이터는 불러왔습니다' : 'OneDrive 기존 데이터 확인 완료');
                         }
                         return changed;
                     });
@@ -9311,7 +9290,8 @@
             return fetch('https://graph.microsoft.com/v1.0/me/drive/special/approot:/임대관리앱_data.json:/content', {
                 method: 'PUT',
                 headers: {
-                    'Authorization': 'Bearer ' + accessToken
+                    'Authorization': 'Bearer ' + accessToken,
+                    'Content-Type': 'application/json;charset=utf-8'
                 },
                 body: dataStr
             }).then(response => {
@@ -9320,16 +9300,12 @@
                     if (!options.silent) showToast('OneDrive 동기화 완료');
                     return true;
                 }
-                updateMSALUI(options.silent ? 'logged_in' : 'error');
+                updateMSALUI('error');
                 throw new Error('동기화 실패 (' + response.status + ')');
             }).catch(err => {
                 console.error('Sync error:', err);
-                if (!options.silent) {
-                    updateMSALUI('error');
-                    showToast('동기화 실패: ' + err.message);
-                } else {
-                    updateMSALUI('logged_in');
-                }
+                updateMSALUI('error');
+                if (!options.silent) showToast('동기화 실패: ' + err.message);
                 throw err;
             });
         }
