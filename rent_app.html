@@ -9136,11 +9136,15 @@
                 checkLoginStatus();
             });
         }
-        function checkLoginStatus() {
+        function checkLoginStatus(options) {
+            options = options || {};
             const accounts = msalInstance.getAllAccounts();
             if (accounts.length > 0) {
                 account = accounts[0];
                 updateMSALUI('logged_in');
+                if (!options.skipAutoSync) {
+                    syncWithOneDrive({ silent: true, uploadAfterMerge: false });
+                }
             } else {
                 updateMSALUI('logged_out');
             }
@@ -9152,9 +9156,16 @@
             }
             msalInstance.loginPopup({
                 scopes: ['Files.ReadWrite.AppFolder']
-            }).then(() => {
-                checkLoginStatus();
-                showToast('로그인되었습니다');
+            }).then(response => {
+                checkLoginStatus({ skipAutoSync: true });
+                showToast('로그인되었습니다. 기존 데이터를 확인 중입니다...');
+                const token = response && response.accessToken;
+                const loadPromise = token
+                    ? loadDataFromOneDrive(token, { uploadAfterMerge: true, afterLogin: true })
+                    : _getOneDriveAccessToken(true).then(accessToken => {
+                        return loadDataFromOneDrive(accessToken, { uploadAfterMerge: true, afterLogin: true });
+                    });
+                loadPromise.catch(err => console.error('OneDrive post-login load error:', err));
             }).catch(err => {
                 showToast('로그인 실패: ' + err.message);
             });
@@ -9170,24 +9181,127 @@
                 });
             }
         }
-        function syncWithOneDrive() {
-            if (!msalInstance || !account) return;
-            updateMSALUI('syncing');
-            msalInstance.acquireTokenSilent({
+        function _getOneDriveAccessToken(allowPopup) {
+            if (!msalInstance || !account) return Promise.reject(new Error('OneDrive 로그인이 필요합니다'));
+            return msalInstance.acquireTokenSilent({
                 scopes: ['Files.ReadWrite.AppFolder'],
                 account: account
-            }).then(response => {
-                saveDataToOneDrive(response.accessToken);
-            }).catch(err => {
-                console.error('Token acquisition error:', err);
-                updateMSALUI('error');
+            }).catch(function() {
+                if (!allowPopup) throw new Error('OneDrive 재인증이 필요합니다');
+                return msalInstance.acquireTokenPopup({
+                    scopes: ['Files.ReadWrite.AppFolder'],
+                    account: account
+                });
+            }).then(function(response) {
+                return response.accessToken;
             });
         }
-        function saveDataToOneDrive(accessToken) {
+        function syncWithOneDrive(options) {
+            options = options || {};
+            if (!msalInstance || !account) return;
+            if (!options.silent) updateMSALUI('syncing');
+            _getOneDriveAccessToken(!options.silent).then(accessToken => {
+                return loadDataFromOneDrive(accessToken, {
+                    silent: !!options.silent,
+                    uploadAfterMerge: options.uploadAfterMerge !== false
+                });
+            }).catch(err => {
+                console.error('Token acquisition error:', err);
+                if (!options.silent) {
+                    updateMSALUI('error');
+                    showToast('OneDrive 연결을 확인해 주세요');
+                } else {
+                    updateMSALUI('logged_in');
+                }
+            });
+        }
+        function _validOneDriveAppData(data) {
+            const requiredKeys = ['buildings', 'rooms', 'tenants', 'rents', 'expenses'];
+            if (!data || typeof data !== 'object') return null;
+            const normalized = {};
+            for (const key of requiredKeys) {
+                if (!Array.isArray(data[key])) return null;
+                normalized[key] = data[key];
+            }
+            return normalized;
+        }
+        function _hasAnyAppData(data) {
+            return !!data && ['buildings', 'rooms', 'tenants', 'rents', 'expenses']
+                .some(key => Array.isArray(data[key]) && data[key].length > 0);
+        }
+        function _applyOneDriveData(remoteData) {
+            const remote = _validOneDriveAppData(remoteData);
+            if (!remote) throw new Error('OneDrive 데이터 형식이 올바르지 않습니다');
+            const local = _validOneDriveAppData(appData) || { buildings: [], rooms: [], tenants: [], rents: [], expenses: [] };
+            const merged = {};
+            ['buildings', 'rooms', 'tenants', 'rents', 'expenses'].forEach(key => {
+                merged[key] = _mergeArraysWithVersions(local[key], remote[key], true);
+            });
+            merged.expenses = merged.expenses.map(expense => {
+                const localExpense = (local.expenses || []).find(item => item && item.id === expense.id);
+                if (localExpense && localExpense.receipts && localExpense.receipts.length) {
+                    expense.receipts = localExpense.receipts;
+                }
+                return expense;
+            });
+            const before = _appDataForSyncCompare(appData);
+            appData = merged;
+            cleanupInvalidRents();
+            localStorage.setItem('appData', JSON.stringify(appData));
+            _syncPrevSaveSnapshot();
+            updateUI();
+            return before !== _appDataForSyncCompare(appData);
+        }
+        function loadDataFromOneDrive(accessToken, options) {
+            options = options || {};
+            return fetch('https://graph.microsoft.com/v1.0/me/drive/special/approot:/임대관리앱_data.json:/content', {
+                method: 'GET',
+                headers: { 'Authorization': 'Bearer ' + accessToken }
+            }).then(response => {
+                if (response.status === 404) {
+                    if (_hasAnyAppData(appData)) {
+                        return saveDataToOneDrive(accessToken, { silent: true }).then(() => {
+                            if (!options.silent) showToast('OneDrive에 현재 데이터를 처음 저장했습니다');
+                            return false;
+                        });
+                    }
+                    updateMSALUI('logged_in');
+                    if (!options.silent) showToast('OneDrive에 저장된 기존 데이터가 없습니다');
+                    return false;
+                }
+                if (!response.ok) {
+                    throw new Error('OneDrive 불러오기 실패 (' + response.status + ')');
+                }
+                return response.json();
+            }).then(remoteData => {
+                if (!remoteData) return false;
+                const changed = _applyOneDriveData(remoteData);
+                if (options.uploadAfterMerge) {
+                    return saveDataToOneDrive(accessToken, { silent: true }).then(() => {
+                        if (!options.silent) {
+                            showToast(changed ? 'OneDrive 기존 데이터를 불러왔습니다' : 'OneDrive와 동기화 완료');
+                        }
+                        return changed;
+                    });
+                }
+                updateMSALUI('logged_in');
+                if (changed && !options.silent) showToast('OneDrive 기존 데이터를 불러왔습니다');
+                return changed;
+            }).catch(err => {
+                console.error('OneDrive load error:', err);
+                if (!options.silent) {
+                    updateMSALUI('error');
+                    showToast('OneDrive 데이터 불러오기 실패: ' + err.message);
+                } else {
+                    updateMSALUI('logged_in');
+                }
+                throw err;
+            });
+        }
+        function saveDataToOneDrive(accessToken, options) {
+            options = options || {};
             const dataStr = JSON.stringify(appData);
-            const formData = new FormData();
-            formData.append('file', new Blob([dataStr], { type: 'application/json' }));
-            fetch('https://graph.microsoft.com/v1.0/me/drive/special/approot:/임대관리앱_data.json:/content', {
+            return fetch('https://graph.microsoft.com/v1.0/me/drive/special/approot:/임대관리앱_data.json:/content', {
                 method: 'PUT',
                 headers: {
                     'Authorization': 'Bearer ' + accessToken
@@ -9196,14 +9310,16 @@
             }).then(response => {
                 if (response.ok) {
                     updateMSALUI('logged_in');
-                    showToast('OneDrive 동기화 완료');
-                } else {
-                    updateMSALUI('error');
-                    showToast('동기화 실패');
+                    if (!options.silent) showToast('OneDrive 동기화 완료');
+                    return true;
                 }
+                updateMSALUI('error');
+                throw new Error('동기화 실패 (' + response.status + ')');
             }).catch(err => {
                 console.error('Sync error:', err);
                 updateMSALUI('error');
+                if (!options.silent) showToast('동기화 실패: ' + err.message);
+                throw err;
             });
         }
         function updateMSALUI(status) {
@@ -9215,6 +9331,7 @@
                 loginBtn.style.display = 'none';
                 logoutBtn.style.display = 'block';
                 syncBtn.style.display = 'block';
+                syncBtn.innerHTML = '<span id="syncStatus">OneDrive 동기화</span>';
                 statusDiv.textContent = '✓ ' + (account?.username || '로그인됨');
                 statusDiv.style.color = 'var(--success)';
             } else if (status === 'syncing') {
