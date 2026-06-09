@@ -8262,6 +8262,8 @@
         var _fbLastFamilyToastAt = 0;
         var _firestoreInitialLoadComplete = false;
         var _firestoreTimeoutTimer = null;
+        // 자기 쓰기 에코 감지: _saveToFirestore 직전에 기록, _mergeRemoteData 시작에서 비교
+        var _lastWrittenToFirestore = null;
 
         function _hideLoadingSpinnerAndRender() {
             if (_firestoreTimeoutTimer) {
@@ -8648,6 +8650,14 @@
 
         function _mergeRemoteData(remote, meta) {
             meta = meta || {};
+            // ── 에코 감지: 내가 방금 쓴 데이터가 그대로 돌아온 경우 머지 생략 ──
+            var remoteCompare = _appDataForSyncCompare(remote);
+            if (_lastWrittenToFirestore !== null && remoteCompare === _lastWrittenToFirestore) {
+                _lastWrittenToFirestore = null;
+                _showFbStatus('synced');
+                return;
+            }
+            _lastWrittenToFirestore = null;
             var prevSnap = _appDataForSyncCompare(appData);
             var localData;
             try {
@@ -8791,11 +8801,16 @@
                 // 첫 동기화 완료 표시
                 localStorage.setItem('_fbSyncInit', '1');
                 if (needUpload) {
+                    // 디바운스 타이머 취소 — 동시 더블 라이트 방지
+                    clearTimeout(_fbDebounceTimer);
+                    _fbDebounceTimer = null;
                     _saveToFirestore(0);
                     showToast('🔄 로컬 데이터를 클라우드와 합쳤습니다');
                 }
             } else if (needUpload) {
-                // 오프라인 중 추가된 항목 업로드
+                // 오프라인 중 추가된 항목 업로드 — 디바운스 타이머 취소
+                clearTimeout(_fbDebounceTimer);
+                _fbDebounceTimer = null;
                 _saveToFirestore(0);
             }
 
@@ -8826,6 +8841,7 @@
             try {
                 cloudData._deviceLabel = new Date().getTimezoneOffset() <= -480 ? '🇰🇷 한국 폰' : '🇨🇦 캐나다 폰';
             } catch(e0) {}
+            _lastWrittenToFirestore = _appDataForSyncCompare(cloudData);
             return docRef.set(cloudData)
                 .then(function() {
                     try {
@@ -8839,6 +8855,21 @@
                 })
                 .catch(function(err) {
                     console.error('Firestore save error:', err);
+                    // permission-denied → 토큰 만료 가능성 → 강제 갱신 후 1회 재시도
+                    if (err && err.code === 'permission-denied' && retryAttempt === 0) {
+                        try {
+                            var cu = firebase.auth && firebase.auth().currentUser;
+                            if (cu) {
+                                return cu.getIdToken(true).then(function() {
+                                    return _saveToFirestore(1);
+                                }).catch(function() {
+                                    _showFbStatus('error');
+                                    showToast('⚠️ 인증이 만료됐어요. 앱을 새로고침해 주세요.', 4500);
+                                    throw err;
+                                });
+                            }
+                        } catch(e0) {}
+                    }
                     if (retryAttempt < 3) {
                         var delay = 500 * Math.pow(2, retryAttempt);
                         return new Promise(function(resolve) {
