@@ -9113,7 +9113,7 @@
             clearTimeout(syncTimer);
             syncTimer = setTimeout(() => {
                 if (account) {
-                    syncWithOneDrive();
+                    syncWithOneDrive({ silent: true, uploadAfterMerge: true });
                 }
             }, 3000);
         }
@@ -9282,6 +9282,13 @@
                             showToast(changed ? 'OneDrive 기존 데이터를 불러왔습니다' : 'OneDrive와 동기화 완료');
                         }
                         return changed;
+                    }).catch(err => {
+                        console.warn('OneDrive re-upload after merge failed:', err);
+                        updateMSALUI('logged_in');
+                        if (!options.silent) {
+                            showToast(changed ? 'OneDrive 기존 데이터는 불러왔습니다' : 'OneDrive 기존 데이터 확인 완료');
+                        }
+                        return changed;
                     });
                 }
                 updateMSALUI('logged_in');
@@ -9313,12 +9320,16 @@
                     if (!options.silent) showToast('OneDrive 동기화 완료');
                     return true;
                 }
-                updateMSALUI('error');
+                updateMSALUI(options.silent ? 'logged_in' : 'error');
                 throw new Error('동기화 실패 (' + response.status + ')');
             }).catch(err => {
                 console.error('Sync error:', err);
-                updateMSALUI('error');
-                if (!options.silent) showToast('동기화 실패: ' + err.message);
+                if (!options.silent) {
+                    updateMSALUI('error');
+                    showToast('동기화 실패: ' + err.message);
+                } else {
+                    updateMSALUI('logged_in');
+                }
                 throw err;
             });
         }
