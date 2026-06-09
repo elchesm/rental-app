@@ -6,15 +6,16 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#1e40af">
+    <meta name="theme-color" content="#2563EB">
     <meta name="format-detection" content="telephone=no">
     <title>원룸관리앱</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
-            --primary:        #1e40af;
+            --primary:        #2563EB;
+            --primary-dark:   #1D4ED8;
             --primary-light:  #3b82f6;
-            --primary-pale:   #EEF2FF;
+            --primary-pale:   #EFF6FF;
             --success:        #059669;
             --success-light:  #D1FAE5;
             --danger:         #DC2626;
@@ -30,9 +31,9 @@
             --bg-card:        #FFFFFF;
             --border-color:   #E2E8F0;
             --border-light:   #F1F5F9;
-            --shadow-sm:      0 1px 3px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04);
-            --shadow-md:      0 4px 16px rgba(30,64,175,0.10), 0 1px 4px rgba(15,23,42,0.06);
-            --shadow-lg:      0 8px 32px rgba(30,64,175,0.15), 0 2px 8px rgba(15,23,42,0.08);
+            --shadow-sm:      0 1px 3px rgba(15,23,42,0.05);
+            --shadow-md:      0 4px 16px rgba(15,23,42,0.08);
+            --shadow-lg:      0 8px 32px rgba(15,23,42,0.12);
             --radius-sm:      8px;
             --radius-md:      14px;
             --radius-lg:      20px;
@@ -45,6 +46,7 @@
             background: var(--bg-page);
             color: var(--text-primary);
             font-size: 16px; line-height: 1.5;
+            font-variant-numeric: tabular-nums;
             -webkit-user-select: none; user-select: none;
             -webkit-touch-callout: none;
         }
@@ -70,19 +72,20 @@
         .header-actions { display: flex; gap: 10px; }
         .icon-btn {
             background: white;
-            border: none;
-            color: #374151;
-            width: 58px; height: 58px;
+            border: 1px solid var(--border-color);
+            color: #334155;
+            width: 56px; height: 56px;
             border-radius: 16px;
             cursor: pointer;
             display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            box-shadow: var(--shadow-sm);
             transition: all 0.15s ease; touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
         }
-        .icon-btn .btn-icon { font-size: 20px; line-height: 1; }
-        .icon-btn .btn-label { font-size: 10px; font-weight: 700; color: #374151; white-space: nowrap; }
-        .icon-btn:active { transform: scale(0.93); box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+        .icon-btn .btn-icon { font-size: 20px; line-height: 1; display: flex; align-items: center; justify-content: center; }
+        .icon-btn .btn-icon svg { width: 21px; height: 21px; display: block; }
+        .icon-btn .btn-label { font-size: 10px; font-weight: 700; color: #334155; white-space: nowrap; }
+        .icon-btn:active { transform: scale(0.93); background: #F8FAFC; }
 
         .content-area {
             flex: 1; overflow-y: auto; overflow-x: hidden;
@@ -98,7 +101,7 @@
         .bottom-nav {
             display: flex; align-items: flex-end;
             background: white;
-            border-top: 1px solid #EAECF4;
+            border-top: 1px solid #E2E8F0;
             padding: 6px 4px max(10px, env(safe-area-inset-bottom));
             flex-shrink: 0; z-index: 100;
             box-shadow: 0 -2px 16px rgba(0,0,0,0.07);
@@ -106,7 +109,7 @@
         .nav-item {
             flex: 1; padding: 7px 2px 4px;
             text-align: center; cursor: pointer;
-            background: none; border: none; color: #9CA3AF;
+            background: none; border: none; color: #94A3B8;
             transition: all 0.2s ease;
             display: flex; flex-direction: column; align-items: center; gap: 3px;
             position: relative; touch-action: manipulation;
@@ -116,16 +119,11 @@
         }
         .nav-item .nav-label { font-size: 11px; }
         .nav-item.active {
-            color: white;
-            background: #5856D6;
-            box-shadow: 0 4px 14px rgba(88,86,214,0.35);
-            padding: 9px 8px 7px;
-            margin: -3px 2px 0;
-            border-radius: 18px;
+            color: var(--primary);
         }
-        .nav-item.active .nav-label { color: white; font-weight: 700; }
-        .nav-icon { font-size: 20px; line-height: 1; }
-        .nav-item.active .nav-icon { font-size: 21px; }
+        .nav-item.active .nav-label { color: var(--primary); font-weight: 700; }
+        .nav-icon { font-size: 20px; line-height: 1; display: flex; align-items: center; justify-content: center; }
+        .nav-icon svg { width: 23px; height: 23px; display: block; }
         .nav-label { font-size: 11px; font-weight: 600; letter-spacing: -0.2px; white-space: nowrap; }
         /* 수납 FAB 버튼 */
         .nav-item.nav-fab {
@@ -136,14 +134,15 @@
         }
         .nav-fab-circle {
             width: 52px; height: 52px; border-radius: 50%;
-            background: #5856D6;
+            background: var(--primary);
             display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 4px 16px rgba(88,86,214,0.45);
+            box-shadow: 0 4px 14px rgba(37,99,235,0.35);
             margin-top: -18px; position: relative;
         }
         .nav-item.nav-fab .nav-icon { font-size: 22px; color: white; }
-        .nav-item.nav-fab .nav-label { color: #5856D6; font-weight: 700; font-size: 11px; }
-        .nav-item.nav-fab.active .nav-label { color: #5856D6; }
+        .nav-item.nav-fab .nav-icon svg { width: 24px; height: 24px; }
+        .nav-item.nav-fab .nav-label { color: #2563EB; font-weight: 700; font-size: 11px; }
+        .nav-item.nav-fab.active .nav-label { color: #2563EB; }
         .nav-item.nav-fab .nav-badge {
             position: absolute; top: -2px; right: -2px;
             background: #EF4444; color: white;
@@ -181,13 +180,8 @@
             color: white; overflow: hidden; position: relative;
             min-width: 0;
         }
-        .kpi-tile::before {
-            content: ''; position: absolute;
-            top: -20px; right: -20px; width: 80px; height: 80px;
-            background: rgba(255,255,255,0.12); border-radius: 50%;
-        }
-        .kpi-blue  { background: linear-gradient(135deg, #1e3a8a, #2563eb); box-shadow: 0 4px 16px rgba(30,64,175,0.30); }
-        .kpi-green { background: linear-gradient(135deg, #065F46, #059669); box-shadow: 0 4px 16px rgba(5,150,105,0.30); }
+        .kpi-blue  { background: var(--primary); box-shadow: 0 2px 8px rgba(37,99,235,0.20); }
+        .kpi-green { background: var(--success); box-shadow: 0 2px 8px rgba(5,150,105,0.20); }
         .kpi-label {
             font-size: 12px; font-weight: 600; opacity: 0.88;
             margin-bottom: 6px; white-space: nowrap; position: relative; z-index: 1;
@@ -199,7 +193,7 @@
 
         /* stat-card (used in buildingDetail) */
         .stat-card {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            background: var(--primary);
             color: white; padding: 14px 10px; border-radius: var(--radius-md);
             margin: 8px; text-align: center; box-shadow: var(--shadow-md);
         }
@@ -226,8 +220,8 @@
             touch-action: manipulation; -webkit-tap-highlight-color: transparent;
         }
         .btn-block { width: calc(100% - 16px); margin: 0 8px 8px; display: flex; }
-        .btn-primary { background: var(--primary); color: white; box-shadow: 0 2px 8px rgba(30,64,175,0.25); }
-        .btn-primary:active { background: #1e3a8a; transform: scale(0.98); }
+        .btn-primary { background: var(--primary); color: white; box-shadow: 0 2px 8px rgba(37,99,235,0.25); }
+        .btn-primary:active { background: #1D4ED8; transform: scale(0.98); }
         .btn-secondary { background: #F1F5F9; color: var(--primary); border: 1.5px solid var(--border-color); }
         .btn-secondary:active { background: #E2E8F0; transform: scale(0.98); }
         .btn-danger { background: var(--danger); color: white; }
@@ -252,7 +246,7 @@
         .form-group select:focus,
         .form-group textarea:focus {
             outline: none; border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(30,64,175,0.10);
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.10);
         }
         .form-group textarea { resize: none; height: 80px; line-height: 1.5; }
 
@@ -301,7 +295,7 @@
         .list-item:active { background: #F8FAFC; }
         .list-item-avatar {
             width: 46px; height: 46px; border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            background: var(--primary);
             color: white; display: flex; align-items: center; justify-content: center;
             font-size: 19px; font-weight: 800; flex-shrink: 0;
         }
@@ -327,8 +321,9 @@
         }
         .tc-search-wrap .tc-search-icon {
             position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
-            font-size: 15px; pointer-events: none;
+            font-size: 15px; pointer-events: none; display: flex;
         }
+        .tc-search-wrap .tc-search-icon svg { width: 15px; height: 15px; display: block; }
         .tc-search-wrap input {
             width: 100%; padding: 11px 14px 11px 38px;
             border: 1.5px solid #E2E8F0; border-radius: 12px;
@@ -355,14 +350,14 @@
         .tc-card {
             background: white; border-radius: 16px;
             margin: 0 12px 12px;
-            border: 1px solid #EAECF4;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border: 1px solid #E2E8F0;
+            box-shadow: var(--shadow-sm);
             overflow: hidden;
         }
         .tc-card-header {
             display: flex; align-items: center; justify-content: space-between;
             padding: 10px 14px 9px;
-            background: #F8FAFC; border-bottom: 1px solid #EAECF4;
+            background: #F8FAFC; border-bottom: 1px solid #E2E8F0;
         }
         .tc-header-left { display: flex; align-items: center; gap: 6px; }
         .tc-header-icon { font-size: 14px; }
@@ -374,14 +369,14 @@
         }
         .tc-avatar {
             width: 52px; height: 52px; border-radius: 50%;
-            background: linear-gradient(135deg, #3B82F6, #1D4ED8);
+            background: #2563EB;
             color: white; font-size: 22px; font-weight: 900;
             display: flex; align-items: center; justify-content: center;
             flex-shrink: 0; margin-top: 2px;
         }
         .tc-info { flex: 1; min-width: 0; }
         .tc-name { font-size: 18px; font-weight: 900; color: #1E293B; margin-bottom: 5px; }
-        .tc-detail { font-size: 12.5px; color: #64748B; display: flex; align-items: center; gap: 5px; margin-top: 3px; line-height: 1.4; }
+        .tc-detail { font-size: 13px; color: #64748B; display: flex; align-items: center; gap: 5px; margin-top: 3px; line-height: 1.4; }
         .tc-rent-col { text-align: right; flex-shrink: 0; padding-top: 2px; }
         .tc-rent-label { font-size: 10px; color: #94A3B8; font-weight: 600; margin-bottom: 3px; white-space: nowrap; }
         .tc-rent-amount { font-size: 16px; font-weight: 900; color: #2563EB; white-space: nowrap; }
@@ -390,14 +385,14 @@
         .tc-meta-row {
             display: flex; align-items: center;
             padding: 9px 14px; border-top: 1px solid #F1F5F9;
-            font-size: 12.5px; color: #64748B;
+            font-size: 13px; color: #64748B;
         }
         .tc-meta-cell { display: flex; align-items: center; gap: 5px; flex: 1; }
         .tc-meta-divider { width: 1px; height: 14px; background: #E2E8F0; margin: 0 10px; flex-shrink: 0; }
         /* 메모 행 */
         .tc-memo-row {
             display: flex; align-items: flex-start; gap: 6px;
-            padding: 0 14px 10px; font-size: 12.5px; color: #64748B;
+            padding: 0 14px 10px; font-size: 13px; color: #64748B;
         }
         /* 누적 미납 행 (보증금 제외) */
         .tc-unpaid-row {
@@ -431,7 +426,7 @@
         .tc-past-card {
             background: white; border-radius: 14px;
             margin: 0 12px 10px; padding: 14px;
-            border: 1px solid #EAECF4;
+            border: 1px solid #E2E8F0;
             box-shadow: 0 1px 4px rgba(0,0,0,0.05);
             opacity: 0.8;
             transition: opacity 0.15s, box-shadow 0.15s, transform 0.12s;
@@ -443,10 +438,10 @@
             display: flex; align-items: center; justify-content: space-between;
             margin-bottom: 10px;
         }
-        .tc-past-name { font-size: 15px; font-weight: 700; color: #374151; }
+        .tc-past-name { font-size: 15px; font-weight: 700; color: #334155; }
         .tc-past-room { font-size: 12px; color: #94A3B8; margin-top: 2px; }
-        .tc-past-badge { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px; background: #F1F5F9; color: #6B7280; }
-        .tc-past-dates { font-size: 12px; color: #6B7280; }
+        .tc-past-badge { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px; background: #F1F5F9; color: #64748B; }
+        .tc-past-dates { font-size: 12px; color: #64748B; }
 
         /* ═══════════════════════════ TENANT DETAIL PAGE ═══════════════════════════ */
         .td-overlay {
@@ -482,13 +477,13 @@
         /* Hero card */
         .td-hero-card {
             background: white; margin: 0 12px 12px;
-            border-radius: 18px; border: 1px solid #EAECF4;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.07); overflow: hidden;
+            border-radius: 18px; border: 1px solid #E2E8F0;
+            box-shadow: var(--shadow-sm); overflow: hidden;
         }
         .td-hero-top {
             display: flex; align-items: center; justify-content: space-between;
             padding: 12px 14px 10px; background: #F8FAFC;
-            border-bottom: 1px solid #EAECF4;
+            border-bottom: 1px solid #E2E8F0;
         }
         .td-hero-building { font-size: 13px; font-weight: 700; color: #1E293B; display: flex; align-items: center; gap: 5px; }
         .td-hero-badge { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px; }
@@ -498,7 +493,7 @@
         }
         .td-avatar {
             width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
-            background: linear-gradient(135deg, #3B82F6, #1D4ED8);
+            background: #2563EB;
             color: white; font-size: 22px; font-weight: 900;
             display: flex; align-items: center; justify-content: center;
         }
@@ -535,8 +530,8 @@
         .td-section-title { font-size: 15px; font-weight: 800; color: #1E293B; margin-bottom: 8px; padding-left: 2px; }
         .td-section-card {
             background: white; border-radius: 16px;
-            border: 1px solid #EAECF4;
-            box-shadow: 0 1px 6px rgba(0,0,0,0.05); overflow: hidden;
+            border: 1px solid #E2E8F0;
+            box-shadow: var(--shadow-sm); overflow: hidden;
         }
         .td-amount-pair {
             display: flex; border-bottom: 1px solid #F1F5F9;
@@ -572,14 +567,14 @@
             -webkit-tap-highlight-color: transparent;
         }
         .td-rent-history-btn:active { background: #EFF6FF; }
-        .td-rent-history-btn.expanded { color: #6B7280; background: #F8FAFC; }
+        .td-rent-history-btn.expanded { color: #64748B; background: #F8FAFC; }
         /* Deposit refund badge */
         .td-deposit-ok { background: #DCFCE7; color: #166534; border-radius: 10px; padding: 8px 12px; margin: 8px 10px; font-size: 13px; font-weight: 700; }
         /* Bottom action bar */
         .td-bottom-bar {
             position: fixed; bottom: 0; left: 0; right: 0;
             padding: 12px 16px max(12px, env(safe-area-inset-bottom));
-            background: white; border-top: 1px solid #EAECF4;
+            background: white; border-top: 1px solid #E2E8F0;
             display: flex; gap: 10px; z-index: 1200;
         }
         .td-bottom-btn-danger {
@@ -603,7 +598,7 @@
             padding: 10px 14px; border-bottom: 1px solid #F8FAFC; font-size: 13px;
         }
         .td-rent-item:last-child { border-bottom: none; }
-        .td-rent-item-label { color: #374151; font-weight: 600; }
+        .td-rent-item-label { color: #334155; font-weight: 600; }
         .td-rent-item-sub { font-size: 11px; color: #94A3B8; margin-top: 2px; }
         .td-rent-item-right { text-align: right; }
         .td-rent-item-amount { font-size: 14px; font-weight: 800; color: #1E293B; }
@@ -624,28 +619,6 @@
         .toast.success { background: var(--success); }
 
         /* ═══════════════════════════ DASHBOARD ═══════════════════════════ */
-        .dash-hero {
-            background: linear-gradient(135deg, #1a3587 0%, #1e40af 60%, #2563eb 100%);
-            padding: 20px 16px 18px; margin: 0; position: relative; overflow: hidden;
-        }
-        .dash-hero::before {
-            content: ''; position: absolute;
-            top: -30px; right: -20px; width: 110px; height: 110px;
-            background: rgba(255,255,255,0.07); border-radius: 50%;
-        }
-        .dash-hero::after {
-            content: ''; position: absolute;
-            bottom: -40px; right: 40px; width: 80px; height: 80px;
-            background: rgba(255,255,255,0.05); border-radius: 50%;
-        }
-        .dash-hero-inner { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-        .dash-hero-left { flex: 1; min-width: 0; }
-        .dash-hero-right { flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
-        /* hero KPI */
-        .hero-kpi-label { font-size: 12px; color: rgba(255,255,255,0.72); font-weight: 500; margin-bottom: 2px; }
-        .hero-kpi-value { font-size: 26px; font-weight: 900; color: white; letter-spacing: -0.8px; line-height: 1.15; }
-        .hero-kpi-value.secondary { font-size: 22px; color: rgba(255,255,255,0.88); }
-        .hero-kpi-divider { border: none; border-top: 1px solid rgba(255,255,255,0.18); margin: 11px 0 10px; }
         /* compat hidden */
         .dash-month-row { display: none; }
         .collection-rate-label { display: none; }
@@ -701,7 +674,7 @@
         .annual-income  { color: #2563EB; }
         .annual-expense { color: #DC2626; }
         .annual-profit  { color: #16A34A; }
-        .annual-occ     { color: #7C3AED; }
+        .annual-occ     { color: var(--text-primary); }
         .annual-profit.loss { color: #DC2626; }
         /* Recent payments */
         .recent-pay-card {
@@ -952,9 +925,10 @@
         }
         .search-bar input:focus { border-color: var(--primary); outline: none; }
         .search-bar::before {
-            content: '🔍'; position: absolute;
+            content: ''; position: absolute;
             left: 12px; top: 50%; transform: translateY(-50%);
-            font-size: 15px;
+            width: 16px; height: 16px;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M21 21l-4.5-4.5'/%3E%3C/svg%3E") center/contain no-repeat;
         }
 
         .filter-btn {
@@ -967,7 +941,7 @@
         }
         .filter-btn.active {
             background: var(--primary); border-color: var(--primary);
-            color: white; box-shadow: 0 2px 8px rgba(30,64,175,0.22);
+            color: white; box-shadow: 0 2px 8px rgba(37,99,235,0.22);
         }
 
         .tab-buttons {
@@ -1036,7 +1010,7 @@
         .room-cell.occupied    { background: #DBEAFE; border-color: #93C5FD; }
         .room-cell.vacant      { background: #DCFCE7; border-color: #86EFAC; }
         .room-cell.maintenance { background: #FEF9C3; border-color: #FDE047; }
-        .room-cell-number  { font-size: 17px; font-weight: 800; margin-bottom: 5px; color: #1E3A8A; }
+        .room-cell-number  { font-size: 17px; font-weight: 800; margin-bottom: 5px; color: #1D4ED8; }
         .room-cell-status  { font-size: 13px; font-weight: 600; color: var(--text-primary); }
         .room-cell-tenant  { font-size: 12px; font-weight: 700; color: var(--primary); margin-top: 3px; }
 
@@ -1176,8 +1150,8 @@
         .dash-donut-row {
             display: flex; margin: 12px 12px 0;
             background: white; border-radius: 20px;
-            border: 1px solid #EAECF4;
-            box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+            border: 1px solid #E2E8F0;
+            box-shadow: var(--shadow-sm);
             overflow: hidden;
         }
         .dash-donut-half {
@@ -1187,7 +1161,7 @@
             background: transparent; min-width: 0;
         }
         .dash-donut-half:first-child {
-            border-right: 1px solid #EAECF4;
+            border-right: 1px solid #E2E8F0;
         }
         .dash-donut-half.dash-donut-curr { background: transparent; }
         .dash-donut-month {
@@ -1195,7 +1169,7 @@
             color: #94A3B8; letter-spacing: 0.2px;
         }
         .dash-donut-curr .dash-donut-month {
-            color: #3B82F6;
+            color: var(--primary);
         }
         .dash-donut-detail {
             width: 100%; display: flex; flex-direction: column; gap: 5px;
@@ -1337,7 +1311,7 @@
             border-bottom: 2.5px solid transparent; transition: all 0.15s;
             -webkit-tap-highlight-color: transparent;
         }
-        .tax-tab-btn.active { color: #0F766E; border-bottom-color: #0F766E; background: white; }
+        .tax-tab-btn.active { color: #2563EB; border-bottom-color: #2563EB; background: white; }
         .tax-card {
             background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px;
             padding: 14px; margin-bottom: 10px;
@@ -1347,7 +1321,7 @@
         .tax-row { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-bottom: 1px solid #F1F5F9; }
         .tax-row:last-child { border-bottom: none; }
         .tax-row label { display: flex; align-items: center; gap: 8px; flex: 1; cursor: pointer; font-size: 13px; min-width: 0; }
-        .tax-row input[type=checkbox] { width: 18px; height: 18px; accent-color: #0F766E; flex-shrink: 0; }
+        .tax-row input[type=checkbox] { width: 18px; height: 18px; accent-color: #2563EB; flex-shrink: 0; }
         .tax-row-amt { font-weight: 700; color: #1E293B; white-space: nowrap; font-size: 13px; }
         .tax-row-amt.excluded { color: #CBD5E1; text-decoration: line-through; }
         .tax-group-header {
@@ -1369,7 +1343,7 @@
             padding: 8px 12px; font-size: 14px;
         }
         .tax-final {
-            background: linear-gradient(135deg,#0F766E,#0EA5A4); color: white;
+            background: #2563EB; color: white;
             border-radius: 12px; padding: 16px 18px; margin-top: 10px;
         }
         .tax-final .tax-card-title { color: rgba(255,255,255,0.85); }
@@ -1382,15 +1356,15 @@
         .tax-page-card {
             background: white; border: 1px solid #E2E8F0; border-radius: 12px;
             padding: 14px 16px; margin: 0 12px 12px;
-            box-shadow: 0 1px 3px rgba(15,118,110,0.04);
+            box-shadow: 0 1px 3px rgba(37,99,235,0.04);
         }
         .tax-page-card-title {
-            font-size: 13px; font-weight: 800; color: #0F766E;
+            font-size: 13px; font-weight: 800; color: #2563EB;
             margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
         }
         .tax-page-card-title .pill {
             font-size: 10px; padding: 2px 8px; border-radius: 10px;
-            background: #F0FDFA; color: #0F766E; font-weight: 700;
+            background: #EFF6FF; color: #2563EB; font-weight: 700;
         }
         /* 세무 설정 카드 */
         .tax-setup-card {
@@ -1408,7 +1382,7 @@
         }
         /* 큰 임대소득 카드 */
         .tax-income-final {
-            background: linear-gradient(135deg,#0F766E,#0EA5A4);
+            background: #2563EB;
             color: white; padding: 18px 20px;
         }
         .tax-income-final .label { font-size: 12px; opacity: 0.9; }
@@ -1422,12 +1396,12 @@
             background: #F8FAFC; border: 2px solid transparent; border-radius: 10px;
             padding: 10px 12px;
         }
-        .tax-sim-card.recommended { border-color: #0F766E; background: #F0FDFA; }
+        .tax-sim-card.recommended { border-color: #2563EB; background: #EFF6FF; }
         .tax-sim-label { font-size: 11px; color: #64748B; font-weight: 700; }
         .tax-sim-amount { font-size: 17px; font-weight: 800; color: #1E293B; margin-top: 2px; }
         .tax-sim-badge {
             display: inline-block; padding: 2px 6px; font-size: 9px;
-            background: #0F766E; color: white; border-radius: 8px; font-weight: 700;
+            background: #2563EB; color: white; border-radius: 8px; font-weight: 700;
             margin-left: 4px;
         }
         /* 신고 의무 카드 */
@@ -1482,9 +1456,9 @@
         .tax-trend-bar {
             width: 12px; border-radius: 2px 2px 0 0;
         }
-        .tax-trend-bar.income { background: linear-gradient(180deg,#0EA5A4,#0F766E); }
-        .tax-trend-bar.expense { background: linear-gradient(180deg,#F87171,#DC2626); }
-        .tax-trend-bar.profit { background: linear-gradient(180deg,#3B82F6,#1E40AF); }
+        .tax-trend-bar.income { background: #2563EB; }
+        .tax-trend-bar.expense { background: #DC2626; }
+        .tax-trend-bar.profit { background: #2563EB; }
         .tax-trend-label { font-size: 10px; font-weight: 700; color: #64748B; }
 
         /* --- 세금신고 준비센터 추가 스타일 --- */
@@ -1499,7 +1473,7 @@
         .filing-status-badge.status-collecting { background: #FEF3C7; color: #D97706; border: 1px solid #FCD34D; }
         .filing-status-badge.status-reviewing { background: #DBEAFE; color: #1D4ED8; border: 1px solid #BFDBFE; }
         .filing-status-badge.status-completed { background: #D1FAE5; color: #065F46; border: 1px solid #A7F3D0; }
-        .filing-status-badge.status-exempt { background: #F3F4F6; color: #374151; border: 1px solid #E5E7EB; }
+        .filing-status-badge.status-exempt { background: #F1F5F9; color: #334155; border: 1px solid #E2E8F0; }
 
         .tax-warning-card {
             background: #FFF5F5;
@@ -1543,8 +1517,8 @@
             box-shadow: 0 0 0 1px #CBD5E1;
         }
         .tax-timeline-item.completed .tax-timeline-marker {
-            background: #0F766E;
-            box-shadow: 0 0 0 1px #0D9488;
+            background: #2563EB;
+            box-shadow: 0 0 0 1px #1D4ED8;
         }
         .tax-timeline-content {
             display: flex;
@@ -1649,8 +1623,8 @@
         .doc-checklist-optional-badge {
             font-size: 9px;
             padding: 2px 4px;
-            background: #F3F4F6;
-            color: #6B7280;
+            background: #F1F5F9;
+            color: #64748B;
             border-radius: 4px;
             font-weight: 700;
         }
@@ -1669,9 +1643,9 @@
             border-color: #A7F3D0;
         }
         .doc-checklist-status-select.na {
-            background: #F3F4F6;
-            color: #374151;
-            border-color: #E5E7EB;
+            background: #F1F5F9;
+            color: #334155;
+            border-color: #E2E8F0;
         }
         .doc-checklist-status-select.missing {
             background: #FEF3C7;
@@ -1714,11 +1688,11 @@
         }
         .tax-vault-s-미확보 { background:#FEF2F2; color:#EF4444; border:1px solid rgba(239,68,68,0.25); }
         .tax-vault-s-준비중 { background:#FEF9C3; color:#D97706; border:1px solid rgba(217,119,6,0.25); }
-        .tax-vault-s-업로드완료 { background:#F0FDFA; color:#0F766E; border:1px solid rgba(15,118,110,0.25); }
+        .tax-vault-s-업로드완료 { background:#EFF6FF; color:#2563EB; border:1px solid rgba(37,99,235,0.25); }
         .tax-vault-s-제출완료 { background:#EFF6FF; color:#1D4ED8; border:1px solid rgba(29,78,216,0.25); }
         .tax-vault-storage-warn {
             background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 8px;
-            padding: 8px 12px; font-size: 11.5px; color: #92400E; margin-bottom: 10px; line-height: 1.5;
+            padding: 8px 12px; font-size: 12px; color: #92400E; margin-bottom: 10px; line-height: 1.5;
         }
         .tax-vault-missing-row {
             display: flex; align-items: center; gap: 8px;
@@ -1743,9 +1717,9 @@
         .tax-status-danger { background:#FEE2E2; color:#991B1B; }
         .tax-quick-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:0 12px 12px; }
         .tax-quick-btn { background:white; border:2px dashed #CBD5E1; border-radius:12px; padding:13px 10px; text-align:center; font-size:12px; font-weight:700; color:#475569; cursor:pointer; line-height:1.4; -webkit-tap-highlight-color:transparent; touch-action:manipulation; transition:border-color 0.15s,color 0.15s,background 0.15s; }
-        .tax-quick-btn:active { border-color:#0F766E; color:#0F766E; background:#F0FDFA; }
-        .tax-building-card { background:white; border:1px solid #E2E8F0; border-radius:14px; margin:0 12px 12px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.04); }
-        .tax-building-header { background:linear-gradient(135deg,#F8FAFC,#F0F9FF); padding:11px 14px; border-bottom:1px solid #E2E8F0; display:flex; align-items:center; gap:10px; }
+        .tax-quick-btn:active { border-color:#2563EB; color:#2563EB; background:#EFF6FF; }
+        .tax-building-card { background:white; border:1px solid #E2E8F0; border-radius:14px; margin:0 12px 12px; overflow:hidden; box-shadow:var(--shadow-sm); }
+        .tax-building-header { background:#F8FAFC; padding:11px 14px; border-bottom:1px solid #E2E8F0; display:flex; align-items:center; gap:10px; }
         .tax-building-body { padding:12px 14px 10px; }
         .tax-building-section-title { font-size:10px; font-weight:800; color:#64748B; text-transform:uppercase; letter-spacing:0.07em; margin-bottom:8px; margin-top:2px; }
         .tax-input-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px; }
@@ -1755,28 +1729,28 @@
         .tax-input-group input[type="text"],
         .tax-input-group select,
         .tax-input-group textarea { width:100%; padding:7px 10px; border:1.5px solid #E2E8F0; border-radius:8px; font-size:13px; color:#1E293B; background:white; box-sizing:border-box; font-family:inherit; transition:border-color 0.15s; }
-        .tax-input-group input:focus, .tax-input-group select:focus, .tax-input-group textarea:focus { outline:none; border-color:#0F766E; box-shadow:0 0 0 2px rgba(15,118,110,0.1); }
+        .tax-input-group input:focus, .tax-input-group select:focus, .tax-input-group textarea:focus { outline:none; border-color:#2563EB; box-shadow:0 0 0 2px rgba(37,99,235,0.1); }
         .tax-evidence-grid { display:flex; flex-wrap:wrap; gap:6px; margin-top:4px; }
         .tax-evidence-chip { padding:5px 12px; border:1.5px solid #E2E8F0; border-radius:20px; font-size:12px; font-weight:600; color:#64748B; cursor:pointer; background:white; transition:all 0.15s; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
-        .tax-evidence-chip.active { background:#0F766E; color:white; border-color:#0F766E; }
+        .tax-evidence-chip.active { background:#2563EB; color:white; border-color:#2563EB; }
         .tax-evidence-chip.active-none { background:#EF4444; color:white; border-color:#EF4444; }
         .tax-progress-bar { height:7px; background:#E2E8F0; border-radius:4px; overflow:hidden; margin-top:6px; }
         .tax-progress-fill { height:100%; border-radius:4px; transition:width 0.4s ease; }
-        .tax-progress-fill.good { background:linear-gradient(90deg,#10B981,#0F766E); }
-        .tax-progress-fill.warn { background:linear-gradient(90deg,#F59E0B,#D97706); }
-        .tax-progress-fill.bad { background:linear-gradient(90deg,#EF4444,#DC2626); }
+        .tax-progress-fill.good { background:#059669; }
+        .tax-progress-fill.warn { background:#D97706; }
+        .tax-progress-fill.bad { background:#DC2626; }
         .tax-warn-item { display:flex; align-items:flex-start; gap:8px; padding:8px 10px; border-radius:8px; margin-bottom:6px; font-size:12px; line-height:1.5; }
         .tax-warn-danger { background:#FEE2E2; color:#991B1B; }
         .tax-warn-warning { background:#FEF9C3; color:#854D0E; }
-        .tax-warn-info { background:#DBEAFE; color:#1E40AF; }
+        .tax-warn-info { background:#DBEAFE; color:#1D4ED8; }
         .tax-warn-ok { background:#D1FAE5; color:#065F46; }
         .tax-sim-box { border:1.5px solid #E2E8F0; border-radius:12px; padding:12px 14px; margin-bottom:8px; background:white; position:relative; }
-        .tax-sim-box.highlighted { border-color:#0F766E; background:#F0FDFA; }
-        .tax-sim-badge-rec { position:absolute; top:-8px; right:12px; background:#0F766E; color:white; font-size:9px; padding:2px 7px; border-radius:4px; font-weight:700; }
+        .tax-sim-box.highlighted { border-color:#2563EB; background:#EFF6FF; }
+        .tax-sim-badge-rec { position:absolute; top:-8px; right:12px; background:#2563EB; color:white; font-size:9px; padding:2px 7px; border-radius:4px; font-weight:700; }
         .tax-sim-label { font-size:11px; color:#64748B; font-weight:700; margin-bottom:4px; }
         .tax-sim-amount { font-size:18px; font-weight:900; color:#1E293B; }
         .tax-sim-breakdown { font-size:10px; color:#94A3B8; margin-top:3px; line-height:1.4; }
-        .tax-action-tip { background:linear-gradient(135deg,#EFF6FF,#F0FDFA); border:1px solid #BFDBFE; border-radius:10px; padding:10px 12px; font-size:12px; color:#1E40AF; line-height:1.5; margin-bottom:8px; }
+        .tax-action-tip { background:#EFF6FF; border:1px solid #BFDBFE; border-radius:10px; padding:10px 12px; font-size:12px; color:#1D4ED8; line-height:1.5; margin-bottom:8px; }
         .tax-expense-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:4px; }
         details.tax-page-card > summary { list-style:none; cursor:pointer; }
         details.tax-page-card > summary::-webkit-details-marker { display:none; }
@@ -1795,9 +1769,11 @@
             touch-action: manipulation; -webkit-tap-highlight-color: transparent;
             box-shadow: var(--shadow-sm);
         }
-        .quick-btn:active { background: #EEF2FF; border-color: var(--primary); transform: scale(0.96); }
-        .quick-btn span:first-child { font-size: 24px; line-height: 1; }
+        .quick-btn:active { background: var(--primary-pale); border-color: var(--primary); transform: scale(0.96); }
+        .quick-btn span:first-child { font-size: 24px; line-height: 1; display: flex; color: #475569; }
+        .quick-btn span:first-child svg { width: 23px; height: 23px; display: block; }
         .quick-btn span:last-child { font-size: 12px; font-weight: 700; color: var(--text-primary); }
+        .quick-btn-primary span:first-child { color: white; }
         /* ── 건물별 요약 카드 (대시보드) ── */
         .dash-bld-card {
             background: white; border: 1px solid var(--border-color);
@@ -1827,10 +1803,10 @@
         .dash-bld-metric-val.warning { color: var(--warning); }
         /* SMS 입금문자 빠른 진입용 강조 버튼 */
         .quick-btn-primary {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            background: var(--primary);
             border-color: var(--primary);
             color: white;
-            box-shadow: 0 4px 14px rgba(30,64,175,0.22);
+            box-shadow: 0 4px 14px rgba(37,99,235,0.22);
         }
         .quick-btn-primary span:last-child { color: white; }
         .quick-btn-primary:active { background: var(--primary); border-color: var(--primary); }
@@ -1842,10 +1818,10 @@
         .rent-sms-btn {
             flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
             padding: 11px 14px; border-radius: var(--radius-md);
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            background: var(--primary);
             color: white; border: none; cursor: pointer;
             font-size: 14px; font-weight: 700;
-            box-shadow: 0 4px 14px rgba(30,64,175,0.22);
+            box-shadow: 0 4px 14px rgba(37,99,235,0.22);
             transition: transform 0.12s ease;
             touch-action: manipulation; -webkit-tap-highlight-color: transparent;
         }
@@ -1950,11 +1926,11 @@
     <!-- Initial Loading Spinner for Firebase Synchronization -->
     <div id="initialAppLoadingOverlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#ffffff;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,sans-serif;transition:opacity 0.3s ease;">
         <div style="display:flex;flex-direction:column;align-items:center;gap:16px;">
-            <div style="width:40px;height:40px;border:3px solid #E2E8F0;border-top-color:#0F766E;border-radius:50%;animation:spin 1s linear infinite;"></div>
+            <div style="width:40px;height:40px;border:3px solid #E2E8F0;border-top-color:#2563EB;border-radius:50%;animation:spin 1s linear infinite;"></div>
             <style>
                 @keyframes spin { to { transform: rotate(360deg); } }
             </style>
-            <div style="font-size:15px;color:#0F766E;font-weight:600;letter-spacing:-0.01em;">데이터를 동기화하는 중입니다...</div>
+            <div style="font-size:15px;color:#2563EB;font-weight:600;letter-spacing:-0.01em;">데이터를 동기화하는 중입니다...</div>
         </div>
     </div>
 
@@ -1970,7 +1946,7 @@
             </div>
             <div class="header-actions">
                 <button class="icon-btn" onclick="openModal('addBuildingModal')" title="건물 추가">
-                    <span class="btn-icon">🏢</span>
+                    <span class="btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="1"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01M12 6h.01M16 6h.01M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01"/></svg></span>
                     <span class="btn-label">건물관리</span>
                 </button>
             </div>
@@ -1988,12 +1964,12 @@
                     <div class="dash-donut-half">
                         <div class="dash-donut-month" id="prevMonthLabel">지난달</div>
                         <svg width="150" height="150" viewBox="0 0 150 150" style="display:block;flex-shrink:0;max-width:100%;">
-                            <circle cx="75" cy="75" r="60" fill="none" stroke="rgba(99,102,241,0.12)" stroke-width="11"/>
-                            <circle cx="75" cy="75" r="60" fill="none" stroke="#6366F1" stroke-width="11"
+                            <circle cx="75" cy="75" r="60" fill="none" stroke="rgba(100,116,139,0.15)" stroke-width="9"/>
+                            <circle cx="75" cy="75" r="60" fill="none" stroke="#94A3B8" stroke-width="9"
                                 stroke-dasharray="376.9" stroke-dashoffset="376.9"
                                 stroke-linecap="round" transform="rotate(-90 75 75)"
                                 id="prevDonutArc"/>
-                            <text x="75" y="75" text-anchor="middle" dominant-baseline="middle" fill="#4338CA" font-size="36" font-weight="900" id="prevDonutPct" style="font-family:inherit;">0%</text>
+                            <text x="75" y="75" text-anchor="middle" dominant-baseline="middle" fill="#64748B" font-size="34" font-weight="800" id="prevDonutPct" style="font-family:inherit;">0%</text>
                         </svg>
                         <div class="dash-donut-detail">
                             <div class="ddd-row">
@@ -2005,11 +1981,11 @@
                                 <span class="ddd-val" id="prevMonthExpected">-</span>
                             </div>
                             <div class="ddd-row" id="prevUnpaidRow" style="display:none;">
-                                <span class="ddd-label">⚠️ 미납</span>
+                                <span class="ddd-label">미납</span>
                                 <span class="ddd-val ddd-val-danger" id="prevUnpaidInfo">-</span>
                             </div>
                             <div class="ddd-row" id="prevPaidRow" style="display:none;">
-                                <span class="ddd-label">✅ 완료</span>
+                                <span class="ddd-label">완료</span>
                                 <span class="ddd-val ddd-val-success" id="prevPaidInfo">전체 완료!</span>
                             </div>
                         </div>
@@ -2018,12 +1994,12 @@
                     <div class="dash-donut-half dash-donut-curr">
                         <div class="dash-donut-month" id="currMonthLabel">이번달</div>
                         <svg width="150" height="150" viewBox="0 0 150 150" style="display:block;flex-shrink:0;max-width:100%;">
-                            <circle cx="75" cy="75" r="60" fill="none" stroke="rgba(59,130,246,0.12)" stroke-width="11"/>
-                            <circle cx="75" cy="75" r="60" fill="none" stroke="#3B82F6" stroke-width="11"
+                            <circle cx="75" cy="75" r="60" fill="none" stroke="rgba(37,99,235,0.12)" stroke-width="9"/>
+                            <circle cx="75" cy="75" r="60" fill="none" stroke="#2563EB" stroke-width="9"
                                 stroke-dasharray="376.9" stroke-dashoffset="376.9"
                                 stroke-linecap="round" transform="rotate(-90 75 75)"
                                 id="donutArc"/>
-                            <text x="75" y="75" text-anchor="middle" dominant-baseline="middle" fill="#1D4ED8" font-size="36" font-weight="900" id="donutPct" style="font-family:inherit;">0%</text>
+                            <text x="75" y="75" text-anchor="middle" dominant-baseline="middle" fill="#2563EB" font-size="34" font-weight="800" id="donutPct" style="font-family:inherit;">0%</text>
                         </svg>
                         <div class="dash-donut-detail">
                             <div class="ddd-row">
@@ -2035,11 +2011,11 @@
                                 <span class="ddd-val" id="monthlyExpectedDisplay">-</span>
                             </div>
                             <div class="ddd-row" id="currUnpaidRow" style="display:none;">
-                                <span class="ddd-label">⚠️ 미납</span>
+                                <span class="ddd-label">미납</span>
                                 <span class="ddd-val ddd-val-danger" id="currUnpaidInfo">-</span>
                             </div>
                             <div class="ddd-row" id="currPaidRow" style="display:none;">
-                                <span class="ddd-label">✅ 완료</span>
+                                <span class="ddd-label">완료</span>
                                 <span class="ddd-val ddd-val-success" id="currPaidInfo">-</span>
                             </div>
                         </div>
@@ -2077,7 +2053,7 @@
                 <!-- ③ 미납 현황 (다달 히스토리) -->
                 <div class="dash-section" style="margin-top:14px;">
                     <div class="dash-section-header">
-                        <span class="dash-section-label">💸 미납 현황</span>
+                        <span class="dash-section-label">미납 현황</span>
                         <span class="dash-section-more" onclick="switchPage('rentPage')">수납현황 ›</span>
                     </div>
                     <div class="unpaid-history-scroll" id="unpaidHistoryRow">
@@ -2088,7 +2064,7 @@
                 <!-- ③ 계약만료 임박 -->
                 <div class="dash-section" id="expirySection" style="display:none;margin-top:14px;">
                     <div class="dash-section-header">
-                        <span class="dash-section-label">🔔 계약만료 임박</span>
+                        <span class="dash-section-label">계약만료 임박</span>
                         <span class="dash-section-more" onclick="switchPage('tenantsPage')">전체 ›</span>
                     </div>
                     <div class="info-card-wrap">
@@ -2099,7 +2075,7 @@
                 <!-- ④ 보증금 미반환 -->
                 <div class="dash-section" id="depositPendingSection" style="display:none;margin-top:14px;">
                     <div class="dash-section-header">
-                        <span class="dash-section-label">🏦 보증금 미반환</span>
+                        <span class="dash-section-label">보증금 미반환</span>
                         <span class="dash-section-more" onclick="switchPage('tenantsPage')">세입자 목록 ›</span>
                     </div>
                     <div class="info-card-wrap">
@@ -2110,7 +2086,7 @@
                 <!-- ⑤ 공실 현황 -->
                 <div class="dash-section" id="vacantSectionNew" style="display:none;margin-top:14px;">
                     <div class="dash-section-header">
-                        <span class="dash-section-label">🏠 공실 현황<span id="vacantKpiBadge" class="vacant-kpi-badge hidden" aria-live="polite"></span></span>
+                        <span class="dash-section-label">공실 현황<span id="vacantKpiBadge" class="vacant-kpi-badge hidden" aria-live="polite"></span></span>
                         <span class="dash-section-more" onclick="openModal('addTenantModal')">세입자 추가 ›</span>
                     </div>
                     <div class="info-card-wrap">
@@ -2124,7 +2100,7 @@
                 <!-- ⑤ 수리 요청 현황 -->
                 <div class="dash-section" id="maintenanceSectionNew" style="display:none;margin-top:14px;">
                     <div class="dash-section-header">
-                        <span class="dash-section-label">🔧 수리요청 현황</span>
+                        <span class="dash-section-label">수리요청 현황</span>
                     </div>
                     <div class="info-card-wrap">
                         <div id="maintenanceListNew"></div>
@@ -2138,22 +2114,22 @@
                     </div>
                     <div class="dashboard-actions-new">
                         <button class="quick-btn quick-btn-primary" onclick="openSmsModal()" aria-label="입금문자 붙여넣기로 수납 처리">
-                            <span>📱</span><span>입금문자</span>
+                            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M11 18h2"/></svg></span><span>입금문자</span>
                         </button>
                         <button class="quick-btn" onclick="openModal('addTenantModal')">
-                            <span>👤</span><span>세입자 추가</span>
+                            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg></span><span>세입자 추가</span>
                         </button>
                         <button class="quick-btn" onclick="switchPage('rentPage')">
-                            <span>💰</span><span>월세기록</span>
+                            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="13" rx="2"/><circle cx="12" cy="12.5" r="3"/><path d="M2 10h2M20 10h2"/></svg></span><span>월세기록</span>
                         </button>
                         <button class="quick-btn" onclick="openModal('addExpenseModal')">
-                            <span>📋</span><span>지출기록</span>
+                            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg></span><span>지출기록</span>
                         </button>
                         <button class="quick-btn" onclick="switchPage('tenantsPage')">
-                            <span>👥</span><span>세입자 목록</span>
+                            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9.5" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span>세입자 목록</span>
                         </button>
                         <button class="quick-btn" onclick="switchPage('expensesPage')">
-                            <span>📊</span><span>지출현황</span>
+                            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg></span><span>지출현황</span>
                         </button>
                     </div>
                 </div>
@@ -2185,7 +2161,7 @@
                     <span style="font-size:18px;">+</span> 세입자 추가
                 </button>
                 <div class="tc-search-wrap">
-                    <span class="tc-search-icon">🔍</span>
+                    <span class="tc-search-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.5-4.5"/></svg></span>
                     <input type="text" id="tenantSearch" placeholder="이름 또는 방번호로 검색" oninput="renderTenants()" style="-webkit-user-select:text;user-select:text;">
                 </div>
                 <div style="display:flex;align-items:center;justify-content:space-between;padding:0 12px;margin-bottom:4px;">
@@ -2212,7 +2188,7 @@
             <div class="page" id="rentPage">
                 <div class="rent-sms-bar">
                     <button type="button" class="rent-sms-btn" onclick="openSmsModal()" aria-label="입금문자 붙여넣기로 수납 처리">
-                        <span style="font-size:18px;">📱</span>
+                        <span style="display:flex;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M11 18h2"/></svg></span>
                         <span>입금문자 붙여넣기 → 자동 수납</span>
                     </button>
                 </div>
@@ -2257,8 +2233,8 @@
                 <div id="expensesList"></div>
                 <div id="expenseActionBar" class="expense-action-bar" style="display:none;">
                     <span id="expenseSelCount">0개 선택</span>
-                    <button class="btn-print" onclick="printSelectedReceipts()">🖨️ 프린트</button>
-                    <button class="btn-share" onclick="shareSelectedReceipts()">💬 공유</button>
+                    <button class="btn-print" onclick="printSelectedReceipts()">프린트</button>
+                    <button class="btn-share" onclick="shareSelectedReceipts()">공유</button>
                     <button class="btn-cancel-sel" onclick="clearExpenseSelection()">✕</button>
                 </div>
             </div>
@@ -2272,7 +2248,7 @@
                 </div>
 
                 <!-- Year Selector -->
-                <div style="background:linear-gradient(135deg,#0F766E,#0EA5A4);color:white;padding:14px 16px;border-radius:14px;margin:8px 12px 12px;box-shadow:0 4px 14px rgba(15,118,110,0.25);">
+                <div style="background:#2563EB;color:white;padding:14px 16px;border-radius:14px;margin:8px 12px 12px;box-shadow:0 4px 14px rgba(37,99,235,0.25);">
                     <div style="display:flex;align-items:center;gap:10px;">
                         <button onclick="_taxPagePrevYear()" style="background:rgba(255,255,255,0.2);border:none;color:white;border-radius:8px;padding:6px 12px;font-size:16px;cursor:pointer;-webkit-tap-highlight-color:transparent;">◀</button>
                         <div style="flex:1;text-align:center;">
@@ -2288,16 +2264,16 @@
 
                 <!-- 2. 빠른 입력 카드 -->
                 <div class="tax-quick-grid">
-                    <button class="tax-quick-btn" onclick="_taxAddBuilding('studio')">🏠 원룸/주택<br>수입 추가</button>
-                    <button class="tax-quick-btn" onclick="_taxAddBuilding('commercial')">🏬 상가/기타<br>건물 추가</button>
-                    <button class="tax-quick-btn" onclick="_taxOpenOtherIncomeDetails()">💼 근로/기타<br>소득 입력</button>
-                    <button class="tax-quick-btn" onclick="_taxOpenBasicInfoDetails()">📋 기본정보<br>확인</button>
+                    <button class="tax-quick-btn" onclick="_taxAddBuilding('studio')">원룸/주택<br>수입 추가</button>
+                    <button class="tax-quick-btn" onclick="_taxAddBuilding('commercial')">상가/기타<br>건물 추가</button>
+                    <button class="tax-quick-btn" onclick="_taxOpenOtherIncomeDetails()">근로/기타<br>소득 입력</button>
+                    <button class="tax-quick-btn" onclick="_taxOpenBasicInfoDetails()">기본정보<br>확인</button>
                 </div>
 
                 <!-- 3. 신고 기본정보 -->
                 <details class="tax-page-card" id="taxBasicInfoDetails" style="margin:0 12px 12px;">
-                    <summary style="font-size:13px;font-weight:800;color:#0F766E;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:2px 0;">
-                        <span>📋 신고 기본정보</span>
+                    <summary style="font-size:13px;font-weight:800;color:#2563EB;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:2px 0;">
+                        <span>신고 기본정보</span>
                         <span style="font-size:11px;font-weight:500;color:#94A3B8;" id="taxBasicInfoSummary">탭하여 열기</span>
                     </summary>
                     <div id="taxBasicInfoContent" style="margin-top:14px;"></div>
@@ -2308,8 +2284,8 @@
 
                 <!-- 5. 기타소득/근로소득 -->
                 <details class="tax-page-card" id="taxOtherIncomeDetails" style="margin:0 12px 12px;">
-                    <summary style="font-size:13px;font-weight:800;color:#0F766E;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:2px 0;">
-                        <span>💼 기타소득 / 근로소득</span>
+                    <summary style="font-size:13px;font-weight:800;color:#2563EB;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:2px 0;">
+                        <span>기타소득 / 근로소득</span>
                         <span style="font-size:11px;font-weight:500;color:#94A3B8;" id="taxOtherIncomeSummary">탭하여 열기</span>
                     </summary>
                     <div id="taxOtherIncomeContent" style="margin-top:14px;"></div>
@@ -2324,13 +2300,13 @@
                 <!-- 8. 세금서류 보관함 (Tax Document Vault) -->
                 <div class="tax-page-card" id="taxDocumentsSection" style="margin:0 12px 12px;">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-                        <div class="tax-page-card-title">🗄️ 세금서류 보관함</div>
+                        <div class="tax-page-card-title">세금서류 보관함</div>
                         <div style="display:flex;gap:6px;align-items:center;">
-                            <button class="btn btn-secondary" style="font-size:10px;padding:4px 8px;min-width:auto;" onclick="_exportTaxDocumentChecklistCSV()">📊 체크리스트 CSV</button>
-                            <button class="btn btn-primary" style="font-size:11px;padding:5px 10px;min-width:auto;background:#0F766E;" onclick="_taxVaultAddDoc()">📎 서류 추가</button>
+                            <button class="btn btn-secondary" style="font-size:10px;padding:4px 8px;min-width:auto;" onclick="_exportTaxDocumentChecklistCSV()">체크리스트 CSV</button>
+                            <button class="btn btn-primary" style="font-size:11px;padding:5px 10px;min-width:auto;background:#2563EB;" onclick="_taxVaultAddDoc()">서류 추가</button>
                         </div>
                     </div>
-                    <div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;padding:9px 12px;margin-bottom:6px;font-size:10.5px;color:#92400E;line-height:1.5;">
+                    <div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;padding:9px 12px;margin-bottom:6px;font-size:11px;color:#92400E;line-height:1.5;">
                         🔒 서류는 로그인된 사용자 UID 경로(userData/{uid})에만 저장됩니다. 미로그인 시 업로드가 차단됩니다.
                     </div>
                     <div id="taxVaultStorageWarning" class="tax-vault-storage-warn" style="display:none;">
@@ -2338,13 +2314,13 @@
                     </div>
                     <div id="taxVaultMissingWarnings"></div>
                     <div id="taxVaultDocList"></div>
-                    <div id="taxVaultStats" style="margin-top:8px;padding:7px 10px;background:#F8FAFC;border-radius:8px;font-size:11.5px;color:#64748B;"></div>
+                    <div id="taxVaultStats" style="margin-top:8px;padding:7px 10px;background:#F8FAFC;border-radius:8px;font-size:12px;color:#64748B;"></div>
                 </div>
 
                 <!-- 9. 앱 기록 원본 세무 명세 탭 -->
                 <div class="tax-page-card" style="margin:0 12px 12px;padding:0;overflow:hidden;">
                     <div style="padding:10px 12px 0;border-bottom:1px solid #E2E8F0;background:#F8FAFC;">
-                        <span style="font-size:12px;font-weight:800;color:#475569;">📊 앱 기록 원본 세무 명세 (참고용)</span>
+                        <span style="font-size:12px;font-weight:800;color:#475569;">앱 기록 원본 세무 명세 (참고용)</span>
                     </div>
                     <div style="display:flex;border-bottom:1px solid #E2E8F0;background:#F8FAFC;">
                         <button class="tax-tab-btn active" data-tab="income" onclick="_taxPageSwitchTab('income')">임대수입</button>
@@ -2356,10 +2332,10 @@
 
                 <!-- 10. 내보내기 -->
                 <div style="margin:16px 12px 100px;display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                    <button class="btn btn-primary" style="grid-column:1/-1;background:#0F766E;" onclick="copyTaxAccountantSummary()">📋 세무사 전달용 요약 복사</button>
-                    <button class="btn btn-primary" style="background:#0F766E;" onclick="exportTaxFilingPackage()">📥 JSON 내보내기</button>
-                    <button class="btn btn-secondary" onclick="exportTaxFilingCSV()">📊 CSV 내보내기</button>
-                    <button class="btn btn-secondary" style="grid-column:1/-1;" onclick="printTaxBundleForAccountant()">🖨️ 세무사 제출용 묶음 PDF 출력</button>
+                    <button class="btn btn-primary" style="grid-column:1/-1;background:#2563EB;" onclick="copyTaxAccountantSummary()">세무사 전달용 요약 복사</button>
+                    <button class="btn btn-primary" style="background:#2563EB;" onclick="exportTaxFilingPackage()">JSON 내보내기</button>
+                    <button class="btn btn-secondary" onclick="exportTaxFilingCSV()">CSV 내보내기</button>
+                    <button class="btn btn-secondary" style="grid-column:1/-1;" onclick="printTaxBundleForAccountant()">세무사 제출용 묶음 PDF 출력</button>
                 </div>
             </div>
 
@@ -2369,7 +2345,7 @@
             <div class="modal-overlay" id="taxVaultModal">
                 <div class="modal">
                     <div class="modal-header" style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid #E2E8F0;">
-                        <h3 style="margin:0; font-size:16px; font-weight:800; color:#1E293B;">📄 서류 상세 / 편집</h3>
+                        <h3 style="margin:0; font-size:16px; font-weight:800; color:#1E293B;">서류 상세 / 편집</h3>
                         <button onclick="_taxVaultCloseModal()" style="background:none; border:none; font-size:20px; cursor:pointer; color:#64748B; padding:2px 6px; line-height:1;">✕</button>
                     </div>
                     <div class="modal-body" id="taxVaultModalBody" style="padding:14px 16px; overflow-y:auto; max-height:calc(88vh - 60px);">
@@ -2379,14 +2355,14 @@
 
             <!-- ════════════ 설정 ════════════ -->
             <div class="page" id="settingsPage">
-                <div class="settings-section-title">📑 세무 신고 자료</div>
-                <button class="btn btn-primary btn-block" onclick="openTaxFiling()" style="background:linear-gradient(135deg,#0F766E,#0EA5A4);">📑 종합소득세 자료 정리</button>
+                <div class="settings-section-title">세무 신고 자료</div>
+                <button class="btn btn-primary btn-block" onclick="openTaxFiling()" style="background:#2563EB;">종합소득세 자료 정리</button>
                 <p style="font-size:12px;color:var(--text-tertiary);margin:6px 12px 16px;line-height:1.5;">선택한 연도의 임대수입·필요경비를 세입자/건물/카테고리별로 정리해 국세청 신고용 양식으로 출력합니다.</p>
 
                 <div class="settings-section-title">데이터 관리</div>
-                <button class="btn btn-secondary btn-block" onclick="exportToJSON()">📥 JSON으로 내보내기</button>
-                <button class="btn btn-secondary btn-block" onclick="importFromJSON()">📤 JSON에서 가져오기</button>
-                <button class="btn btn-secondary btn-block" onclick="exportToCSV()">📊 CSV로 내보내기 (Excel)</button>
+                <button class="btn btn-secondary btn-block" onclick="exportToJSON()">JSON으로 내보내기</button>
+                <button class="btn btn-secondary btn-block" onclick="importFromJSON()">JSON에서 가져오기</button>
+                <button class="btn btn-secondary btn-block" onclick="exportToCSV()">CSV로 내보내기 (Excel)</button>
 
                 <!-- 영수증 사진 저장 경고 -->
                 <div class="card" style="margin-bottom:8px;background:#FFF7ED;border:1.5px solid #FED7AA;">
@@ -2404,9 +2380,9 @@
                     </div>
                 </div>
 
-                <div class="settings-section-title">🔥 가족 공유 · 실시간 동기화</div>
-                <div class="card" style="margin-bottom:8px;background:linear-gradient(180deg,#EFF6FF 0%,#fff 60%);border-color:#BFDBFE;">
-                    <p style="font-size:14px;color:#1E3A8A;line-height:1.65;margin:0 0 10px;font-weight:600;">엄마 폰 ↔ 내 폰</p>
+                <div class="settings-section-title">가족 공유 · 실시간 동기화</div>
+                <div class="card" style="margin-bottom:8px;background:#FFFFFF;border-color:#BFDBFE;">
+                    <p style="font-size:14px;color:#1D4ED8;line-height:1.65;margin:0 0 10px;font-weight:600;">엄마 폰 ↔ 내 폰</p>
                     <p style="font-size:13px;color:#475569;line-height:1.65;margin:0;">둘 다 이 앱을 켜 두면 <strong>자동으로 같은 데이터</strong>를 봅니다. 따로 눌러서 맞출 필요 없어요. 수정한 쪽이 잠시 후 상대 화면에도 반영됩니다.</p>
                 </div>
                 <div class="card" style="margin-bottom:8px;">
@@ -2416,7 +2392,7 @@
                     </div>
                     <p id="fbStatusDesc" style="font-size:13px;color:var(--text-secondary);margin-top:8px;line-height:1.6;"></p>
                     <p id="fbLastSyncLine" style="font-size:12px;color:#64748B;margin-top:8px;display:none;"></p>
-                    <button type="button" class="btn btn-primary" style="margin-top:12px;" onclick="cloudSaveNow()">☁️ 지금 클라우드에 저장</button>
+                    <button type="button" class="btn btn-primary" style="margin-top:12px;" onclick="cloudSaveNow()">지금 클라우드에 저장</button>
                     <p style="font-size:11px;color:var(--text-tertiary);margin-top:8px;line-height:1.5;">※ Wi-Fi가 불안하면 위 버튼으로 한 번 더 올릴 수 있어요.<br>※ 영수증 사진은 각 폰에만 남고, 클라우드에는 금액·날짜만 올라갑니다.</p>
                 </div>
 
@@ -2446,13 +2422,13 @@
                     </div>
                 </div>
 
-                <div class="settings-section-title">📋 변경 이력 &amp; 롤백</div>
+                <div class="settings-section-title">변경 이력 &amp; 롤백</div>
                 <div class="card" style="margin-bottom:8px;">
                     <p style="font-size:13px;color:var(--text-secondary);margin:0 0 10px;line-height:1.6;">
                         엄마 폰·내 폰 어느 쪽에서 저장해도 여기에 기록됩니다.<br>
                         최대 20개 보관 · 원하는 시점으로 되돌릴 수 있어요.
                     </p>
-                    <button type="button" class="btn btn-secondary" style="width:100%;margin-bottom:12px;" onclick="loadChangelog()">🔄 이력 불러오기</button>
+                    <button type="button" class="btn btn-secondary" style="width:100%;margin-bottom:12px;" onclick="loadChangelog()">이력 불러오기</button>
                     <div id="changelogList">
                         <p class="changelog-empty">「이력 불러오기」를 눌러 확인하세요.</p>
                     </div>
@@ -2476,31 +2452,31 @@
         <!-- ──────────── BOTTOM NAV ──────────── -->
         <nav class="bottom-nav">
             <button class="nav-item active" onclick="switchPage('dashboardPage')">
-                <span class="nav-icon">🏠</span>
+                <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V21h5v-6h4v6h5V9.5"/></svg></span>
                 <span class="nav-label">홈</span>
                 <div class="nav-badge" id="dashboardBadge" style="display:none;">0</div>
             </button>
             <button class="nav-item" onclick="switchPage('tenantsPage')">
-                <span class="nav-icon">👥</span>
+                <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9.5" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
                 <span class="nav-label">세입자</span>
             </button>
             <button class="nav-item nav-fab" onclick="switchPage('rentPage')">
                 <div class="nav-fab-circle">
-                    <span class="nav-icon">💰</span>
+                    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="13" rx="2"/><circle cx="12" cy="12.5" r="3"/><path d="M2 10h2M20 10h2"/></svg></span>
                     <div class="nav-badge" id="rentBadge" style="display:none;">0</div>
                 </div>
                 <span class="nav-label">수납</span>
             </button>
             <button class="nav-item" onclick="switchPage('expensesPage')">
-                <span class="nav-icon">📄</span>
+                <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h14v18l-2.5-1.5L14 21l-2-1.5L10 21l-2.5-1.5L5 21z"/><path d="M9 8h6M9 12h6"/></svg></span>
                 <span class="nav-label">지출</span>
             </button>
             <button class="nav-item" onclick="switchPage('taxPage')">
-                <span class="nav-icon">📑</span>
+                <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 16.5l6-6"/><circle cx="9.5" cy="11.5" r="0.5"/><circle cx="14.5" cy="16" r="0.5"/></svg></span>
                 <span class="nav-label">세금</span>
             </button>
             <button class="nav-item" onclick="switchPage('settingsPage')">
-                <span class="nav-icon">⚙️</span>
+                <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
                 <span class="nav-label">설정</span>
             </button>
         </nav>
@@ -2540,7 +2516,7 @@
                 </div>
                 <div id="buildingRoomsSection">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin: 4px 0 8px;">
-                        <span style="font-size: 14px; font-weight: 600; color: #374151;">호수 등록 <span style="font-weight: 400; color: var(--neutral-gray);">(선택)</span></span>
+                        <span style="font-size: 14px; font-weight: 600; color: #334155;">호수 등록 <span style="font-weight: 400; color: var(--neutral-gray);">(선택)</span></span>
                         <button type="button" onclick="addRoomRowToBuilding()" style="background: var(--primary); color: white; border: none; border-radius: 6px; padding: 5px 12px; font-size: 14px; cursor: pointer; font-weight: 600;">+ 호수 추가</button>
                     </div>
                     <div style="display: grid; grid-template-columns: 1fr 0.6fr 1fr 1fr 1fr auto; gap: 4px; margin-bottom: 4px;">
@@ -2820,7 +2796,7 @@
                 <div class="form-group">
                     <label>영수증 / 사진 첨부</label>
                     <input type="file" id="receiptInput" accept="image/*" multiple style="display:none" onchange="handleReceiptUpload(this.files)">
-                    <div class="receipt-upload-btn" onclick="document.getElementById('receiptInput').click()">📷 사진 또는 파일 선택</div>
+                    <div class="receipt-upload-btn" onclick="document.getElementById('receiptInput').click()">사진 또는 파일 선택</div>
                     <div id="receiptPreviewList" class="receipt-preview-wrap"></div>
                 </div>
                 <button type="submit" class="btn btn-primary btn-block">저장</button>
@@ -2863,7 +2839,7 @@
                 <button class="modal-close" onclick="closeModal('renewContractModal')">✕</button>
             </div>
             <div style="padding:0 16px 8px;">
-                <p id="renewModalTenantName" style="margin:0 0 20px;color:#6b7280;font-size:14px;"></p>
+                <p id="renewModalTenantName" style="margin:0 0 20px;color:#64748B;font-size:14px;"></p>
                 <div class="form-group">
                     <label>신규 시작일</label>
                     <input type="date" id="renewStart">
@@ -2891,7 +2867,7 @@
     <!-- 공용 확인 다이얼로그 -->
     <div class="modal-overlay" id="appConfirmModal" style="z-index:99999;">
         <div class="modal-content" style="max-width:360px;padding:28px 24px 20px;">
-            <p id="appConfirmMsg" style="font-size:15px;line-height:1.6;color:#1F2937;white-space:pre-line;margin:0 0 24px;"></p>
+            <p id="appConfirmMsg" style="font-size:15px;line-height:1.6;color:#1E293B;white-space:pre-line;margin:0 0 24px;"></p>
             <div style="display:flex;gap:10px;">
                 <button class="btn btn-secondary" style="flex:1;" onclick="_appConfirmResolve(false)">취소</button>
                 <button id="appConfirmOkBtn" class="btn btn-danger" style="flex:1;" onclick="_appConfirmResolve(true)">확인</button>
@@ -2901,9 +2877,9 @@
     <!-- 세무 정리 모달 -->
     <div class="modal-overlay" id="taxFilingModal">
         <div class="modal-content" style="max-width:680px;width:96%;max-height:92vh;padding:0;overflow:hidden;display:flex;flex-direction:column;">
-            <div style="padding:18px 20px 12px;border-bottom:1px solid #E2E8F0;background:linear-gradient(135deg,#0F766E,#0EA5A4);color:white;">
+            <div style="padding:18px 20px 12px;border-bottom:1px solid #E2E8F0;background:#2563EB;color:white;">
                 <div style="display:flex;align-items:center;justify-content:space-between;">
-                    <h2 style="margin:0;font-size:18px;color:white;">📑 종합소득세 자료 정리</h2>
+                    <h2 style="margin:0;font-size:18px;color:white;">종합소득세 자료 정리</h2>
                     <button class="modal-close" onclick="closeModal('taxFilingModal')" style="color:white;">✕</button>
                 </div>
                 <div style="display:flex;align-items:center;gap:10px;margin-top:10px;">
@@ -2923,8 +2899,8 @@
             <div id="taxFilingContent" style="flex:1;overflow-y:auto;padding:14px 16px;background:#fff;"></div>
             <!-- 하단 액션 -->
             <div style="padding:12px 16px;border-top:1px solid #E2E8F0;background:#F8FAFC;display:flex;gap:8px;">
-                <button class="btn btn-secondary" style="flex:1;" onclick="exportTaxFilingCSV()">📊 CSV</button>
-                <button class="btn btn-secondary" style="flex:1;" onclick="printTaxFiling()">🖨️ 인쇄/PDF</button>
+                <button class="btn btn-secondary" style="flex:1;" onclick="exportTaxFilingCSV()">CSV</button>
+                <button class="btn btn-secondary" style="flex:1;" onclick="printTaxFiling()">인쇄/PDF</button>
                 <button class="btn btn-primary" style="flex:1;" onclick="closeModal('taxFilingModal')">닫기</button>
             </div>
         </div>
@@ -2933,7 +2909,7 @@
     <!-- 수리 요청 정보 입력 모달 -->
     <div class="modal-overlay" id="maintenanceModal" style="z-index:99999;">
         <div class="modal-content" style="max-width:400px;padding:24px;">
-            <h3 style="margin:0 0 16px;font-size:17px;" id="maintenanceModalTitle">🔧 수리 요청</h3>
+            <h3 style="margin:0 0 16px;font-size:17px;" id="maintenanceModalTitle">수리 요청</h3>
             <div id="maintenanceRoomLabel" style="font-size:13px;color:var(--neutral-gray);margin-bottom:14px;"></div>
             <div class="form-group">
                 <label>수리 내용</label>
@@ -2958,7 +2934,7 @@
     <!-- 수리 완료 처리 모달 -->
     <div class="modal-overlay" id="maintenanceCompleteModal" style="z-index:99999;">
         <div class="modal-content" style="max-width:400px;padding:24px;">
-            <h3 style="margin:0 0 12px;font-size:17px;">✅ 수리 완료 처리</h3>
+            <h3 style="margin:0 0 12px;font-size:17px;">수리 완료 처리</h3>
             <div id="maintCompleteRoomLabel" style="font-size:13px;color:var(--neutral-gray);margin-bottom:14px;"></div>
             <div class="form-group">
                 <label>완료일</label>
@@ -2985,7 +2961,7 @@
     <div class="modal-overlay" id="depositRefundModal" style="z-index:99999;">
         <div class="modal-content" style="max-width:360px;padding:28px 24px 20px;">
             <h3 style="margin:0 0 16px;font-size:17px;">보증금 반환 처리</h3>
-            <label style="font-size:14px;color:#6B7280;display:block;margin-bottom:6px;">반환일</label>
+            <label style="font-size:14px;color:#64748B;display:block;margin-bottom:6px;">반환일</label>
             <input type="date" id="depositRefundDateInput" class="form-input" style="width:100%;margin-bottom:20px;">
             <div style="display:flex;gap:10px;">
                 <button class="btn btn-secondary" style="flex:1;" onclick="closeModal('depositRefundModal')">취소</button>
@@ -3485,9 +3461,9 @@
                 <div class="card">
                     <h3 style="font-weight: 600; margin-bottom: 12px;">${building.name}</h3>
                     <div style="font-size: 15px; color: var(--neutral-gray); line-height: 1.6;">
-                        <div>📍 ${building.address}</div>
-                        <div>🏷️ ${building.type}</div>
-                        ${building.memo ? `<div>📝 ${building.memo}</div>` : ''}
+                        <div>${building.address}</div>
+                        <div>${building.type}</div>
+                        ${building.memo ? `<div>${building.memo}</div>` : ''}
                     </div>
                 </div>
                 <h4 style="margin: 16px 8px 8px; font-size: 16px; font-weight: 700;">이번달 현황</h4>
@@ -4019,7 +3995,7 @@
                 card.className = 'tc-card';
                 // Header
                 var html = '<div class="tc-card-header">' +
-                    '<div class="tc-header-left"><span class="tc-header-icon">🏢</span>' +
+                    '<div class="tc-header-left">' +
                     '<span class="tc-header-building">' + safeBuildingRoom + '</span></div>' +
                     '<span class="tc-status-badge" style="background:'+badgeBg+';color:'+badgeColor+';">'+badgeText+'</span>' +
                     '</div>';
@@ -4028,8 +4004,8 @@
                     '<div class="tc-avatar">' + safeInitial(tenant.name) + '</div>' +
                     '<div class="tc-info">' +
                         '<div class="tc-name">' + safeTenantName + '</div>' +
-                        (tenant.phone ? '<div class="tc-detail"><span style="font-size:13px;">📱</span>' + safePhone + '</div>' : '') +
-                        '<div class="tc-detail"><span style="font-size:13px;">📅</span>' + escapeHTML(contractStr) + '</div>' +
+                        (tenant.phone ? '<div class="tc-detail">' + safePhone + '</div>' : '') +
+                        '<div class="tc-detail">' + escapeHTML(contractStr) + '</div>' +
                     '</div>' +
                     '<div class="tc-rent-col">' +
                         '<div class="tc-rent-label">' + escapeHTML(rentLabel) + '</div>' +
@@ -4042,14 +4018,14 @@
                 // 생년월일 + 직업 행 (둘 중 하나라도 있으면 표시)
                 if (bdStr || tenant.occupation) {
                     html += '<div class="tc-meta-row">' +
-                        '<div class="tc-meta-cell"><span style="font-size:13px;">👤</span>' + escapeHTML(bdStr||'-') + '</div>' +
+                        '<div class="tc-meta-cell">' + escapeHTML(bdStr||'-') + '</div>' +
                         '<div class="tc-meta-divider"></div>' +
-                        '<div class="tc-meta-cell"><span style="font-size:13px;">📋</span>' + (safeOccupation||'-') + '</div>' +
+                        '<div class="tc-meta-cell">' + (safeOccupation||'-') + '</div>' +
                         '</div>';
                 }
                 // 메모 행 (항상 표시)
-                html += '<div class="tc-memo-row"><span style="font-size:13px;flex-shrink:0;">📝</span>' +
-                    '<span style="color:'+(tenant.memo?'#374151':'#94A3B8')+';">' + (safeMemo||'메모 없음') + '</span>' +
+                html += '<div class="tc-memo-row">' +
+                    '<span style="color:'+(tenant.memo?'#334155':'#94A3B8')+';">' + (safeMemo||'메모 없음') + '</span>' +
                     '</div>';
                 // 누적 미납 (보증금 제외)
                 var unpaidRecords = (appData.rents || []).filter(function(r) {
@@ -4061,8 +4037,7 @@
                     var unpaidTotal = unpaidRecords.reduce(function(s, r) { return s + (r.amount || 0); }, 0);
                     var hasOverdue = unpaidRecords.some(function(r) { return r.status === 'overdue'; });
                     html += '<div class="tc-unpaid-row" title="' + (hasOverdue ? '연체 포함 누적 미납 (보증금 제외)' : '누적 미납 (보증금 제외)') + '">' +
-                        '<span class="tc-unpaid-icon">' + (hasOverdue ? '🚨' : '⚠️') + '</span>' +
-                        '<span>누적 미납 ' + unpaidRecords.length + '건' + (hasOverdue ? ' · 연체 있음' : '') + '</span>' +
+                                                '<span>누적 미납 ' + unpaidRecords.length + '건' + (hasOverdue ? ' · 연체 있음' : '') + '</span>' +
                         '<span class="tc-unpaid-amount">₩' + unpaidTotal.toLocaleString() + '</span>' +
                         '</div>';
                 }
@@ -4130,7 +4105,7 @@
             const daysLeft = Math.floor((endDate - today) / 86400000);
             const isActive = tenant.status === 'active';
             let badgeText, badgeBg, badgeColor;
-            if (!isActive) { badgeText='퇴거'; badgeBg='#F1F5F9'; badgeColor='#6B7280'; }
+            if (!isActive) { badgeText='퇴거'; badgeBg='#F1F5F9'; badgeColor='#64748B'; }
             else if (daysLeft < 0) { badgeText='계약만료'; badgeBg='#FEE2E2'; badgeColor='#DC2626'; }
             else if (daysLeft < 30) { badgeText='D-'+daysLeft; badgeBg='#FEF3C7'; badgeColor='#D97706'; }
             else { badgeText='입주중'; badgeBg='#DCFCE7'; badgeColor='#16A34A'; }
@@ -4170,17 +4145,17 @@
             // ─── Hero card ───
             let html = '<div class="td-hero-card">';
             html += '<div class="td-hero-top">';
-            html += '<div class="td-hero-building">🏢 '+safeBName+' '+safeRNum+'호</div>';
+            html += '<div class="td-hero-building">'+safeBName+' '+safeRNum+'호</div>';
             html += '<span class="td-hero-badge" style="background:'+badgeBg+';color:'+badgeColor+';">'+badgeText+'</span>';
             html += '</div>';
             html += '<div class="td-hero-main">';
             html += '<div class="td-avatar">'+safeInitial(tenant.name)+'</div>';
             html += '<div class="td-hero-info">';
             html += '<div class="td-hero-name">'+safeTenantName+'</div>';
-            if (tenant.phone) html += '<div class="td-hero-contact"><span>📱</span>'+safePhone+'</div>';
-            if (tenant.email) html += '<div class="td-hero-contact"><span>✉️</span><a href="mailto:'+safeEmail+'" style="color:inherit;text-decoration:none;">'+safeEmail+'</a></div>';
-            if (tenant.birthday) { var _age=_calcAge(tenant.birthday); html += '<div class="td-hero-contact"><span>👤</span>'+_fmtDate(tenant.birthday)+(_age!==null?' (만 '+_age+'세)':'')+'</div>'; }
-            if (tenant.occupation) html += '<div class="td-hero-contact"><span>📋</span>'+safeOccupation+'</div>';
+            if (tenant.phone) html += '<div class="td-hero-contact">'+safePhone+'</div>';
+            if (tenant.email) html += '<div class="td-hero-contact"><a href="mailto:'+safeEmail+'" style="color:inherit;text-decoration:none;">'+safeEmail+'</a></div>';
+            if (tenant.birthday) { var _age=_calcAge(tenant.birthday); html += '<div class="td-hero-contact">'+_fmtDate(tenant.birthday)+(_age!==null?' (만 '+_age+'세)':'')+'</div>'; }
+            if (tenant.occupation) html += '<div class="td-hero-contact">'+safeOccupation+'</div>';
             html += '</div>';
             html += '<div class="td-hero-rent-col">';
             html += '<div class="td-hero-rent-label">'+rentLabel+'</div>';
@@ -4188,18 +4163,18 @@
             html += '</div></div>';
             // info rows
             html += '<div class="td-hero-rows">';
-            html += '<div class="td-hero-row"><span class="td-hero-row-label">📅 계약기간</span><span class="td-hero-row-value">'+cPeriod+'</span></div>';
-            if (tenant.moveInDate) html += '<div class="td-hero-row"><span class="td-hero-row-label">🏠 입주일</span><span class="td-hero-row-value">'+tenant.moveInDate+'</span></div>';
-            if (tenant.payDay) html += '<div class="td-hero-row"><span class="td-hero-row-label">💳 납부일</span><span class="td-hero-row-value">매월 '+tenant.payDay+'일</span></div>';
-            html += '<div class="td-hero-row"><span class="td-hero-row-label">📝 메모</span><span class="td-hero-row-value">'+(safeMemo||'없음')+'</span></div>';
+            html += '<div class="td-hero-row"><span class="td-hero-row-label">계약기간</span><span class="td-hero-row-value">'+cPeriod+'</span></div>';
+            if (tenant.moveInDate) html += '<div class="td-hero-row"><span class="td-hero-row-label">입주일</span><span class="td-hero-row-value">'+tenant.moveInDate+'</span></div>';
+            if (tenant.payDay) html += '<div class="td-hero-row"><span class="td-hero-row-label">납부일</span><span class="td-hero-row-value">매월 '+tenant.payDay+'일</span></div>';
+            html += '<div class="td-hero-row"><span class="td-hero-row-label">메모</span><span class="td-hero-row-value">'+(safeMemo||'없음')+'</span></div>';
             html += '</div>';
             // action buttons
             html += '<div class="td-hero-btns">';
             if (tenant.phone) {
-                html += '<button class="td-hero-btn-outline" onclick="window.location.href=\''+telHref+'\'">📞 전화하기</button>';
-                html += '<button class="td-hero-btn-fill" onclick="window.location.href=\''+smsHref+'\'">💬 문자하기</button>';
+                html += '<button class="td-hero-btn-outline" onclick="window.location.href=\''+telHref+'\'">전화하기</button>';
+                html += '<button class="td-hero-btn-fill" onclick="window.location.href=\''+smsHref+'\'">문자하기</button>';
             } else {
-                html += '<button class="td-hero-btn-outline" onclick="editCurrentTenant()">✏️ 정보 수정</button>';
+                html += '<button class="td-hero-btn-outline" onclick="editCurrentTenant()">정보 수정</button>';
             }
             html += '</div></div>';
 
@@ -4215,10 +4190,10 @@
                 const isPaid = thisMonthRent.status==='paid';
                 const isPartial = thisMonthRent.status==='partial';
                 const statusClass = isPaid ? 'td-pay-ok' : (isPartial ? 'td-pay-none' : 'td-pay-fail');
-                const statusIcon = isPaid ? '✅' : (isPartial ? '⚠️' : '❌');
+                
                 const paidInfo = isPaid ? (thisMonthRent.paidDate||'') : (isPartial ? '부분납부' : '미납');
                 html += '<div class="td-pay-status-row '+statusClass+'">';
-                html += '<span>'+statusIcon+' '+curMonth.replace('-','년 ')+'월 '+(isPaid?'납부 완료':isPartial?'부분 납부':'미납')+'</span>';
+                html += '<span>'+curMonth.replace('-','년 ')+'월 '+(isPaid?'납부 완료':isPartial?'부분 납부':'미납')+'</span>';
                 html += '<span>'+paidInfo+'</span></div>';
                 // 부분납부 시 받은 금액·잔액 명시
                 if (isPartial) {
@@ -4230,10 +4205,10 @@
                     html += '</div>';
                 }
                 if (thisMonthRent.status !== 'paid') {
-                    html += '<div style="padding:0 10px 8px;"><button class="td-bottom-btn-fill" style="width:100%;padding:9px;" onclick="markRentPaid(\''+thisMonthRent.id+'\')">💰 수납 처리</button></div>';
+                    html += '<div style="padding:0 10px 8px;"><button class="td-bottom-btn-fill" style="width:100%;padding:9px;" onclick="markRentPaid(\''+thisMonthRent.id+'\')">수납 처리</button></div>';
                 }
             } else {
-                html += '<div class="td-pay-status-row td-pay-none"><span>📋 '+curMonth.replace('-','년 ')+'월 기록 없음</span><span></span></div>';
+                html += '<div class="td-pay-status-row td-pay-none"><span>'+curMonth.replace('-','년 ')+'월 기록 없음</span><span></span></div>';
             }
             // Unpaid count
             html += '<div class="td-info-row"><span class="td-info-label">미납 내역</span><span class="td-info-value" style="'+(unpaidRents.length>0?'color:#DC2626;':'color:#16A34A;')+'">'+(unpaidRents.length>0?unpaidRents.length+'건':'없음')+'</span></div>';
@@ -4269,14 +4244,14 @@
             // ─── 계약 정보 ───
             html += '<div class="td-section"><div class="td-section-title">계약 정보</div>';
             html += '<div class="td-section-card">';
-            html += '<div class="td-info-row"><span class="td-info-label">📅 계약 기간</span><span class="td-info-value">'+cPeriod+'</span></div>';
-            html += '<div class="td-info-row"><span class="td-info-label">🏦 보증금</span><span class="td-info-value">₩'+(tenant.deposit||0).toLocaleString()+'</span></div>';
-            html += '<div class="td-info-row"><span class="td-info-label">💰 월세</span><span class="td-info-value">₩'+(tenant.monthlyRent||0).toLocaleString()+(tenant.rentType==='annual'?' (연 1회)':'')+'</span></div>';
-            if (tenant.managementFee>0) html += '<div class="td-info-row"><span class="td-info-label">🏠 관리비</span><span class="td-info-value">₩'+(tenant.managementFee||0).toLocaleString()+'</span></div>';
-            if ((tenant.cleaningFee||0)>0) html += '<div class="td-info-row"><span class="td-info-label">🧹 청소비</span><span class="td-info-value">₩'+(tenant.cleaningFee||0).toLocaleString()+'</span></div>';
-            if (tenant.residentId) html += '<div class="td-info-row"><span class="td-info-label">🪪 주민번호</span><span class="td-info-value">'+escapeHTML(tenant.residentId)+'</span></div>';
+            html += '<div class="td-info-row"><span class="td-info-label">계약 기간</span><span class="td-info-value">'+cPeriod+'</span></div>';
+            html += '<div class="td-info-row"><span class="td-info-label">보증금</span><span class="td-info-value">₩'+(tenant.deposit||0).toLocaleString()+'</span></div>';
+            html += '<div class="td-info-row"><span class="td-info-label">월세</span><span class="td-info-value">₩'+(tenant.monthlyRent||0).toLocaleString()+(tenant.rentType==='annual'?' (연 1회)':'')+'</span></div>';
+            if (tenant.managementFee>0) html += '<div class="td-info-row"><span class="td-info-label">관리비</span><span class="td-info-value">₩'+(tenant.managementFee||0).toLocaleString()+'</span></div>';
+            if ((tenant.cleaningFee||0)>0) html += '<div class="td-info-row"><span class="td-info-label">청소비</span><span class="td-info-value">₩'+(tenant.cleaningFee||0).toLocaleString()+'</span></div>';
+            if (tenant.residentId) html += '<div class="td-info-row"><span class="td-info-label">주민번호</span><span class="td-info-value">'+escapeHTML(tenant.residentId)+'</span></div>';
             if (tenant.depositRefunded) {
-                html += '<div class="td-deposit-ok">✅ 보증금 반환 완료 '+escapeHTML('('+(tenant.depositRefundDate||'날짜 미기록')+')')+'</div>';
+                html += '<div class="td-deposit-ok">보증금 반환 완료 '+escapeHTML('('+(tenant.depositRefundDate||'날짜 미기록')+')')+'</div>';
             }
             html += '</div></div>';
 
@@ -4311,7 +4286,7 @@
                     const epName = escapeHTML(tenant.emergencyName || '비상연락처');
                     const epPhone = escapeHTML(tenant.emergencyPhone || '');
                     const epHref = safePhoneHref(tenant.emergencyPhone, 'tel');
-                    html += '<div class="td-info-row"><span class="td-info-label">📞 '+epName+'</span>';
+                    html += '<div class="td-info-row"><span class="td-info-label">'+epName+'</span>';
                     if (epPhone) {
                         html += '<a href="'+epHref+'" class="td-info-value" style="color:#2563EB;text-decoration:none;">'+epPhone+'</a>';
                     } else {
@@ -4324,7 +4299,7 @@
                     const gPhone = escapeHTML(tenant.guarantorPhone || '');
                     const gRel = tenant.guarantorRelation ? ' ('+escapeHTML(tenant.guarantorRelation)+')' : '';
                     const gHref = safePhoneHref(tenant.guarantorPhone, 'tel');
-                    html += '<div class="td-info-row"><span class="td-info-label">🛡️ '+gName+gRel+'</span>';
+                    html += '<div class="td-info-row"><span class="td-info-label">'+gName+gRel+'</span>';
                     if (gPhone) {
                         html += '<a href="'+gHref+'" class="td-info-value" style="color:#2563EB;text-decoration:none;">'+gPhone+'</a>';
                     } else {
@@ -4338,7 +4313,7 @@
             // ─── Cleaning fee / deposit actions (non-active tenants) ───
             if (!isActive && !hasCleaningRecord && (tenant.cleaningFee||0)>0) {
                 html += '<div class="td-section">';
-                html += '<button class="td-bottom-btn-outline" style="width:100%;padding:13px;" onclick="addCleaningFeeRecord(\''+tenantId+'\')">🧹 청소비 수납 등록</button>';
+                html += '<button class="td-bottom-btn-outline" style="width:100%;padding:13px;" onclick="addCleaningFeeRecord(\''+tenantId+'\')">청소비 수납 등록</button>';
                 html += '</div>';
             }
 
@@ -4353,20 +4328,20 @@
                 if (tenant.deposit>0 && !tenant.depositRefunded) {
                     const refundBtn = document.createElement('button');
                     refundBtn.className='td-bottom-btn-danger';
-                    refundBtn.textContent='🏦 보증금 반환';
+                    refundBtn.textContent='보증금 반환';
                     refundBtn.onclick=function() { refundDeposit(tenantId); };
                     bottomBar.appendChild(refundBtn);
                 }
                 const renewBtn = document.createElement('button');
                 renewBtn.className='td-bottom-btn-outline';
-                renewBtn.textContent='📋 계약 갱신';
+                renewBtn.textContent='계약 갱신';
                 renewBtn.onclick=function() { openRenewModal(tenantId); };
                 bottomBar.appendChild(renewBtn);
             } else {
                 if (tenant.deposit>0 && !tenant.depositRefunded) {
                     const refundBtn = document.createElement('button');
                     refundBtn.className='td-bottom-btn-danger';
-                    refundBtn.textContent='🏦 보증금 반환';
+                    refundBtn.textContent='보증금 반환';
                     refundBtn.onclick=function() { refundDeposit(tenantId); };
                     bottomBar.appendChild(refundBtn);
                 }
@@ -4748,7 +4723,7 @@
             if (annualTenants.length > 0) {
                 const annualHeader = document.createElement('div');
                 annualHeader.style.cssText = 'font-size:15px;font-weight:700;color:#92400e;background:#fef3c7;padding:10px 14px;border-radius:10px;margin:12px 0 4px;';
-                annualHeader.textContent = '📅 연세 세입자';
+                annualHeader.textContent = '연세 세입자';
                 container.appendChild(annualHeader);
                 annualTenants.forEach(tenant => {
                     const room = roomMap[tenant.roomId];
@@ -4798,7 +4773,7 @@
                 // 건물 헤더
                 const buildingHeader = document.createElement('div');
                 buildingHeader.style.cssText = 'font-size:14px;font-weight:800;color:#1e3a5f;background:#e8f0fe;padding:10px 14px;border-radius:8px;margin:14px 12px 6px;';
-                buildingHeader.textContent = '🏢 ' + (building?.name || '건물');
+                buildingHeader.textContent = (building?.name || '건물');
                 container.appendChild(buildingHeader);
                 roomIds.forEach(rid => {
                     const room = roomMap[rid];
@@ -4806,7 +4781,7 @@
                     // 호실 헤더
                     const roomHeader = document.createElement('div');
                     roomHeader.style.cssText = 'font-size:13px;font-weight:800;color:#475569;padding:4px 14px;margin:6px 12px 0;';
-                    roomHeader.textContent = '🚪 ' + (room?.roomNumber ? room.roomNumber + '호' : '호실');
+                    roomHeader.textContent = (room?.roomNumber ? room.roomNumber + '호' : '호실');
                     container.appendChild(roomHeader);
                     tenants.forEach(tenant => {
                         const monthlyAmount = tenant.monthlyRent + (tenant.managementFee || 0);
@@ -5182,9 +5157,9 @@
                 var color = colors[i % colors.length];
                 rows += '<div style="margin-bottom:12px;">'
                     + '<div style="display:flex;justify-content:space-between;margin-bottom:3px;">'
-                    + '<span style="font-size:13px;font-weight:600;color:#374151;">' + escapeHTML(entry.label) + '</span>'
-                    + '<span style="font-size:12px;color:#6b7280;">' + share + '%&nbsp;'
-                    + '<strong style="color:#111827;">&#8361;' + entry.amount.toLocaleString() + '</strong></span>'
+                    + '<span style="font-size:13px;font-weight:600;color:#334155;">' + escapeHTML(entry.label) + '</span>'
+                    + '<span style="font-size:12px;color:#64748B;">' + share + '%&nbsp;'
+                    + '<strong style="color:#0F172A;">&#8361;' + entry.amount.toLocaleString() + '</strong></span>'
                     + '</div>'
                     + '<div style="background:#f1f5f9;border-radius:6px;height:10px;overflow:hidden;">'
                     + '<div style="width:' + pct + '%;height:100%;background:' + color + ';border-radius:6px;"></div>'
@@ -5193,7 +5168,7 @@
 
             chartEl.innerHTML = '<div style="font-size:14px;font-weight:700;color:#1e3a5f;margin-bottom:12px;">'
                 + '\uD83D\uDCCA \ud638\uc2e4\ubcc4 \uc9c0\ucd9c'
-                + '<span style="font-size:12px;font-weight:400;color:#6b7280;margin-left:8px;">'
+                + '<span style="font-size:12px;font-weight:400;color:#64748B;margin-left:8px;">'
                 + '\ud569\uacc4 &#8361;' + total.toLocaleString() + '</span></div>'
                 + rows;
         }
@@ -5225,14 +5200,14 @@
                 return '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;min-width:0;">' +
                     '<div style="font-size:9px;color:#94A3B8;font-weight:600;">' + amtStr + '</div>' +
                     '<div style="width:100%;background:#EFF6FF;border-radius:4px;overflow:hidden;height:60px;display:flex;align-items:flex-end;">' +
-                    '<div style="width:100%;height:' + pct + '%;background:linear-gradient(180deg,#6366F1,#818CF8);border-radius:4px 4px 0 0;transition:height 0.3s;"></div>' +
+                    '<div style="width:100%;height:' + pct + '%;background:#2563EB;border-radius:4px 4px 0 0;transition:height 0.3s;"></div>' +
                     '</div>' +
                     '<div style="font-size:9px;color:#64748B;font-weight:700;white-space:nowrap;">' + label + '</div>' +
                     '</div>';
             }).join('');
 
             chartEl.innerHTML =
-                '<div style="font-size:12px;font-weight:700;color:#475569;margin-bottom:10px;">📈 월별 지출 추이</div>' +
+                '<div style="font-size:12px;font-weight:700;color:#475569;margin-bottom:10px;">월별 지출 추이</div>' +
                 '<div style="display:flex;gap:4px;align-items:flex-end;">' + bars + '</div>';
         }
         function renderExpenseSummary(filtered) {
@@ -5330,7 +5305,7 @@
                 item.innerHTML = `
                     <div class="list-item">
                         <div class="expense-check${isChecked ? ' checked' : ''}" data-eid="${expense.id}">${isChecked ? '✓' : ''}</div>
-                        <div class="list-item-avatar" style="background: linear-gradient(135deg, #f59e0b, #fbbf24); font-size: 20px;">🔧</div>
+                        <div class="list-item-avatar" style="background: #F59E0B; font-size: 20px;">🔧</div>
                         <div class="list-item-content">
                             <div class="list-item-title">${escapeHTML(expense.title)}</div>
                             <div class="expense-meta-line">
@@ -5375,7 +5350,7 @@
                     <div style="padding:14px 16px;border-bottom:1px solid var(--border-color);background:#fff7f7;">
                         <div style="font-size:13px;color:#991b1b;font-weight:700;margin-bottom:4px;">미납 요약</div>
                         <div style="font-size:22px;font-weight:900;color:var(--danger);">₩${totalUnpaid.toLocaleString()}</div>
-                        <div style="font-size:13px;color:#6b7280;margin-top:4px;">총 ${unpaidRents.length}건의 미납이 있습니다</div>
+                        <div style="font-size:13px;color:#64748B;margin-top:4px;">총 ${unpaidRents.length}건의 미납이 있습니다</div>
                     </div>`;
                 unpaidRents.forEach(rent => {
                     const tenant = tenantMap[rent.tenantId];
@@ -5395,7 +5370,7 @@
                 });
             }
             const [detailYear, detailMonth] = monthStr.split('-');
-            document.getElementById('dashboardDetailTitle').textContent = `⚠️ ${detailYear}년 ${parseInt(detailMonth, 10)}월 미납 현황`;
+            document.getElementById('dashboardDetailTitle').textContent = `${detailYear}년 ${parseInt(detailMonth, 10)}월 미납 현황`;
             document.getElementById('dashboardDetailContent').innerHTML = html;
             openModal('dashboardDetailModal');
         }
@@ -5430,7 +5405,7 @@
                         </div>`;
                 });
             }
-            document.getElementById('dashboardDetailTitle').textContent = `📋 계약만료 임박 (${expiringTenants.length}건)`;
+            document.getElementById('dashboardDetailTitle').textContent = `계약만료 임박 (${expiringTenants.length}건)`;
             document.getElementById('dashboardDetailContent').innerHTML = html;
             openModal('dashboardDetailModal');
         }
@@ -5465,7 +5440,7 @@
             const unpaidAlert = document.getElementById('unpaidAlert');
             if (unpaidRents.length > 0) {
                 unpaidAlert.style.display = 'block';
-                document.getElementById('unpaidCount').innerHTML = `⚠️ ${unpaidRents.length}건의 미납이 있습니다`;
+                document.getElementById('unpaidCount').innerHTML = `${unpaidRents.length}건의 미납이 있습니다`;
             } else {
                 unpaidAlert.style.display = 'none';
             }
@@ -5478,7 +5453,7 @@
             const expiringAlert = document.getElementById('expiringAlert');
             if (expiringTenants.length > 0) {
                 expiringAlert.style.display = 'block';
-                let expiringHtml = `📋 ${expiringTenants.length}건의 계약이 30일 이내 만료됩니다<br>`;
+                let expiringHtml = `${expiringTenants.length}건의 계약이 30일 이내 만료됩니다<br>`;
                 expiringTenants.slice(0, 3).forEach(t => {
                     const endDate = new Date(t.contractEnd);
                     const daysUntilEnd = Math.floor((endDate - today) / (1000 * 60 * 60 * 24));
@@ -5493,7 +5468,7 @@
             const vacantAlert = document.getElementById('vacantAlert');
             if (vacantRooms.length > 0) {
                 vacantAlert.style.display = 'block';
-                let vacantHtml = `🏠 ${vacantRooms.length}개의 공실이 있습니다<br>`;
+                let vacantHtml = `${vacantRooms.length}개의 공실이 있습니다<br>`;
                 vacantRooms.slice(0, 5).forEach(r => {
                     const building = appData.buildings.find(b => b.id === r.buildingId);
                     vacantHtml += `• ${building?.name} ${r.roomNumber}<br>`;
@@ -5558,7 +5533,7 @@
             document.getElementById('maintStartDate').value = room.maintStartDate || new Date().toISOString().split('T')[0];
             document.getElementById('maintEstCost').value = room.maintEstCost || '';
             const titleEl = document.getElementById('maintenanceModalTitle');
-            if (titleEl) titleEl.textContent = room.maintMemo ? '🔧 수리 정보 수정' : '🔧 수리 요청';
+            if (titleEl) titleEl.textContent = room.maintMemo ? '수리 정보 수정' : '수리 요청';
             openModal('maintenanceModal');
         }
         function _submitMaintenance() {
@@ -6408,7 +6383,7 @@
             var storageAvail = _taxVaultStorageAvailable();
             var buildings = (appData.buildings || []);
             var tenants = (appData.tenants || []);
-            var scMap = { '미확보':'#EF4444','준비중':'#D97706','업로드완료':'#0F766E','제출완료':'#1D4ED8' };
+            var scMap = { '미확보':'#EF4444','준비중':'#D97706','업로드완료':'#2563EB','제출완료':'#1D4ED8' };
             var catOpts = _TAX_VAULT_CATEGORIES.map(function(c) {
                 return '<option value="' + c + '"' + (doc.category === c ? ' selected' : '') + '>' + c + '</option>';
             }).join('');
@@ -6425,9 +6400,9 @@
             var fileHTML = '';
             if (doc.downloadURL || doc.storagePath) {
                 var hasURL = !!doc.downloadURL;
-                fileHTML = '<div style="background:#F0FDFA;border:1px solid #A7F3D0;border-radius:8px;padding:12px;margin-bottom:12px;">'
-                    + '<div style="font-size:11.5px;font-weight:700;color:#0F766E;margin-bottom:6px;">📎 업로드된 파일</div>'
-                    + '<div style="font-size:12.5px;color:#1E293B;font-weight:600;word-break:break-all;margin-bottom:3px;">' + escapeHTML(doc.originalFileName || doc.fileName || '') + '</div>'
+                fileHTML = '<div style="background:#EFF6FF;border:1px solid #A7F3D0;border-radius:8px;padding:12px;margin-bottom:12px;">'
+                    + '<div style="font-size:12px;font-weight:700;color:#2563EB;margin-bottom:6px;">업로드된 파일</div>'
+                    + '<div style="font-size:13px;color:#1E293B;font-weight:600;word-break:break-all;margin-bottom:3px;">' + escapeHTML(doc.originalFileName || doc.fileName || '') + '</div>'
                     + '<div style="font-size:11px;color:#64748B;margin-bottom:8px;">'
                     + escapeHTML(doc.fileType || '') + ' · ' + _taxVaultFmtBytes(doc.fileSize)
                     + (doc.uploadedAt ? ' · 업로드: ' + doc.uploadedAt : '')
@@ -6435,17 +6410,17 @@
                     + (!hasURL && doc.storagePath ? ' · <span style="color:#D97706;">⚠️ URL 만료됨 (열기 시 재취득)</span>' : '')
                     + '</div>'
                     + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;">'
-                    + '<button class="btn btn-primary" style="font-size:12px;padding:7px;" onclick="_taxVaultOpenFile(\'' + docId + '\')">🔗 파일 열기</button>'
-                    + '<button class="btn btn-secondary" style="font-size:12px;padding:7px;" onclick="_taxVaultDownloadFile(\'' + docId + '\')">📥 다운로드</button>'
+                    + '<button class="btn btn-primary" style="font-size:12px;padding:7px;" onclick="_taxVaultOpenFile(\'' + docId + '\')">파일 열기</button>'
+                    + '<button class="btn btn-secondary" style="font-size:12px;padding:7px;" onclick="_taxVaultDownloadFile(\'' + docId + '\')">다운로드</button>'
                     + '</div>'
                     + (storageAvail ? '<button class="btn btn-secondary" style="width:100%;font-size:12px;padding:7px;" onclick="_taxVaultReplaceFile(\'' + docId + '\')">🔄 파일 교체</button>' : '')
                     + '</div>';
             } else {
                 fileHTML = '<div style="background:#F8FAFC;border:1.5px dashed #CBD5E1;border-radius:8px;padding:14px;margin-bottom:12px;text-align:center;">'
-                    + '<div style="font-size:12px;color:#94A3B8;margin-bottom:8px;">📭 업로드된 파일 없음<br><span style="font-size:10.5px;">지원 형식: PDF, JPEG, PNG · 최대 ' + MAX_TAX_DOC_SIZE_MB + 'MB</span></div>'
+                    + '<div style="font-size:12px;color:#94A3B8;margin-bottom:8px;">📭 업로드된 파일 없음<br><span style="font-size:11px;">지원 형식: PDF, JPEG, PNG · 최대 ' + MAX_TAX_DOC_SIZE_MB + 'MB</span></div>'
                     + (storageAvail
-                        ? '<button class="btn btn-primary" style="font-size:12px;background:#0F766E;" onclick="_taxVaultUploadFile(\'' + docId + '\')">📎 서류 업로드 / 사진 촬영</button>'
-                        : '<div class="tax-vault-storage-warn" style="text-align:left;">⚠️ Firebase Storage SDK 미로드 — 파일 업로드 비활성화<br><span style="font-size:10.5px;">TODO: Storage SDK 로드 및 보안 규칙 설정 필요</span></div>')
+                        ? '<button class="btn btn-primary" style="font-size:12px;background:#2563EB;" onclick="_taxVaultUploadFile(\'' + docId + '\')">서류 업로드 / 사진 촬영</button>'
+                        : '<div class="tax-vault-storage-warn" style="text-align:left;">⚠️ Firebase Storage SDK 미로드 — 파일 업로드 비활성화<br><span style="font-size:11px;">TODO: Storage SDK 로드 및 보안 규칙 설정 필요</span></div>')
                     + '</div>';
             }
             mb.innerHTML = '<div>'
@@ -6482,10 +6457,10 @@
                 // File section
                 + fileHTML
                 // Metadata footer
-                + '<div style="font-size:10.5px;color:#94A3B8;border-top:1px solid #F1F5F9;padding-top:8px;margin-top:4px;">최종 수정: ' + (doc.updatedAt || '-') + ' · ID: ' + doc.id + '</div>'
+                + '<div style="font-size:11px;color:#94A3B8;border-top:1px solid #F1F5F9;padding-top:8px;margin-top:4px;">최종 수정: ' + (doc.updatedAt || '-') + ' · ID: ' + doc.id + '</div>'
                 // Delete
                 + '<div style="margin-top:12px;">'
-                + '<button class="btn" style="width:100%;background:#FEF2F2;color:#EF4444;border:1px solid #FECACA;font-size:12.5px;" onclick="_taxVaultDeleteDoc(\'' + docId + '\')">🗑️ 이 서류 삭제</button>'
+                + '<button class="btn" style="width:100%;background:#FEF2F2;color:#EF4444;border:1px solid #FECACA;font-size:13px;" onclick="_taxVaultDeleteDoc(\'' + docId + '\')">🗑️ 이 서류 삭제</button>'
                 + '</div>'
                 + '</div>';
         }
@@ -6714,9 +6689,9 @@
             if (!container || !warningsSection) return;
             const list = getTaxPreparationWarnings();
             if (list.length === 0) {
-                warningsSection.style.background = '#F0FDFA';
-                warningsSection.style.border = '1px solid #CCFBF1';
-                container.innerHTML = '<div style="color:#0F766E;font-size:12.5px;font-weight:700;text-align:center;padding:12px 0;">✨ 감지된 누락 사항이나 주의사항이 없습니다! 준비가 완료되었습니다.</div>';
+                warningsSection.style.background = '#EFF6FF';
+                warningsSection.style.border = '1px solid #DBEAFE';
+                container.innerHTML = '<div style="color:#2563EB;font-size:13px;font-weight:700;text-align:center;padding:12px 0;">✨ 감지된 누락 사항이나 주의사항이 없습니다! 준비가 완료되었습니다.</div>';
                 return;
             }
             warningsSection.style.background = '#FFF5F5';
@@ -6727,7 +6702,7 @@
                 let bg = '#FEE2E2';
                 let icon = '🚨';
                 if (w.type === 'info') {
-                    color = '#1E3A8A';
+                    color = '#1D4ED8';
                     bg = '#DBEAFE';
                     icon = 'ℹ️';
                 } else if (w.type === 'danger') {
@@ -6762,11 +6737,11 @@
             const alternativeAmount = sepBetter ? data.totalCombinedScenarioTax : data.totalSeparateScenarioTax;
             const diff = Math.abs(recommendedAmount - alternativeAmount);
             let html = `
-                <div class="tax-page-card-title">💰 참고용 요약 계산 <span class="pill" style="background:#0F766E;color:white;font-size:10px;padding:2px 6px;border-radius:4px;font-weight:700;vertical-align:middle;margin-left:6px;">모의계산</span></div>
+                <div class="tax-page-card-title">참고용 요약 계산 <span class="pill" style="background:#2563EB;color:white;font-size:10px;padding:2px 6px;border-radius:4px;font-weight:700;vertical-align:middle;margin-left:6px;">모의계산</span></div>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px;">
                     <div style="background:#F8FAFC; border:1px solid #E2E8F0; padding:10px; border-radius:8px; text-align:center;">
                         <div style="font-size:10px; color:#64748B; font-weight:700;">연간 총 임대수입 (간주포함)</div>
-                        <div style="font-size:15px; font-weight:800; color:#0F766E; margin-top:4px;">₩${data.totalRentalIncome.toLocaleString()}</div>
+                        <div style="font-size:15px; font-weight:800; color:#2563EB; margin-top:4px;">₩${data.totalRentalIncome.toLocaleString()}</div>
                     </div>
                     <div style="background:#F8FAFC; border:1px solid #E2E8F0; padding:10px; border-radius:8px; text-align:center;">
                         <div style="font-size:10px; color:#64748B; font-weight:700;">연간 임대 필요경비</div>
@@ -6774,26 +6749,26 @@
                     </div>
                     <div style="background:#F8FAFC; border:1px solid #E2E8F0; padding:10px; border-radius:8px; text-align:center; grid-column: 1 / -1;">
                         <div style="font-size:11px; color:#64748B; font-weight:700;">순 임대소득금액 (수입 - 경비)</div>
-                        <div style="font-size:18px; font-weight:900; color:#1E3A8A; margin-top:4px;">₩${data.netRentalIncome.toLocaleString()}</div>
+                        <div style="font-size:18px; font-weight:900; color:#1D4ED8; margin-top:4px;">₩${data.netRentalIncome.toLocaleString()}</div>
                     </div>
                 </div>
                 <div style="border-top:1px dashed #E2E8F0; margin:14px 0;"></div>
-                <div style="font-size:12px; font-weight:700; color:#475569; margin-bottom:8px;">📌 납부세액 시뮬레이션 (추정치)</div>
+                <div style="font-size:12px; font-weight:700; color:#475569; margin-bottom:8px;">납부세액 시뮬레이션 (추정치)</div>
                 <div class="tax-sim-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                    <div class="tax-sim-card ${sepBetter ? 'recommended' : ''}" style="border:1.5px solid ${sepBetter ? '#0F766E' : '#E2E8F0'}; padding:8px; border-radius:8px; background:${sepBetter ? '#F0FDFA' : '#white'}; text-align:center; position:relative;">
-                        ${sepBetter ? '<span style="position:absolute; top:-8px; right:10px; background:#0F766E; color:white; font-size:9px; padding:1px 5px; border-radius:4px; font-weight:700;">추천</span>' : ''}
+                    <div class="tax-sim-card ${sepBetter ? 'recommended' : ''}" style="border:1.5px solid ${sepBetter ? '#2563EB' : '#E2E8F0'}; padding:8px; border-radius:8px; background:${sepBetter ? '#EFF6FF' : '#white'}; text-align:center; position:relative;">
+                        ${sepBetter ? '<span style="position:absolute; top:-8px; right:10px; background:#2563EB; color:white; font-size:9px; padding:1px 5px; border-radius:4px; font-weight:700;">추천</span>' : ''}
                         <div style="font-size:11px; color:#64748B; font-weight:700;">분리과세 선택시</div>
-                        <div style="font-size:14px; font-weight:800; color:${sepBetter ? '#0F766E' : '#334155'}; margin-top:4px;">₩${data.totalSeparateScenarioTax.toLocaleString()}</div>
+                        <div style="font-size:14px; font-weight:800; color:${sepBetter ? '#2563EB' : '#334155'}; margin-top:4px;">₩${data.totalSeparateScenarioTax.toLocaleString()}</div>
                         <div style="font-size:9px; color:#94A3B8; margin-top:2px;">분리세액(₩${data.sepTaxAmount.toLocaleString()}) + 합산세액</div>
                     </div>
-                    <div class="tax-sim-card ${!sepBetter ? 'recommended' : ''}" style="border:1.5px solid ${!sepBetter ? '#0F766E' : '#E2E8F0'}; padding:8px; border-radius:8px; background:${!sepBetter ? '#F0FDFA' : '#white'}; text-align:center; position:relative;">
-                        ${!sepBetter ? '<span style="position:absolute; top:-8px; right:10px; background:#0F766E; color:white; font-size:9px; padding:1px 5px; border-radius:4px; font-weight:700;">추천</span>' : ''}
+                    <div class="tax-sim-card ${!sepBetter ? 'recommended' : ''}" style="border:1.5px solid ${!sepBetter ? '#2563EB' : '#E2E8F0'}; padding:8px; border-radius:8px; background:${!sepBetter ? '#EFF6FF' : '#white'}; text-align:center; position:relative;">
+                        ${!sepBetter ? '<span style="position:absolute; top:-8px; right:10px; background:#2563EB; color:white; font-size:9px; padding:1px 5px; border-radius:4px; font-weight:700;">추천</span>' : ''}
                         <div style="font-size:11px; color:#64748B; font-weight:700;">종합합산 선택시</div>
-                        <div style="font-size:14px; font-weight:800; color:${!sepBetter ? '#0F766E' : '#334155'}; margin-top:4px;">₩${data.totalCombinedScenarioTax.toLocaleString()}</div>
+                        <div style="font-size:14px; font-weight:800; color:${!sepBetter ? '#2563EB' : '#334155'}; margin-top:4px;">₩${data.totalCombinedScenarioTax.toLocaleString()}</div>
                         <div style="font-size:9px; color:#94A3B8; margin-top:2px;">누진세율(근로+임대+기타)</div>
                     </div>
                 </div>
-                <div style="font-size:11px; color:#0F766E; margin-top:10px; padding:6px 10px; background:#F0FDFA; border-radius:6px; font-weight:500;">
+                <div style="font-size:11px; color:#2563EB; margin-top:10px; padding:6px 10px; background:#EFF6FF; border-radius:6px; font-weight:500;">
                     💡 의사결정: <strong>${recommendedMethod}</strong>가 대략 <strong>₩${diff.toLocaleString()}</strong> 유리합니다. (공제금액 등에 따라 차이 발생 가능)
                 </div>
                 <div style="margin-top:8px; border-top:1px solid #F1F5F9; padding-top:8px;">
@@ -6821,7 +6796,7 @@
                     </div>
                     <div style="grid-column: 1 / -1; display:flex; align-items:center; gap:8px; margin-top:2px;">
                         <input type="checkbox" id="emp_doc_checked" ${emp.docChecked ? 'checked' : ''} onchange="updateTaxProfileField('employmentIncome.docChecked', this.checked)">
-                        <label for="emp_doc_checked" style="font-size:11.5px;color:#475569;font-weight:600;cursor:pointer;">근로소득 원천징수영수증 확인됨</label>
+                        <label for="emp_doc_checked" style="font-size:12px;color:#475569;font-weight:600;cursor:pointer;">근로소득 원천징수영수증 확인됨</label>
                     </div>
                 </div>
             `;
@@ -6843,11 +6818,11 @@
                     <div>
                         <label style="font-size:11px;color:#64748B;">수입 조정 금액 (₩)</label>
                         <input type="number" value="${std.manualAdjustment || 0}" placeholder="누락 또는 중복 수입 보정금 입력" onchange="updateTaxProfileField('studioRental.manualAdjustment', parseInt(this.value) || 0)" style="width:100%;padding:6px;border:1px solid #CBD5E1;border-radius:6px;font-size:12px;margin-top:2px;">
-                        <span style="font-size:9.5px;color:#94A3B8;display:block;margin-top:2px;">통장에는 찍혔으나 앱에 수납 처리하지 않은 임대소득은 +로, 이중 수납은 -로 입력</span>
+                        <span style="font-size:10px;color:#94A3B8;display:block;margin-top:2px;">통장에는 찍혔으나 앱에 수납 처리하지 않은 임대소득은 +로, 이중 수납은 -로 입력</span>
                     </div>
                     <div style="display:flex; align-items:center; gap:8px; margin-top:2px;">
                         <input type="checkbox" id="std_doc_checked" ${std.docChecked ? 'checked' : ''} onchange="updateTaxProfileField('studioRental.docChecked', this.checked)">
-                        <label for="std_doc_checked" style="font-size:11.5px;color:#475569;font-weight:600;cursor:pointer;">임대대장 월세 수납 통장 확인 완료</label>
+                        <label for="std_doc_checked" style="font-size:12px;color:#475569;font-weight:600;cursor:pointer;">임대대장 월세 수납 통장 확인 완료</label>
                     </div>
                     <div>
                         <label style="font-size:11px;color:#64748B;">조정 메모</label>
@@ -7018,13 +6993,13 @@
                 return '<div class="tax-vault-card" onclick="_taxVaultOpenModal(\'' + doc.id + '\')">'
                     + '<div style="flex:1;min-width:0;">'
                     + '<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;flex-wrap:wrap;">'
-                    + '<span style="font-size:12.5px;font-weight:700;color:#1E293B;">' + escapeHTML(doc.title || doc.category || '(제목없음)') + '</span>'
+                    + '<span style="font-size:13px;font-weight:700;color:#1E293B;">' + escapeHTML(doc.title || doc.category || '(제목없음)') + '</span>'
                     + (doc.required ? '<span style="font-size:10px;background:#FEF2F2;color:#EF4444;border:1px solid #FECACA;padding:1px 5px;border-radius:4px;font-weight:700;">필수</span>' : '')
                     + '</div>'
                     + '<div style="font-size:11px;color:#64748B;display:flex;flex-wrap:wrap;gap:6px;">'
                     + '<span>' + escapeHTML(doc.category || '') + '</span>'
                     + (doc.amount ? '<span>· ₩' + Number(doc.amount).toLocaleString() + '</span>' : '')
-                    + (hasFile ? '<span style="color:#0F766E;">· 📎 ' + escapeHTML(doc.originalFileName || doc.fileName || '파일있음') + '</span>' : '')
+                    + (hasFile ? '<span style="color:#2563EB;">· 📎 ' + escapeHTML(doc.originalFileName || doc.fileName || '파일있음') + '</span>' : '')
                     + (doc.notes ? '<span style="color:#94A3B8;">· ' + escapeHTML(doc.notes.slice(0,30)) + (doc.notes.length>30?'…':'') + '</span>' : '')
                     + '</div></div>'
                     + '<div style="flex-shrink:0;"><span class="tax-vault-status-badge ' + sCls + '">' + escapeHTML(doc.status) + '</span></div>'
@@ -7110,17 +7085,17 @@
                 html += `
                 <div class="tax-timeline-item" style="display:flex; gap:12px; margin-bottom:12px; position:relative; align-items: flex-start;">
                     <div style="display:flex; flex-direction:column; align-items:center; margin-top:2px;">
-                        <div style="width:22px; height:22px; border-radius:50%; background:${checked ? '#0F766E' : '#E2E8F0'}; color:${checked ? 'white' : '#64748B'}; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:900;">
+                        <div style="width:22px; height:22px; border-radius:50%; background:${checked ? '#2563EB' : '#E2E8F0'}; color:${checked ? 'white' : '#64748B'}; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:900;">
                             ${checked ? '✓' : s.step}
                         </div>
                         ${s.step < 11 ? '<div style="width:2px; height:34px; background:#E2E8F0; margin-top:4px;"></div>' : ''}
                     </div>
                     <div style="flex:1;">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <span style="font-size:12.5px; font-weight:700; color:${checked ? '#0F766E' : '#334155'}; text-decoration:${checked ? 'line-through' : 'none'};">${escapeHTML(s.name)}</span>
+                            <span style="font-size:13px; font-weight:700; color:${checked ? '#2563EB' : '#334155'}; text-decoration:${checked ? 'line-through' : 'none'};">${escapeHTML(s.name)}</span>
                             <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleTaxProcedureStep(${s.step})" style="width:15px; height:15px; cursor:pointer;">
                         </div>
-                        <div style="font-size:10.5px; color:#64748B; margin-top:2px; line-height:1.4;">${escapeHTML(s.desc)}</div>
+                        <div style="font-size:11px; color:#64748B; margin-top:2px; line-height:1.4;">${escapeHTML(s.desc)}</div>
                     </div>
                 </div>
                 `;
@@ -7231,9 +7206,9 @@
             const EXEMPTION_THRESHOLD = 20000000;
             const isSubject = totalRentalIncome > EXEMPTION_THRESHOLD;
             return '<div class="tax-page-card" style="margin:10px 0;">'
-                + '<div class="tax-page-card-title">📋 신고 의무 참고 (간이)</div>'
-                + '<div style="background:' + (isSubject ? '#FEF3C7' : '#F0FDFA') + ';border-radius:8px;padding:10px;margin-top:10px;">'
-                + '<div style="font-size:14px;font-weight:800;color:' + (isSubject ? '#D97706' : '#0F766E') + ';">'
+                + '<div class="tax-page-card-title">신고 의무 참고 (간이)</div>'
+                + '<div style="background:' + (isSubject ? '#FEF3C7' : '#EFF6FF') + ';border-radius:8px;padding:10px;margin-top:10px;">'
+                + '<div style="font-size:14px;font-weight:800;color:' + (isSubject ? '#D97706' : '#2563EB') + ';">'
                 + (isSubject ? '⚠️ 신고 대상 가능성 높음 (참고용)' : '✅ 연 2,000만원 이하 (분리과세 선택 가능)') + '</div>'
                 + '<div style="font-size:12px;color:#64748B;margin-top:6px;line-height:1.5;">'
                 + '<strong>' + _taxYear + '년 임대수입 합계(간주포함):</strong> ₩' + totalRentalIncome.toLocaleString() + '<br>'
@@ -7245,17 +7220,17 @@
             if (!data) return '<div style="color:#94A3B8;text-align:center;padding:16px;">세무 프로필이 없습니다.</div>';
             const sepBetter = data.totalSeparateScenarioTax < data.totalCombinedScenarioTax;
             return '<div class="tax-page-card" style="margin:10px 0;">'
-                + '<div class="tax-page-card-title">🧮 납부세액 시뮬레이션 (참고용)</div>'
+                + '<div class="tax-page-card-title">납부세액 시뮬레이션 (참고용)</div>'
                 + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;">'
-                + '<div style="border:1.5px solid ' + (sepBetter ? '#0F766E' : '#E2E8F0') + ';padding:10px;border-radius:8px;background:' + (sepBetter ? '#F0FDFA' : 'white') + ';text-align:center;position:relative;">'
-                + (sepBetter ? '<span style="position:absolute;top:-8px;right:6px;background:#0F766E;color:white;font-size:9px;padding:1px 5px;border-radius:4px;font-weight:700;">추천</span>' : '')
+                + '<div style="border:1.5px solid ' + (sepBetter ? '#2563EB' : '#E2E8F0') + ';padding:10px;border-radius:8px;background:' + (sepBetter ? '#EFF6FF' : 'white') + ';text-align:center;position:relative;">'
+                + (sepBetter ? '<span style="position:absolute;top:-8px;right:6px;background:#2563EB;color:white;font-size:9px;padding:1px 5px;border-radius:4px;font-weight:700;">추천</span>' : '')
                 + '<div style="font-size:10px;color:#64748B;font-weight:700;">분리과세 시나리오</div>'
-                + '<div style="font-size:15px;font-weight:800;color:' + (sepBetter ? '#0F766E' : '#334155') + ';margin-top:4px;">₩' + data.totalSeparateScenarioTax.toLocaleString() + '</div></div>'
-                + '<div style="border:1.5px solid ' + (!sepBetter ? '#0F766E' : '#E2E8F0') + ';padding:10px;border-radius:8px;background:' + (!sepBetter ? '#F0FDFA' : 'white') + ';text-align:center;position:relative;">'
-                + (!sepBetter ? '<span style="position:absolute;top:-8px;right:6px;background:#0F766E;color:white;font-size:9px;padding:1px 5px;border-radius:4px;font-weight:700;">추천</span>' : '')
+                + '<div style="font-size:15px;font-weight:800;color:' + (sepBetter ? '#2563EB' : '#334155') + ';margin-top:4px;">₩' + data.totalSeparateScenarioTax.toLocaleString() + '</div></div>'
+                + '<div style="border:1.5px solid ' + (!sepBetter ? '#2563EB' : '#E2E8F0') + ';padding:10px;border-radius:8px;background:' + (!sepBetter ? '#EFF6FF' : 'white') + ';text-align:center;position:relative;">'
+                + (!sepBetter ? '<span style="position:absolute;top:-8px;right:6px;background:#2563EB;color:white;font-size:9px;padding:1px 5px;border-radius:4px;font-weight:700;">추천</span>' : '')
                 + '<div style="font-size:10px;color:#64748B;font-weight:700;">종합합산 시나리오</div>'
-                + '<div style="font-size:15px;font-weight:800;color:' + (!sepBetter ? '#0F766E' : '#334155') + ';margin-top:4px;">₩' + data.totalCombinedScenarioTax.toLocaleString() + '</div></div></div>'
-                + '<div style="font-size:10.5px;color:#94A3B8;margin-top:8px;text-align:center;">⚠️ 모든 수치는 입력 데이터 기반 단순 참고용입니다</div></div>';
+                + '<div style="font-size:15px;font-weight:800;color:' + (!sepBetter ? '#2563EB' : '#334155') + ';margin-top:4px;">₩' + data.totalCombinedScenarioTax.toLocaleString() + '</div></div></div>'
+                + '<div style="font-size:11px;color:#94A3B8;margin-top:8px;text-align:center;">⚠️ 모든 수치는 입력 데이터 기반 단순 참고용입니다</div></div>';
         }
         function _renderTaxIncomeFinalCard() {
             const inc = _taxCollectIncome();
@@ -7267,14 +7242,14 @@
             const netIncome = totalIncome - exp.deductibleTotal;
             let rows = '';
             rows += '<div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid #E2E8F0;"><span style="color:#475569;">원룸 임대수입 (앱 기록)</span><span style="font-weight:700;">₩' + inc.totalIncluded.toLocaleString() + '</span></div>';
-            if (studioAdj !== 0) rows += '<div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid #E2E8F0;"><span style="color:#475569;">수입 조정금액</span><span style="font-weight:700;color:' + (studioAdj >= 0 ? '#0F766E' : '#DC2626') + ';">' + (studioAdj >= 0 ? '+' : '') + '₩' + studioAdj.toLocaleString() + '</span></div>';
+            if (studioAdj !== 0) rows += '<div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid #E2E8F0;"><span style="color:#475569;">수입 조정금액</span><span style="font-weight:700;color:' + (studioAdj >= 0 ? '#2563EB' : '#DC2626') + ';">' + (studioAdj >= 0 ? '+' : '') + '₩' + studioAdj.toLocaleString() + '</span></div>';
             if (dep.deemed > 0) rows += '<div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid #E2E8F0;"><span style="color:#475569;">간주임대료</span><span style="font-weight:700;color:#B45309;">+₩' + dep.deemed.toLocaleString() + '</span></div>';
             rows += '<div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid #E2E8F0;"><span style="color:#475569;">필요경비 (차감)</span><span style="font-weight:700;color:#DC2626;">−₩' + exp.deductibleTotal.toLocaleString() + '</span></div>';
-            rows += '<div style="display:flex;justify-content:space-between;font-size:15px;padding:10px;background:#0F766E;border-radius:8px;color:white;margin-top:4px;"><span style="font-weight:700;">임대소득금액 합계</span><span style="font-weight:900;">₩' + netIncome.toLocaleString() + '</span></div>';
-            return '<div class="tax-page-card" style="margin:10px 0;background:linear-gradient(135deg,#F0FDFA,#E0F2FE);">'
-                + '<div class="tax-page-card-title">📊 임대소득금액 최종 집계 (참고용)</div>'
+            rows += '<div style="display:flex;justify-content:space-between;font-size:15px;padding:10px;background:#2563EB;border-radius:8px;color:white;margin-top:4px;"><span style="font-weight:700;">임대소득금액 합계</span><span style="font-weight:900;">₩' + netIncome.toLocaleString() + '</span></div>';
+            return '<div class="tax-page-card" style="margin:10px 0;background:#EFF6FF;">'
+                + '<div class="tax-page-card-title">임대소득금액 최종 집계 (참고용)</div>'
                 + '<div style="margin-top:12px;display:grid;gap:8px;">' + rows + '</div>'
-                + '<div style="font-size:10.5px;color:#94A3B8;margin-top:8px;line-height:1.4;">※ 타 소득(근로/기타)과 합산 전 임대부분만 집계한 단순 참고값입니다.</div></div>';
+                + '<div style="font-size:11px;color:#94A3B8;margin-top:8px;line-height:1.4;">※ 타 소득(근로/기타)과 합산 전 임대부분만 집계한 단순 참고값입니다.</div></div>';
         }
         function copyTaxAccountantSummary() {
             if (!appData.taxProfile) { showToast('세무 프로필이 없습니다.'); return; }
@@ -7358,16 +7333,16 @@
             });
             let html = '<html><head><meta charset="utf-8"><title>' + _taxYear + '년 세무사 제출용 세금신고 자료 묶음</title>'
                 + '<style>body{font-family:"Malgun Gothic",sans-serif;margin:0;padding:20px;color:#1E293B;font-size:12px;}'
-                + 'h1{font-size:18px;margin:0 0 4px;color:#0F766E;}h2{font-size:13px;margin:16px 0 6px;border-bottom:2px solid #0F766E;padding-bottom:3px;color:#0F766E;}'
+                + 'h1{font-size:18px;margin:0 0 4px;color:#2563EB;}h2{font-size:13px;margin:16px 0 6px;border-bottom:2px solid #2563EB;padding-bottom:3px;color:#2563EB;}'
                 + 'table{width:100%;border-collapse:collapse;margin-bottom:10px;}'
                 + 'th,td{border:1px solid #CBD5E1;padding:5px 7px;text-align:left;font-size:11px;}'
                 + 'th{background:#F1F5F9;font-weight:700;}'
-                + '.total-row{background:#F0FDFA;font-weight:700;}'
+                + '.total-row{background:#EFF6FF;font-weight:700;}'
                 + '.sum-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0;}'
                 + '.sum-card{border:1px solid #CBD5E1;border-radius:6px;padding:8px;}'
                 + '.sum-lbl{font-size:9px;color:#64748B;margin-bottom:3px;}'
                 + '.sum-amt{font-size:12px;font-weight:800;}'
-                + '.final{background:#0F766E;color:white;padding:10px;border-radius:6px;text-align:center;margin:10px 0;}'
+                + '.final{background:#2563EB;color:white;padding:10px;border-radius:6px;text-align:center;margin:10px 0;}'
                 + '.final .sum-amt{font-size:17px;color:white;}'
                 + '.disclaimer{background:#FFFBEB;border:1px solid #FDE68A;border-radius:6px;padding:8px;font-size:10px;color:#B45309;margin-top:12px;}'
                 + '@media print{body{padding:10px;}}</style></head><body>';
@@ -7425,7 +7400,7 @@
             // 세금서류 보관함 체크리스트
             const vaultDocs = _taxGetActiveTaxDocuments();
             if (vaultDocs.length > 0) {
-                const stColors = { '미확보':'#EF4444','준비중':'#D97706','업로드완료':'#0F766E','제출완료':'#1D4ED8' };
+                const stColors = { '미확보':'#EF4444','준비중':'#D97706','업로드완료':'#2563EB','제출완료':'#1D4ED8' };
                 html += '<h2>🗄️ 세금서류 보관함 체크리스트</h2>';
                 const reqMissing = vaultDocs.filter(function(d) { return d.required && d.status === '미확보'; }).length;
                 if (reqMissing > 0) html += '<div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:6px;padding:7px;margin-bottom:8px;color:#B91C1C;font-weight:700;font-size:11px;">⚠️ 필수서류 미확보 ' + reqMissing + '건 — 세무사 전달 전 확인 필요</div>';
@@ -7472,7 +7447,7 @@
                 + '<span class="tax-status-badge ' + st.cls + '">' + st.text + '</span></div>'
                 + '<div class="tax-kpi-grid">'
                 + '<div class="tax-kpi-card"><div class="tax-kpi-label">올해 받은 월세/임대수입</div>'
-                + '<div class="tax-kpi-value" style="color:#0F766E;">' + _taxFmtKRW(totalIncome) + '</div>'
+                + '<div class="tax-kpi-value" style="color:#2563EB;">' + _taxFmtKRW(totalIncome) + '</div>'
                 + '<div class="tax-kpi-sub">총 임대수입 합계</div></div>'
                 + '<div class="tax-kpi-card"><div class="tax-kpi-label">건물 때문에 실제로 쓴 돈</div>'
                 + '<div class="tax-kpi-value" style="color:#DC2626;">' + _taxFmtKRW(totalExpense) + '</div>'
@@ -7481,7 +7456,7 @@
                 + '<div class="tax-progress-bar"><div class="tax-progress-fill ' + barCls + '" style="width:' + evidRate + '%;"></div></div>'
                 + '<div class="tax-kpi-value" style="font-size:15px;margin-top:5px;">' + evidRate + '%</div></div>'
                 + '<div class="tax-kpi-card"><div class="tax-kpi-label">세금 계산에 참고되는 금액</div>'
-                + '<div class="tax-kpi-value" style="color:#1E40AF;">' + _taxFmtKRW(taxBase) + '</div>'
+                + '<div class="tax-kpi-value" style="color:#1D4ED8;">' + _taxFmtKRW(taxBase) + '</div>'
                 + '<div class="tax-kpi-sub">참고용 과세 기준금액</div></div>'
                 + '</div>';
         }
@@ -7613,7 +7588,7 @@
             var evBadge = ev.none
                 ? '<span style="font-size:10px;color:#EF4444;font-weight:700;background:#FEE2E2;padding:2px 7px;border-radius:10px;">⚠ 증빙없음</span>'
                 : hasEvidence
-                    ? '<span style="font-size:10px;color:#0F766E;font-weight:700;background:#D1FAE5;padding:2px 7px;border-radius:10px;">✓ 증빙있음</span>'
+                    ? '<span style="font-size:10px;color:#2563EB;font-weight:700;background:#D1FAE5;padding:2px 7px;border-radius:10px;">✓ 증빙있음</span>'
                     : '<span style="font-size:10px;color:#94A3B8;background:#F1F5F9;padding:2px 7px;border-radius:10px;">미입력</span>';
 
             var h = '<div class="tax-building-card">';
@@ -7635,7 +7610,7 @@
                 + '<label style="display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;">'
                 + '<input type="checkbox" ' + (b.isRegisteredRental ? 'checked' : '') + ' '
                 + 'onchange="_taxUpdateBuildingField(\'' + id + '\',\'isRegisteredRental\',this.checked);_taxScheduleAutoSave()" '
-                + 'style="width:16px;height:16px;accent-color:#0F766E;">'
+                + 'style="width:16px;height:16px;accent-color:#2563EB;">'
                 + '<span style="font-size:9px;color:#64748B;white-space:nowrap;">등록임대</span></label>'
                 + '<button onclick="_taxDeleteBuilding(\'' + id + '\')" title="삭제" '
                 + 'style="background:#FEE2E2;border:none;color:#EF4444;border-radius:6px;padding:4px 7px;cursor:pointer;font-size:12px;margin-top:2px;">🗑</button>'
@@ -7658,7 +7633,7 @@
                     + _mkTaxInputField('기타 수입', 'number', normalizeNumber(inc.otherIncome),
                         '_taxUpdateBuildingField(\'' + id + '\',\'income.otherIncome\',normalizeNumber(this.value));_taxScheduleAutoSave()')
                     + '</div>'
-                    + '<div style="background:#F0FDFA;border-radius:8px;padding:7px 10px;font-size:12px;color:#0F766E;font-weight:700;margin-bottom:12px;">'
+                    + '<div style="background:#EFF6FF;border-radius:8px;padding:7px 10px;font-size:12px;color:#2563EB;font-weight:700;margin-bottom:12px;">'
                     + '수입 소계: ' + _taxFmtKRW(totalInc) + '</div>';
             }
 
@@ -7723,7 +7698,7 @@
                 + _mkTaxInputField('기납부 원천세 합계', 'number', normalizeNumber(inc.withholdingTax || empInc.withholdingTax),
                     '_taxUpdateIncomeField(\'withholdingTax\',normalizeNumber(this.value));_taxUpdateProfileField(\'employmentIncome.withholdingTax\',normalizeNumber(this.value));_taxScheduleAutoSave()')
                 + '<div class="tax-input-group"><label>&nbsp;</label>'
-                + '<div style="padding:7px 10px;background:#F0FDFA;border-radius:8px;font-size:12px;color:#0F766E;font-weight:700;">'
+                + '<div style="padding:7px 10px;background:#EFF6FF;border-radius:8px;font-size:12px;color:#2563EB;font-weight:700;">'
                 + '합계: ' + _taxFmtKRW((normalizeNumber(inc.employment || empInc.grossSalary)) + normalizeNumber(inc.business) + normalizeNumber(inc.interest) + normalizeNumber(inc.other))
                 + '</div></div>'
                 + '</div>'
@@ -7925,7 +7900,7 @@
             if (simpleRate != null && simpleRate > 0) {
                 var simpleBase = Math.max(0, Math.round(totalRentalIncome * (1 - simpleRate / 100)));
                 var simpleTax = _taxProgressiveTax(simpleBase + otherIncome);
-                html += '<div style="background:#EFF6FF;border-radius:8px;padding:8px 10px;font-size:12px;color:#1E40AF;margin-top:4px;">'
+                html += '<div style="background:#EFF6FF;border-radius:8px;padding:8px 10px;font-size:12px;color:#1D4ED8;margin-top:4px;">'
                     + '단순경비율 기준 참고 추계: 소득금액 ' + _taxFmtKRW(simpleBase) + ' → 예상세액 ' + _taxFmtKRW(simpleTax + Math.round(simpleTax*0.1)) + ' (지방세 포함, 참고용)</div>';
             }
             if (stdRate != null && stdRate > 0) {
@@ -7936,7 +7911,7 @@
                     + '<input type="number" value="' + normalizeNumber((sim||{}).mainExpenses) + '" placeholder="0" '
                     + 'oninput="if(!appData.taxProfile.simulation)appData.taxProfile.simulation={};appData.taxProfile.simulation.mainExpenses=normalizeNumber(this.value);_taxScheduleAutoSave();_renderTaxSimulationSection()" '
                     + 'style="width:100%;padding:7px 10px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:13px;box-sizing:border-box;" /></div>'
-                    + '<div style="background:#EFF6FF;border-radius:8px;padding:8px 10px;font-size:12px;color:#1E40AF;margin-top:6px;">'
+                    + '<div style="background:#EFF6FF;border-radius:8px;padding:8px 10px;font-size:12px;color:#1D4ED8;margin-top:6px;">'
                     + '기준경비율 기준 참고 추계: 소득금액 ' + _taxFmtKRW(stdBase) + ' → 예상세액 ' + _taxFmtKRW(stdTax + Math.round(stdTax*0.1)) + ' (지방세 포함, 참고용)</div>';
             }
             html += '</div>';
@@ -7969,7 +7944,7 @@
             const inc = _taxCollectIncome();
             if (inc.paidRents.length === 0) return '<div style="text-align:center;padding:30px;color:#94A3B8;">' + _taxYear + '년 납부 완료된 월세 기록이 없습니다.</div>';
             let html = '<div style="font-size:12px;color:#64748B;margin-bottom:10px;line-height:1.5;">체크된 항목만 신고 자료에 포함됩니다. 세입자 단위로 일괄 토글 가능합니다.</div>';
-            html += '<div style="display:flex;justify-content:space-between;padding:10px 14px;background:#0F766E;color:white;border-radius:8px;margin-bottom:8px;font-weight:800;font-size:14px;"><span>총 임대수입 (포함)</span><span>' + _taxFmt(inc.totalIncluded) + ' / ' + _taxFmt(inc.totalGross) + '</span></div>';
+            html += '<div style="display:flex;justify-content:space-between;padding:10px 14px;background:#2563EB;color:white;border-radius:8px;margin-bottom:8px;font-weight:800;font-size:14px;"><span>총 임대수입 (포함)</span><span>' + _taxFmt(inc.totalIncluded) + ' / ' + _taxFmt(inc.totalGross) + '</span></div>';
             // 세입자별 그룹
             Object.values(inc.byTenant).forEach(g => {
                 const tenant = g.tenant;
@@ -7995,7 +7970,7 @@
             const exp = _taxCollectExpenses();
             if (exp.yearExp.length === 0) return '<div style="text-align:center;padding:30px;color:#94A3B8;">' + _taxYear + '년 지출 기록이 없습니다.</div>';
             let html = '<div style="font-size:12px;color:#64748B;margin-bottom:10px;line-height:1.5;">카테고리 배지를 눌러 필요경비/비필요경비를 변경할 수 있습니다.</div>';
-            html += '<div style="display:flex;justify-content:space-between;padding:10px 14px;background:#0F766E;color:white;border-radius:8px;margin-bottom:8px;font-weight:800;font-size:14px;"><span>필요경비 합계</span><span>' + _taxFmt(exp.deductibleTotal) + '</span></div>';
+            html += '<div style="display:flex;justify-content:space-between;padding:10px 14px;background:#2563EB;color:white;border-radius:8px;margin-bottom:8px;font-weight:800;font-size:14px;"><span>필요경비 합계</span><span>' + _taxFmt(exp.deductibleTotal) + '</span></div>';
             // 카테고리별 그룹
             Object.keys(exp.byCategory).sort().forEach(cat => {
                 const g = exp.byCategory[cat];
@@ -8040,7 +8015,7 @@
                      + '<div>계약: ' + escapeHTML(t.contractStart || '-') + ' ~ ' + escapeHTML(t.contractEnd || '-') + '</div>'
                      + '<div>월세: ₩' + (t.monthlyRent||0).toLocaleString() + (t.managementFee>0 ? ' + 관리비 ₩' + t.managementFee.toLocaleString() : '') + '</div>'
                      + '<div>보증금: ₩' + (t.deposit||0).toLocaleString() + '</div>'
-                     + '<div style="font-weight:800;color:#0F766E;">연간 임대수입: ₩' + annualPaid.toLocaleString() + '</div>'
+                     + '<div style="font-weight:800;color:#2563EB;">연간 임대수입: ₩' + annualPaid.toLocaleString() + '</div>'
                      + '</div></div>';
             });
             return html;
@@ -8131,16 +8106,16 @@
             });
             let html = '<html><head><meta charset="utf-8"><title>' + _taxYear + '년 종합소득세 임대소득 신고 자료</title>'
                 + '<style>body{font-family:"Malgun Gothic",sans-serif;margin:0;padding:24px;color:#1E293B;}'
-                + 'h1{font-size:20px;margin:0 0 4px;}h2{font-size:15px;margin:18px 0 8px;border-bottom:2px solid #0F766E;padding-bottom:4px;color:#0F766E;}'
+                + 'h1{font-size:20px;margin:0 0 4px;}h2{font-size:15px;margin:18px 0 8px;border-bottom:2px solid #2563EB;padding-bottom:4px;color:#2563EB;}'
                 + 'table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:12px;}'
                 + 'th,td{border:1px solid #CBD5E1;padding:6px 8px;text-align:left;}'
                 + 'th{background:#F1F5F9;font-weight:700;}'
-                + '.total-row{background:#F0FDFA;font-weight:700;}'
+                + '.total-row{background:#EFF6FF;font-weight:700;}'
                 + '.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:8px 0;}'
                 + '.summary-card{border:1px solid #CBD5E1;border-radius:6px;padding:10px;}'
                 + '.summary-label{font-size:10px;color:#64748B;margin-bottom:4px;}'
                 + '.summary-amt{font-size:14px;font-weight:800;}'
-                + '.final{background:#0F766E;color:white;padding:12px;border-radius:8px;text-align:center;margin:12px 0;}'
+                + '.final{background:#2563EB;color:white;padding:12px;border-radius:8px;text-align:center;margin:12px 0;}'
                 + '.final .summary-amt{font-size:20px;color:white;}'
                 + '.final .summary-label{color:rgba(255,255,255,0.85);}'
                 + '@media print{body{padding:12px;}}</style></head><body>';
@@ -8194,7 +8169,7 @@
             // 세금서류 보관함 체크리스트
             const vaultDocs = _taxGetActiveTaxDocuments();
             if (vaultDocs.length > 0) {
-                const stColors = { '미확보':'#EF4444','준비중':'#D97706','업로드완료':'#0F766E','제출완료':'#1D4ED8' };
+                const stColors = { '미확보':'#EF4444','준비중':'#D97706','업로드완료':'#2563EB','제출완료':'#1D4ED8' };
                 html += '<h2>🗄️ 세금서류 보관함 체크리스트</h2>';
                 const reqMissing = vaultDocs.filter(d => d.required && d.status === '미확보').length;
                 if (reqMissing > 0) html += '<div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:6px;padding:8px;margin-bottom:8px;color:#B91C1C;font-weight:700;font-size:11px;">⚠️ 필수서류 미확보 ' + reqMissing + '건 — 신고 전 확인 필요</div>';
@@ -8392,10 +8367,10 @@
         function _showAuthRequiredScreen() {
             try {
                 document.body.innerHTML = [
-                    '<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; padding:24px; font-family:-apple-system,BlinkMacSystemFont,sans-serif; background: linear-gradient(135deg, #F0FDFA 0%, #ECFDF5 100%);">',
+                    '<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; padding:24px; font-family:-apple-system,BlinkMacSystemFont,sans-serif; background: #EFF6FF;">',
                     '  <div style="width: 100%; max-width: 400px; background: #ffffff; padding: 40px 32px; border-radius: 24px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02); border: 1px solid #E2E8F0; text-align: center;">',
                     '    <div style="font-size: 48px; margin-bottom: 16px;">🔑</div>',
-                    '    <h2 style="font-size: 22px; font-weight: 800; color: #0F766E; margin: 0 0 8px 0; letter-spacing: -0.02em;">임대관리 앱 로그인</h2>',
+                    '    <h2 style="font-size: 22px; font-weight: 800; color: #2563EB; margin: 0 0 8px 0; letter-spacing: -0.02em;">임대관리 앱 로그인</h2>',
                     '    <p style="font-size: 14px; color: #64748B; margin: 0 0 28px 0; line-height: 1.5;">관리자 계정으로 로그인해 주세요.</p>',
                     '    ',
                     '    <div id="loginErrorMsg" style="display: none; background: #FEE2E2; border: 1.5px solid #FCA5A5; color: #B91C1C; padding: 12px 16px; border-radius: 12px; font-size: 13px; text-align: left; margin-bottom: 20px; line-height: 1.4;"></div>',
@@ -8403,13 +8378,13 @@
                     '    <form id="loginForm" onsubmit="handleAuthLogin(event)" style="display: flex; flex-direction: column; gap: 16px;">',
                     '      <div style="text-align: left;">',
                     '        <label for="loginEmail" style="display: block; font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 6px; margin-left: 4px;">이메일 주소</label>',
-                    '        <input type="email" id="loginEmail" required placeholder="example@email.com" style="width: 100%; padding: 12px 16px; border: 1.5px solid #E2E8F0; border-radius: 12px; font-size: 14px; color: #1E293B; outline: none; transition: all 0.2s;" onfocus="this.style.borderColor=\'#0F766E\'; this.style.boxShadow=\'0 0 0 3px rgba(15, 118, 110, 0.15)\';" onblur="this.style.borderColor=\'#E2E8F0\'; this.style.boxShadow=\'none\';">',
+                    '        <input type="email" id="loginEmail" required placeholder="example@email.com" style="width: 100%; padding: 12px 16px; border: 1.5px solid #E2E8F0; border-radius: 12px; font-size: 14px; color: #1E293B; outline: none; transition: all 0.2s;" onfocus="this.style.borderColor=\'#2563EB\'; this.style.boxShadow=\'0 0 0 3px rgba(37,99,235, 0.15)\';" onblur="this.style.borderColor=\'#E2E8F0\'; this.style.boxShadow=\'none\';">',
                     '      </div>',
                     '      <div style="text-align: left;">',
                     '        <label for="loginPassword" style="display: block; font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 6px; margin-left: 4px;">비밀번호</label>',
-                    '        <input type="password" id="loginPassword" required placeholder="비밀번호 입력" style="width: 100%; padding: 12px 16px; border: 1.5px solid #E2E8F0; border-radius: 12px; font-size: 14px; color: #1E293B; outline: none; transition: all 0.2s;" onfocus="this.style.borderColor=\'#0F766E\'; this.style.boxShadow=\'0 0 0 3px rgba(15, 118, 110, 0.15)\';" onblur="this.style.borderColor=\'#E2E8F0\'; this.style.boxShadow=\'none\';">',
+                    '        <input type="password" id="loginPassword" required placeholder="비밀번호 입력" style="width: 100%; padding: 12px 16px; border: 1.5px solid #E2E8F0; border-radius: 12px; font-size: 14px; color: #1E293B; outline: none; transition: all 0.2s;" onfocus="this.style.borderColor=\'#2563EB\'; this.style.boxShadow=\'0 0 0 3px rgba(37,99,235, 0.15)\';" onblur="this.style.borderColor=\'#E2E8F0\'; this.style.boxShadow=\'none\';">',
                     '      </div>',
-                    '      <button type="submit" id="loginSubmitBtn" style="width: 100%; margin-top: 8px; padding: 14px; background: linear-gradient(135deg, #0F766E, #0EA5A4); color: white; border: none; border-radius: 12px; font-size: 15px; font-weight: 800; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(15, 118, 110, 0.2);" onmouseover="this.style.opacity=\'0.95\'; this.style.transform=\'translateY(-1px)\';" onmouseout="this.style.opacity=\'1\'; this.style.transform=\'none\';">로그인</button>',
+                    '      <button type="submit" id="loginSubmitBtn" style="width: 100%; margin-top: 8px; padding: 14px; background: #2563EB; color: white; border: none; border-radius: 12px; font-size: 15px; font-weight: 800; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(37,99,235, 0.2);" onmouseover="this.style.opacity=\'0.95\'; this.style.transform=\'translateY(-1px)\';" onmouseout="this.style.opacity=\'1\'; this.style.transform=\'none\';">로그인</button>',
                     '    </form>',
                     '    <div style="font-size: 12px; color: #94A3B8; margin-top: 24px; line-height: 1.5;">계정 신규 발급 또는 분실 시<br>Ryan에게 문의해 주세요.</div>',
                     '  </div>',
@@ -9504,15 +9479,15 @@
                     '<div class="tc-past-header">' +
                         '<div style="flex:1;min-width:0;">' +
                             '<div class="tc-past-name">' + escapeHTML(t.name) + '</div>' +
-                            '<div class="tc-past-room">🏢 ' + escapeHTML((bldName ? bldName + ' ' : '') + roomNum) + '</div>' +
+                            '<div class="tc-past-room">' + escapeHTML((bldName ? bldName + ' ' : '') + roomNum) + '</div>' +
                         '</div>' +
                         '<div style="display:flex;align-items:center;gap:8px;">' +
                             '<span class="tc-past-badge">' + badgeText + '</span>' +
                             '<span style="color:#CBD5E1;font-size:20px;line-height:1;">›</span>' +
                         '</div>' +
                     '</div>' +
-                    '<div class="tc-past-dates">📅 ' + escapeHTML(start) + ' ~ ' + escapeHTML(end) + '</div>' +
-                    (t.deposit > 0 ? '<div style="margin-top:8px;font-size:12px;color:#6B7280;">🏦 보증금 ₩' + t.deposit.toLocaleString() + (t.depositRefunded ? ' <span style="color:#16A34A;font-weight:700;">반환완료</span>' : ' <span style="color:#DC2626;font-weight:700;">미반환</span>') + '</div>' : '') +
+                    '<div class="tc-past-dates">' + escapeHTML(start) + ' ~ ' + escapeHTML(end) + '</div>' +
+                    (t.deposit > 0 ? '<div style="margin-top:8px;font-size:12px;color:#64748B;">보증금 ₩' + t.deposit.toLocaleString() + (t.depositRefunded ? ' <span style="color:#16A34A;font-weight:700;">반환완료</span>' : ' <span style="color:#DC2626;font-weight:700;">미반환</span>') + '</div>' : '') +
                     (isExpiredActive ? '<div style="margin-top:10px;"><button class="tc-btn-outline" style="width:100%;" data-tid="' + t.id + '">계약 갱신</button></div>' : '');
                 // 카드 클릭 → 세부정보 보기
                 card.addEventListener('click', function(e) {
@@ -9596,29 +9571,29 @@
             m.style.cssText = 'display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;';
             m.innerHTML = '<div style="background:#fff;border-radius:16px;padding:24px;width:92%;max-width:460px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.3);">' +
               '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">' +
-              '<h3 style="margin:0;font-size:20px;color:#1e40af;">📱 은행 입금 문자 확인</h3>' +
-              '<button onclick="closeSmsModal()" style="background:none;border:none;font-size:26px;cursor:pointer;color:#6b7280;padding:4px;">✕</button></div>' +
+              '<h3 style="margin:0;font-size:20px;color:#1D4ED8;">은행 입금 문자 확인</h3>' +
+              '<button onclick="closeSmsModal()" style="background:none;border:none;font-size:26px;cursor:pointer;color:#64748B;padding:4px;">✕</button></div>' +
               '<div id="smsStep1">' +
-              '<p style="font-size:16px;color:#374151;margin-bottom:12px;">입금 알림 문자를 아래에 붙여넣으세요</p>' +
+              '<p style="font-size:16px;color:#334155;margin-bottom:12px;">입금 알림 문자를 아래에 붙여넣으세요</p>' +
               '<textarea id="smsInput" rows="7" placeholder="예) [국민은행] 입금 230,000원 홍*동 잔액 1,234,567원"' +
-              ' style="width:100%;box-sizing:border-box;padding:12px;font-size:15px;border:2px solid #d1d5db;border-radius:8px;resize:none;font-family:inherit;"></textarea>' +
+              ' style="width:100%;box-sizing:border-box;padding:12px;font-size:15px;border:2px solid #CBD5E1;border-radius:8px;resize:none;font-family:inherit;"></textarea>' +
               '<div style="display:flex;gap:8px;margin-top:12px;">' +
-              '<button onclick="pasteFromClipboard()" style="flex:1;padding:14px;font-size:15px;background:#f3f4f6;border:2px solid #d1d5db;border-radius:8px;cursor:pointer;">📋 클립보드</button>' +
-              '<button onclick="analyzeSms()" style="flex:1;padding:14px;font-size:16px;background:#1e40af;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:bold;">🔍 분석하기</button>' +
+              '<button onclick="pasteFromClipboard()" style="flex:1;padding:14px;font-size:15px;background:#F1F5F9;border:2px solid #CBD5E1;border-radius:8px;cursor:pointer;">📋 클립보드</button>' +
+              '<button onclick="analyzeSms()" style="flex:1;padding:14px;font-size:16px;background:#1D4ED8;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:bold;">🔍 분석하기</button>' +
               '</div></div>' +
               '<div id="smsStep2" style="display:none;">' +
               '<div style="background:#f0fdf4;border:2px solid #86efac;border-radius:12px;padding:16px;margin-bottom:16px;">' +
-              '<div style="font-size:14px;color:#6b7280;margin-bottom:8px;">📊 분석 결과</div>' +
+              '<div style="font-size:14px;color:#64748B;margin-bottom:8px;">분석 결과</div>' +
               '<table style="width:100%;border-collapse:collapse;">' +
-              '<tr><td style="padding:5px 0;color:#6b7280;font-size:14px;width:60px;">은행</td><td style="font-size:15px;font-weight:bold;" id="smsResBank">-</td></tr>' +
-              '<tr><td style="padding:5px 0;color:#6b7280;font-size:14px;">입금액</td><td style="font-size:20px;font-weight:bold;color:#059669;" id="smsResAmount">-</td></tr>' +
-              '<tr><td style="padding:5px 0;color:#6b7280;font-size:14px;">입금자</td><td style="font-size:15px;font-weight:bold;" id="smsResSender">-</td></tr>' +
+              '<tr><td style="padding:5px 0;color:#64748B;font-size:14px;width:60px;">은행</td><td style="font-size:15px;font-weight:bold;" id="smsResBank">-</td></tr>' +
+              '<tr><td style="padding:5px 0;color:#64748B;font-size:14px;">입금액</td><td style="font-size:20px;font-weight:bold;color:#059669;" id="smsResAmount">-</td></tr>' +
+              '<tr><td style="padding:5px 0;color:#64748B;font-size:14px;">입금자</td><td style="font-size:15px;font-weight:bold;" id="smsResSender">-</td></tr>' +
               '</table></div>' +
-              '<div style="margin-bottom:16px;"><label style="display:block;font-size:15px;font-weight:bold;margin-bottom:8px;color:#374151;">세입자 선택</label>' +
-              '<select id="smsTenantSel" style="width:100%;padding:12px;font-size:15px;border:2px solid #d1d5db;border-radius:8px;background:#fff;">' +
+              '<div style="margin-bottom:16px;"><label style="display:block;font-size:15px;font-weight:bold;margin-bottom:8px;color:#334155;">세입자 선택</label>' +
+              '<select id="smsTenantSel" style="width:100%;padding:12px;font-size:15px;border:2px solid #CBD5E1;border-radius:8px;background:#fff;">' +
               '<option value="">-- 세입자를 선택하세요 --</option></select></div>' +
               '<div style="display:flex;gap:8px;">' +
-              '<button onclick="resetSmsModal()" style="flex:1;padding:14px;font-size:15px;background:#f3f4f6;border:2px solid #d1d5db;border-radius:8px;cursor:pointer;">↩ 다시</button>' +
+              '<button onclick="resetSmsModal()" style="flex:1;padding:14px;font-size:15px;background:#F1F5F9;border:2px solid #CBD5E1;border-radius:8px;cursor:pointer;">↩ 다시</button>' +
               '<button onclick="confirmSmsPayment()" style="flex:2;padding:14px;font-size:16px;background:#059669;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:bold;">✅ 수납 처리</button>' +
               '</div></div></div>';
             document.body.appendChild(m);
@@ -9851,7 +9826,7 @@
             };
 
             var html = '<div class="dash-section-header" style="padding:0 12px 6px;">'
-                     + '<span class="dash-section-label">🏢 건물별 이번달 현황</span>'
+                     + '<span class="dash-section-label">건물별 이번달 현황</span>'
                      + '</div>';
 
             bldList.forEach(function(b) {
@@ -9900,7 +9875,7 @@
                     : '';
 
                 html += '<div class="dash-bld-card">'
-                      + '<div class="dash-bld-card-title">🏢 ' + (b.name || '-') + addrTxt + '</div>'
+                      + '<div class="dash-bld-card-title">' + (b.name || '-') + addrTxt + '</div>'
                       + '<div class="dash-bld-metrics">'
                       + '<div class="dash-bld-metric"><div class="dash-bld-metric-label">수납률</div>'
                       +   '<div class="dash-bld-metric-val ' + rateClass + '">' + rateTxt + '</div></div>'
@@ -9979,7 +9954,7 @@
                     var dashOffset = circ - (Math.min(rate, 100) / 100) * circ;
                     donutArc.setAttribute('stroke-dasharray', circ.toFixed(1));
                     donutArc.setAttribute('stroke-dashoffset', dashOffset.toFixed(1));
-                    donutArc.setAttribute('stroke', rate >= 100 ? '#22C55E' : '#3B82F6');
+                    donutArc.setAttribute('stroke', rate >= 100 ? '#059669' : '#2563EB');
                 }
                 if (donutPct) donutPct.textContent = rate + '%';
 
@@ -10045,7 +10020,7 @@
                     var prevOffset = circ - (Math.min(prevRate, 100) / 100) * circ;
                     prevDonutArc.setAttribute('stroke-dasharray', circ.toFixed(1));
                     prevDonutArc.setAttribute('stroke-dashoffset', prevOffset.toFixed(1));
-                    prevDonutArc.setAttribute('stroke', prevRate >= 100 ? '#22C55E' : '#6366F1');
+                    prevDonutArc.setAttribute('stroke', prevRate >= 100 ? '#059669' : '#94A3B8');
                 }
                 if (prevDonutPct) prevDonutPct.textContent = prevRate + '%';
 
@@ -10219,7 +10194,7 @@
                                     '<div class="info-row-desc">' + escapeHTML(memo) + dateStr + estStr + '</div>' +
                                     '</div>' +
                                     '<div class="info-row-right" style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;">' +
-                                    '<span class="info-row-badge ibadge-yellow">🔧 수리중</span>' +
+                                    '<span class="info-row-badge ibadge-yellow">수리중</span>' +
                                     '<button onclick="openMaintenanceCompleteModal(\'' + r.id + '\')" style="font-size:11px;padding:3px 10px;background:#16A34A;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:700;">완료</button>' +
                                     '</div></div>';
                             }).join('');
@@ -10343,14 +10318,14 @@
                     annualProfitEl.textContent = (annualNet >= 0 ? '₩' : '-₩') + _fmtShort(Math.abs(annualNet));
                     annualProfitEl.className = 'annual-stat-val annual-profit' + (annualNet < 0 ? ' loss' : '');
                 }
-                if (annualOccEl) annualOccEl.innerHTML = occRate + '%<span style="display:block;font-size:10px;font-weight:600;color:#7C3AED;opacity:0.75;margin-top:1px;">' + occupiedRooms + '/' + totalRooms + '실</span>';
+                if (annualOccEl) annualOccEl.innerHTML = occRate + '%<span style="display:block;font-size:10px;font-weight:600;color:#64748B;opacity:0.85;margin-top:1px;">' + occupiedRooms + '/' + totalRooms + '실</span>';
 
                 /* ── 하위호환: subtitle, 배지 업데이트 ── */
                 var sub = document.getElementById('dashSubtitleLine');
                 if (sub) {
                     sub.textContent = historyUnpaidTotal > 0
-                        ? '⚠️ 미납 ' + historyUnpaidTotal + '건이 있습니다'
-                        : rate >= 100 ? '✅ 이번달 수납 완료!' : m + '월 수납 현황입니다';
+                        ? '미납 ' + historyUnpaidTotal + '건이 있습니다'
+                        : rate >= 100 ? '이번달 수납 완료!' : m + '월 수납 현황입니다';
                 }
                 var mnEl = document.getElementById('dashMonthNum');
                 var yrEl = document.getElementById('dashYearNum');
