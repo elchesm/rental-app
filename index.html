@@ -2414,6 +2414,7 @@
                         <span style="font-weight:700;font-size:15px;">연동 상태</span>
                         <span id="firebaseConnStatus" style="font-size:14px;font-weight:600;">⚫ 비활성</span>
                     </div>
+                    <p id="fbAccountLine" style="font-size:13px;color:var(--text-secondary);margin-top:8px;display:none;line-height:1.6;"></p>
                     <p id="fbStatusDesc" style="font-size:13px;color:var(--text-secondary);margin-top:8px;line-height:1.6;"></p>
                     <p id="fbLastSyncLine" style="font-size:12px;color:#64748B;margin-top:8px;display:none;"></p>
                     <button type="button" class="btn btn-primary" style="margin-top:12px;" onclick="cloudSaveNow()">☁️ 지금 클라우드에 저장</button>
@@ -8264,6 +8265,11 @@
         var _firestoreTimeoutTimer = null;
         // 자기 쓰기 에코 감지: _saveToFirestore 직전에 기록, _mergeRemoteData 시작에서 비교
         var _lastWrittenToFirestore = null;
+        // 수신 리스너 상태: onSnapshot은 permission-denied 등 오류 시 영구 종료되므로
+        // 오류 코드를 기록하고 재구독을 시도한다. (없으면 그 폰은 영원히 수신 불가)
+        var _fbListenerErrorCode = null;
+        var _fbListenerRetryTimer = null;
+        var _fbListenerRetryCount = 0;
 
         function _hideLoadingSpinnerAndRender() {
             if (_firestoreTimeoutTimer) {
@@ -8607,12 +8613,16 @@
 
             _fbUnsubscribe = docRef.onSnapshot(function(doc) {
                 clearTimeout(_connectingTimer);
-                
-                // hasPendingWrites=true → 방금 우리가 쓴 것, 화면 업데이트 불필요
+                _fbListenerErrorCode = null;
+                _fbListenerRetryCount = 0;
+
+                // 주의: hasPendingWrites=true 스냅샷도 그대로 처리한다.
+                // 과거에는 여기서 early-return 했지만, 이 폰의 보류 쓰기가 flush되지 못하면
+                // (토큰 만료 등) 상대 폰의 변경이 영원히 반영되지 않는 문제가 있었다.
+                // 자기 쓰기 에코는 _mergeRemoteData의 비교 로직이 걸러낸다.
                 if (doc.metadata.hasPendingWrites) {
                     _firestoreInitialLoadComplete = true;
                     _hideLoadingSpinnerAndRender();
-                    return;
                 }
 
                 if (!doc.exists) {
@@ -8640,13 +8650,46 @@
                 _hideLoadingSpinnerAndRender();
             }, function(err) {
                 console.error('Firestore listener error:', err);
+                _fbListenerErrorCode = (err && err.code) || 'unknown';
                 _showFbStatus('error');
                 _updateFirebaseSettingsUI();
-                
+
                 _firestoreInitialLoadComplete = true;
                 _hideLoadingSpinnerAndRender();
+                // 리스너는 오류와 함께 영구 종료된 상태 → 토큰 갱신 후 재구독 시도
+                _scheduleListenerRecovery();
             });
         }
+
+        /** 죽은 onSnapshot 리스너 복구: 토큰 강제 갱신 후 재구독 (지수 백오프, 최대 5회) */
+        function _scheduleListenerRecovery() {
+            if (_fbListenerRetryTimer) return;
+            if (!_db) return;
+            if (_fbListenerRetryCount >= 5) return; // 포그라운드 복귀 시 카운터 리셋 후 재시도
+            var delay = Math.min(30000, 2000 * Math.pow(2, _fbListenerRetryCount));
+            _fbListenerRetryCount++;
+            _fbListenerRetryTimer = setTimeout(function() {
+                _fbListenerRetryTimer = null;
+                var cu = null;
+                try { cu = firebase.auth && firebase.auth().currentUser; } catch (e) {}
+                if (cu) {
+                    // permission-denied는 대부분 토큰 만료 → 강제 갱신 후 재구독
+                    cu.getIdToken(true)
+                        .catch(function (e) { console.warn('[Firestore] token refresh failed:', e); })
+                        .then(function () { _startFirestoreListener(); });
+                } else {
+                    _startFirestoreListener();
+                }
+            }, delay);
+        }
+
+        // 앱이 다시 화면에 보일 때 리스너가 죽어 있으면 즉시 복구 시도
+        document.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'visible' && _fbListenerErrorCode && _db) {
+                _fbListenerRetryCount = 0;
+                _scheduleListenerRecovery();
+            }
+        });
 
         function _mergeRemoteData(remote, meta) {
             meta = meta || {};
@@ -8659,6 +8702,12 @@
             }
             _lastWrittenToFirestore = null;
             var prevSnap = _appDataForSyncCompare(appData);
+            // 원격 데이터가 현재 상태와 완전히 동일하면 머지/재렌더 불필요
+            if (remoteCompare === prevSnap) {
+                try { localStorage.setItem('_fbSyncInit', '1'); } catch (e0) {}
+                _showFbStatus('synced');
+                return;
+            }
             var localData;
             try {
                 localData = JSON.parse(localStorage.getItem('appData') || '{}');
@@ -9118,10 +9167,30 @@
         function _updateFirebaseSettingsUI() {
             var statusEl  = document.getElementById('firebaseConnStatus');
             var descEl    = document.getElementById('fbStatusDesc');
+            var acctEl    = document.getElementById('fbAccountLine');
             if (!statusEl) return;
+            // 로그인 계정 표시 — 두 폰이 같은 계정인지 비교할 수 있게 함.
+            // 계정이 다르면 서로 다른 userData/{uid} 문서를 보므로 동기화되지 않음.
+            if (acctEl) {
+                var _u = null;
+                try { _u = firebase.auth && firebase.auth().currentUser; } catch(e) {}
+                if (_u && _u.uid) {
+                    acctEl.style.display = '';
+                    acctEl.innerHTML = '로그인 계정: <strong>' + escapeHTML(_u.email || '(이메일 없음)') + '</strong>'
+                        + ' <span style="color:var(--text-tertiary);">(ID ' + escapeHTML(_u.uid.slice(0, 6)) + '…)</span>'
+                        + '<br><span style="font-size:11px;color:var(--text-tertiary);">두 폰의 계정이 다르면 데이터가 서로 공유되지 않아요. 두 폰 모두 같은 이메일로 로그인해 주세요.</span>';
+                } else {
+                    acctEl.style.display = '';
+                    acctEl.innerHTML = '<span style="color:var(--danger);font-weight:700;">로그인되지 않음</span> — 로그인 전에는 클라우드 저장/수신이 모두 중단됩니다.';
+                }
+            }
             if (!_fbConfigured()) {
                 statusEl.textContent = '⚫ 비활성';
                 if (descEl) descEl.textContent = 'HTML 파일의 FIREBASE_CONFIG를 채우면 자동으로 활성화됩니다.';
+            } else if (_db && _fbListenerErrorCode) {
+                statusEl.textContent = '🔴 수신 오류';
+                if (descEl) descEl.textContent = '클라우드에서 데이터를 받지 못하고 있어요 (' + _fbListenerErrorCode + '). 자동 재연결을 시도 중입니다. 계속되면 앱을 완전히 닫았다가 다시 열어 주세요.';
+                _refreshFbLastSyncUI();
             } else if (_db) {
                 statusEl.textContent = typeof navigator !== 'undefined' && navigator.onLine === false ? '🟡 연동됨(오프라인 대기)' : '🟢 연동됨';
                 if (descEl) {
