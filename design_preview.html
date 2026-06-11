@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>디자인 예시</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Noto Sans KR', sans-serif;
+  background: #E5E5EA;
+  padding: 40px 20px;
+  min-height: 100vh;
+}
+h1 {
+  text-align: center;
+  font-size: 28px;
+  font-weight: 800;
+  color: #1C1C1E;
+  margin-bottom: 8px;
+  letter-spacing: -0.5px;
+}
+.page-sub {
+  text-align: center;
+  font-size: 15px;
+  color: #6C6C70;
+  margin-bottom: 40px;
+}
+.options-row {
+  display: flex;
+  gap: 32px;
+  justify-content: center;
+  flex-wrap: wrap;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.option-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+.option-label {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+}
+.option-desc {
+  font-size: 13px;
+  color: #6C6C70;
+  text-align: center;
+  max-width: 260px;
+  line-height: 1.5;
+}
+/* Phone frame */
+.phone {
+  width: 300px;
+  height: 620px;
+  border-radius: 46px;
+  border: 8px solid #1C1C1E;
+  overflow: hidden;
+  position: relative;
+  box-shadow:
+    0 0 0 2px #3A3A3C,
+    0 30px 80px rgba(0,0,0,0.35),
+    inset 0 0 0 1px rgba(255,255,255,0.08);
+  display: flex;
+  flex-direction: column;
+}
+.phone::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 110px; height: 30px;
+  background: #1C1C1E;
+  border-radius: 0 0 22px 22px;
+  z-index: 100;
+}
+.phone-screen {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* ─────────────────────────────────────
+   OPTION A: iOS Light (밝은 iOS)
+───────────────────────────────────── */
+.a-screen { background: #F2F2F7; }
+.a-header {
+  background: rgba(242,242,247,0.85);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  padding: 48px 20px 14px;
+  position: relative;
+  z-index: 10;
+}
+.a-header-title { font-size: 30px; font-weight: 800; color: #000; letter-spacing: -0.8px; }
+.a-header-sub { font-size: 13px; color: rgba(60,60,67,0.6); font-weight: 500; margin-top: 2px; }
+.a-scroll { flex: 1; overflow: hidden; padding: 12px 16px 0; display: flex; flex-direction: column; gap: 16px; }
+
+.a-kpi-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.a-kpi {
+  background: white;
+  border-radius: 16px;
+  padding: 16px 14px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+}
+.a-kpi-label { font-size: 12px; color: rgba(60,60,67,0.6); font-weight: 600; margin-bottom: 6px; }
+.a-kpi-value { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+.a-kpi.blue .a-kpi-value { color: #007AFF; }
+.a-kpi.green .a-kpi-value { color: #34C759; }
+.a-kpi.red .a-kpi-value { color: #FF3B30; }
+.a-kpi.orange .a-kpi-value { color: #FF9500; }
+
+.a-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(60,60,67,0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: -4px;
+  padding-left: 4px;
+}
+.a-group {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+}
+.a-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(60,60,67,0.1);
+}
+.a-row:last-child { border-bottom: none; }
+.a-avatar {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: #007AFF;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 800; color: white; flex-shrink: 0;
+}
+.a-avatar.green { background: #34C759; }
+.a-avatar.orange { background: #FF9500; }
+.a-row-content { flex: 1; min-width: 0; }
+.a-row-name { font-size: 14px; font-weight: 700; color: #000; }
+.a-row-sub { font-size: 12px; color: rgba(60,60,67,0.6); margin-top: 1px; }
+.a-badge {
+  font-size: 11px; font-weight: 700; padding: 3px 8px;
+  border-radius: 20px; flex-shrink: 0;
+}
+.a-badge.paid { background: rgba(52,199,89,0.15); color: #34C759; }
+.a-badge.unpaid { background: rgba(255,59,48,0.12); color: #FF3B30; }
+
+.a-tabbar {
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: saturate(180%) blur(20px);
+  border-top: 1px solid rgba(60,60,67,0.12);
+  display: flex;
+  padding: 8px 0 20px;
+}
+.a-tab {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+}
+.a-tab-icon { font-size: 20px; line-height: 1; color: rgba(60,60,67,0.3); }
+.a-tab-icon svg { width: 22px; height: 22px; stroke: rgba(60,60,67,0.3); fill: none; stroke-width: 1.8; }
+.a-tab.active .a-tab-icon svg { stroke: #007AFF; stroke-width: 2.2; }
+.a-tab-label { font-size: 10px; font-weight: 600; color: rgba(60,60,67,0.3); }
+.a-tab.active .a-tab-label { color: #007AFF; font-weight: 700; }
+
+
+/* ─────────────────────────────────────
+   OPTION B: iOS Dark Mode (어두운)
+───────────────────────────────────── */
+.b-screen { background: #000; }
+.b-header {
+  background: rgba(28,28,30,0.9);
+  backdrop-filter: saturate(180%) blur(20px);
+  padding: 48px 20px 14px;
+  position: relative; z-index: 10;
+}
+.b-header-title { font-size: 30px; font-weight: 800; color: #FFF; letter-spacing: -0.8px; }
+.b-header-sub { font-size: 13px; color: rgba(235,235,245,0.6); font-weight: 500; margin-top: 2px; }
+.b-scroll { flex: 1; overflow: hidden; padding: 12px 16px 0; display: flex; flex-direction: column; gap: 16px; }
+
+.b-kpi-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.b-kpi {
+  background: #1C1C1E;
+  border-radius: 16px;
+  padding: 16px 14px;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.b-kpi-label { font-size: 12px; color: rgba(235,235,245,0.5); font-weight: 600; margin-bottom: 6px; }
+.b-kpi-value { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+.b-kpi.blue .b-kpi-value { color: #0A84FF; }
+.b-kpi.green .b-kpi-value { color: #30D158; }
+.b-kpi.red .b-kpi-value { color: #FF453A; }
+.b-kpi.orange .b-kpi-value { color: #FF9F0A; }
+
+.b-section-title {
+  font-size: 13px; font-weight: 700;
+  color: rgba(235,235,245,0.5);
+  text-transform: uppercase; letter-spacing: 0.3px;
+  margin-bottom: -4px; padding-left: 4px;
+}
+.b-group {
+  background: #1C1C1E;
+  border-radius: 16px; overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.b-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.b-row:last-child { border-bottom: none; }
+.b-avatar {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: #0A84FF;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 800; color: white; flex-shrink: 0;
+}
+.b-avatar.green { background: #30D158; }
+.b-avatar.orange { background: #FF9F0A; }
+.b-row-name { font-size: 14px; font-weight: 700; color: #FFF; }
+.b-row-sub { font-size: 12px; color: rgba(235,235,245,0.5); margin-top: 1px; }
+.b-badge { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 20px; flex-shrink: 0; }
+.b-badge.paid { background: rgba(48,209,88,0.2); color: #30D158; }
+.b-badge.unpaid { background: rgba(255,69,58,0.2); color: #FF453A; }
+
+.b-tabbar {
+  background: rgba(28,28,30,0.95);
+  backdrop-filter: saturate(180%) blur(20px);
+  border-top: 1px solid rgba(255,255,255,0.1);
+  display: flex;
+  padding: 8px 0 20px;
+}
+.b-tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.b-tab-icon svg { width: 22px; height: 22px; stroke: rgba(235,235,245,0.3); fill: none; stroke-width: 1.8; }
+.b-tab.active .b-tab-icon svg { stroke: #0A84FF; stroke-width: 2.2; }
+.b-tab-label { font-size: 10px; font-weight: 600; color: rgba(235,235,245,0.3); }
+.b-tab.active .b-tab-label { color: #0A84FF; font-weight: 700; }
+
+
+/* ─────────────────────────────────────
+   OPTION C: Tinted Glass (유리빛 네이비)
+───────────────────────────────────── */
+.c-screen { background: #0B1E3E; }
+.c-header {
+  background: rgba(11,30,62,0.85);
+  backdrop-filter: saturate(200%) blur(30px);
+  padding: 48px 20px 16px;
+  position: relative; z-index: 10;
+}
+.c-header-title { font-size: 30px; font-weight: 800; color: #FFF; letter-spacing: -0.8px; }
+.c-header-sub { font-size: 13px; color: rgba(255,255,255,0.5); font-weight: 500; margin-top: 2px; }
+.c-scroll { flex: 1; overflow: hidden; padding: 14px 16px 0; display: flex; flex-direction: column; gap: 16px; }
+
+.c-kpi-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.c-kpi {
+  background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(20px);
+  border-radius: 16px;
+  padding: 16px 14px;
+  border: 1px solid rgba(255,255,255,0.15);
+}
+.c-kpi-label { font-size: 12px; color: rgba(255,255,255,0.6); font-weight: 600; margin-bottom: 6px; }
+.c-kpi-value { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; color: white; }
+.c-kpi.accent .c-kpi-value { color: #5AC8FA; }
+.c-kpi.green .c-kpi-value { color: #30D158; }
+.c-kpi.red .c-kpi-value { color: #FF6B6B; }
+
+.c-section-title {
+  font-size: 13px; font-weight: 700;
+  color: rgba(255,255,255,0.45);
+  text-transform: uppercase; letter-spacing: 0.3px;
+  margin-bottom: -4px; padding-left: 4px;
+}
+.c-group {
+  background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(20px);
+  border-radius: 16px; overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.15);
+}
+.c-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.c-row:last-child { border-bottom: none; }
+.c-avatar {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: rgba(90,200,250,0.3);
+  border: 1.5px solid rgba(90,200,250,0.5);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 800; color: #5AC8FA; flex-shrink: 0;
+}
+.c-avatar.green { background: rgba(48,209,88,0.2); border-color: rgba(48,209,88,0.4); color: #30D158; }
+.c-row-name { font-size: 14px; font-weight: 700; color: #FFF; }
+.c-row-sub { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 1px; }
+.c-badge { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 20px; flex-shrink: 0; }
+.c-badge.paid { background: rgba(48,209,88,0.2); color: #30D158; border: 1px solid rgba(48,209,88,0.3); }
+.c-badge.unpaid { background: rgba(255,107,107,0.2); color: #FF6B6B; border: 1px solid rgba(255,107,107,0.3); }
+
+.c-tabbar {
+  background: rgba(11,30,62,0.9);
+  backdrop-filter: saturate(180%) blur(30px);
+  border-top: 1px solid rgba(255,255,255,0.1);
+  display: flex;
+  padding: 8px 0 20px;
+}
+.c-tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.c-tab-icon svg { width: 22px; height: 22px; stroke: rgba(255,255,255,0.3); fill: none; stroke-width: 1.8; }
+.c-tab.active .c-tab-icon svg { stroke: #5AC8FA; stroke-width: 2.2; }
+.c-tab-label { font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.3); }
+.c-tab.active .c-tab-label { color: #5AC8FA; font-weight: 700; }
+</style>
+</head>
+<body>
+<h1>동거동락 디자인 예시</h1>
+<p class="page-sub">아이폰 스타일 3가지 방향</p>
+
+<div class="options-row">
+
+  <!-- ── OPTION A: iOS Light ── -->
+  <div class="option-wrapper">
+    <div class="phone">
+      <div class="phone-screen a-screen">
+        <div class="a-header">
+          <div class="a-header-title">동거동락</div>
+          <div class="a-header-sub">2026년 6월 · 건물 3채</div>
+        </div>
+        <div class="a-scroll">
+          <div class="a-kpi-row">
+            <div class="a-kpi blue">
+              <div class="a-kpi-label">이번달 수입</div>
+              <div class="a-kpi-value">240만</div>
+            </div>
+            <div class="a-kpi red">
+              <div class="a-kpi-label">미납</div>
+              <div class="a-kpi-value">3건</div>
+            </div>
+            <div class="a-kpi green">
+              <div class="a-kpi-label">완납</div>
+              <div class="a-kpi-value">8건</div>
+            </div>
+            <div class="a-kpi orange">
+              <div class="a-kpi-label">이번달 지출</div>
+              <div class="a-kpi-value">45만</div>
+            </div>
+          </div>
+          <div class="a-section-title">최근 수납</div>
+          <div class="a-group">
+            <div class="a-row">
+              <div class="a-avatar">홍</div>
+              <div class="a-row-content">
+                <div class="a-row-name">홍길동</div>
+                <div class="a-row-sub">302호 · 6월</div>
+              </div>
+              <span class="a-badge paid">완납</span>
+            </div>
+            <div class="a-row">
+              <div class="a-avatar green">김</div>
+              <div class="a-row-content">
+                <div class="a-row-name">김철수</div>
+                <div class="a-row-sub">201호 · 6월</div>
+              </div>
+              <span class="a-badge unpaid">미납</span>
+            </div>
+            <div class="a-row">
+              <div class="a-avatar orange">이</div>
+              <div class="a-row-content">
+                <div class="a-row-name">이영희</div>
+                <div class="a-row-sub">101호 · 6월</div>
+              </div>
+              <span class="a-badge paid">완납</span>
+            </div>
+          </div>
+        </div>
+        <div class="a-tabbar">
+          <div class="a-tab active">
+            <div class="a-tab-icon">
+              <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            </div>
+            <span class="a-tab-label">대시보드</span>
+          </div>
+          <div class="a-tab">
+            <div class="a-tab-icon">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+            </div>
+            <span class="a-tab-label">세입자</span>
+          </div>
+          <div class="a-tab">
+            <div class="a-tab-icon">
+              <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+            </div>
+            <span class="a-tab-label">수납</span>
+          </div>
+          <div class="a-tab">
+            <div class="a-tab-icon">
+              <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+            </div>
+            <span class="a-tab-label">지출</span>
+          </div>
+          <div class="a-tab">
+            <div class="a-tab-icon">
+              <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </div>
+            <span class="a-tab-label">세금</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <span class="option-label" style="color:#007AFF">A. iOS Light</span>
+    <span class="option-desc">흰 배경, iOS 블루<br>애플 순정 느낌</span>
+  </div>
+
+  <!-- ── OPTION B: iOS Dark ── -->
+  <div class="option-wrapper">
+    <div class="phone">
+      <div class="phone-screen b-screen">
+        <div class="b-header">
+          <div class="b-header-title">동거동락</div>
+          <div class="b-header-sub">2026년 6월 · 건물 3채</div>
+        </div>
+        <div class="b-scroll">
+          <div class="b-kpi-row">
+            <div class="b-kpi blue">
+              <div class="b-kpi-label">이번달 수입</div>
+              <div class="b-kpi-value">240만</div>
+            </div>
+            <div class="b-kpi red">
+              <div class="b-kpi-label">미납</div>
+              <div class="b-kpi-value">3건</div>
+            </div>
+            <div class="b-kpi green">
+              <div class="b-kpi-label">완납</div>
+              <div class="b-kpi-value">8건</div>
+            </div>
+            <div class="b-kpi orange">
+              <div class="b-kpi-label">이번달 지출</div>
+              <div class="b-kpi-value">45만</div>
+            </div>
+          </div>
+          <div class="b-section-title">최근 수납</div>
+          <div class="b-group">
+            <div class="b-row">
+              <div class="b-avatar">홍</div>
+              <div style="flex:1">
+                <div class="b-row-name">홍길동</div>
+                <div class="b-row-sub">302호 · 6월</div>
+              </div>
+              <span class="b-badge paid">완납</span>
+            </div>
+            <div class="b-row">
+              <div class="b-avatar green">김</div>
+              <div style="flex:1">
+                <div class="b-row-name">김철수</div>
+                <div class="b-row-sub">201호 · 6월</div>
+              </div>
+              <span class="b-badge unpaid">미납</span>
+            </div>
+            <div class="b-row">
+              <div class="b-avatar orange">이</div>
+              <div style="flex:1">
+                <div class="b-row-name">이영희</div>
+                <div class="b-row-sub">101호 · 6월</div>
+              </div>
+              <span class="b-badge paid">완납</span>
+            </div>
+          </div>
+        </div>
+        <div class="b-tabbar">
+          <div class="b-tab active">
+            <div class="b-tab-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+            <span class="b-tab-label">대시보드</span>
+          </div>
+          <div class="b-tab">
+            <div class="b-tab-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div>
+            <span class="b-tab-label">세입자</span>
+          </div>
+          <div class="b-tab">
+            <div class="b-tab-icon"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></div>
+            <span class="b-tab-label">수납</span>
+          </div>
+          <div class="b-tab">
+            <div class="b-tab-icon"><svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
+            <span class="b-tab-label">지출</span>
+          </div>
+          <div class="b-tab">
+            <div class="b-tab-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+            <span class="b-tab-label">세금</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <span class="option-label" style="color:#0A84FF">B. iOS Dark</span>
+    <span class="option-desc">검은 배경, 다크모드<br>고급스럽고 모던한 느낌</span>
+  </div>
+
+  <!-- ── OPTION C: Tinted Glass ── -->
+  <div class="option-wrapper">
+    <div class="phone">
+      <div class="phone-screen c-screen">
+        <div class="c-header">
+          <div class="c-header-title">동거동락</div>
+          <div class="c-header-sub">2026년 6월 · 건물 3채</div>
+        </div>
+        <div class="c-scroll">
+          <div class="c-kpi-row">
+            <div class="c-kpi accent">
+              <div class="c-kpi-label">이번달 수입</div>
+              <div class="c-kpi-value">240만</div>
+            </div>
+            <div class="c-kpi red">
+              <div class="c-kpi-label">미납</div>
+              <div class="c-kpi-value" style="color:#FF6B6B">3건</div>
+            </div>
+            <div class="c-kpi green">
+              <div class="c-kpi-label">완납</div>
+              <div class="c-kpi-value">8건</div>
+            </div>
+            <div class="c-kpi">
+              <div class="c-kpi-label">이번달 지출</div>
+              <div class="c-kpi-value" style="color:rgba(255,255,255,0.9)">45만</div>
+            </div>
+          </div>
+          <div class="c-section-title">최근 수납</div>
+          <div class="c-group">
+            <div class="c-row">
+              <div class="c-avatar">홍</div>
+              <div style="flex:1">
+                <div class="c-row-name">홍길동</div>
+                <div class="c-row-sub">302호 · 6월</div>
+              </div>
+              <span class="c-badge paid">완납</span>
+            </div>
+            <div class="c-row">
+              <div class="c-avatar green">김</div>
+              <div style="flex:1">
+                <div class="c-row-name">김철수</div>
+                <div class="c-row-sub">201호 · 6월</div>
+              </div>
+              <span class="c-badge unpaid">미납</span>
+            </div>
+            <div class="c-row">
+              <div class="c-avatar">이</div>
+              <div style="flex:1">
+                <div class="c-row-name">이영희</div>
+                <div class="c-row-sub">101호 · 6월</div>
+              </div>
+              <span class="c-badge paid">완납</span>
+            </div>
+          </div>
+        </div>
+        <div class="c-tabbar">
+          <div class="c-tab active">
+            <div class="c-tab-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+            <span class="c-tab-label">대시보드</span>
+          </div>
+          <div class="c-tab">
+            <div class="c-tab-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div>
+            <span class="c-tab-label">세입자</span>
+          </div>
+          <div class="c-tab">
+            <div class="c-tab-icon"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></div>
+            <span class="c-tab-label">수납</span>
+          </div>
+          <div class="c-tab">
+            <div class="c-tab-icon"><svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
+            <span class="c-tab-label">지출</span>
+          </div>
+          <div class="c-tab">
+            <div class="c-tab-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+            <span class="c-tab-label">세금</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <span class="option-label" style="color:#5AC8FA">C. Glass Navy</span>
+    <span class="option-desc">딥 네이비 + 유리 효과<br>세련되고 독특한 느낌</span>
+  </div>
+
+</div>
+
+<p style="text-align:center;margin-top:40px;font-size:13px;color:#8E8E93;">
+  3가지 옵션 중 마음에 드는 스타일을 선택하면 실제 앱에 적용합니다
+</p>
+</body>
+</html>
