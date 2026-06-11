@@ -2404,6 +2404,12 @@
                     </div>
                 </div>
 
+                <div class="settings-section-title">🔒 앱 잠금 (PIN)</div>
+                <div class="card" style="margin-bottom:8px;">
+                    <p style="font-size:13px;color:var(--text-secondary);margin:0 0 10px;line-height:1.6;">앱을 열 때 4자리 PIN으로 잠급니다. PIN은 이 기기에만 저장되며, 잊으면 잠금 화면에서 이메일로 재설정할 수 있어요.</p>
+                    <button type="button" class="btn btn-secondary btn-block" onclick="changeAppPin()">🔑 PIN 변경 / 설정</button>
+                </div>
+
                 <div class="settings-section-title">🔥 가족 공유 · 실시간 동기화</div>
                 <div class="card" style="margin-bottom:8px;background:linear-gradient(180deg,#EFF6FF 0%,#fff 60%);border-color:#BFDBFE;">
                     <p style="font-size:14px;color:#1E3A8A;line-height:1.65;margin:0 0 10px;font-weight:600;">엄마 폰 ↔ 내 폰</p>
@@ -8292,6 +8298,179 @@
             return FIREBASE_CONFIG.projectId && !FIREBASE_CONFIG.projectId.includes('여기에');
         }
 
+        /* ============================================================
+           앱 잠금: 4자리 PIN + 기기-로컬 자격 저장
+           - PIN은 이 기기에서 앱 접근을 막는 편의용 잠금입니다.
+           - 이메일/비밀번호는 이 기기 localStorage에만 저장되며,
+             배포되는 공개 페이지 소스(index.html)에는 들어가지 않습니다.
+           ============================================================ */
+        var _PIN_SALT = 'donggeo-rent-pin-v1';
+
+        function _pinHash(pin) {
+            var s = _PIN_SALT + '|' + String(pin);
+            var h1 = 0x811c9dc5 >>> 0;                 // FNV-1a
+            for (var i = 0; i < s.length; i++) {
+                h1 ^= s.charCodeAt(i);
+                h1 = (h1 * 0x01000193) >>> 0;
+            }
+            var h2 = 5381 >>> 0;                        // djb2 (역방향)
+            for (var j = s.length - 1; j >= 0; j--) {
+                h2 = (((h2 << 5) + h2) + s.charCodeAt(j)) >>> 0;
+            }
+            return ('00000000' + h1.toString(16)).slice(-8) + ('00000000' + h2.toString(16)).slice(-8);
+        }
+        function _getPinHash() { try { return localStorage.getItem('_appPinHash'); } catch (e) { return null; } }
+        function _hasPin() { return !!_getPinHash(); }
+        function _setPin(pin) { try { localStorage.setItem('_appPinHash', _pinHash(pin)); return true; } catch (e) { return false; } }
+        function _verifyPin(pin) { var st = _getPinHash(); return !!st && st === _pinHash(pin); }
+
+        function _storeCred(email, password) {
+            try {
+                localStorage.setItem('_appCred', btoa(unescape(encodeURIComponent(JSON.stringify({ e: email, p: password })))));
+            } catch (e) { console.warn('[Auth] storeCred failed', e); }
+        }
+        function _getStoredCred() {
+            try {
+                var raw = localStorage.getItem('_appCred');
+                if (!raw) return null;
+                var o = JSON.parse(decodeURIComponent(escape(atob(raw))));
+                if (o && o.e && o.p) return { email: o.e, password: o.p };
+            } catch (e) {}
+            return null;
+        }
+        function _clearStoredCred() { try { localStorage.removeItem('_appCred'); } catch (e) {} }
+
+        /* PIN 게이트: 이번 세션에서 이미 통과했으면 즉시 onPass, 아니면 PIN 화면 표시 */
+        function _passPinGate(onPass) {
+            try { if (sessionStorage.getItem('_pinOk') === '1') { if (onPass) onPass(); return; } } catch (e) {}
+            _showPinScreen(_hasPin() ? 'enter' : 'set', onPass);
+        }
+
+        /* PIN 분실 → 이메일 재인증으로 재설정 */
+        window._resetPinViaEmail = function () {
+            _clearStoredCred();
+            try { localStorage.removeItem('_appPinHash'); } catch (e) {}
+            try { sessionStorage.removeItem('_pinOk'); } catch (e) {}
+            _showAuthRequiredScreen();
+        };
+
+        /* 4자리 PIN 화면 (mode: 'set' | 'enter'), 통과 시 onPass() 호출 */
+        function _showPinScreen(mode, onPass) {
+            var prev = document.getElementById('pinGateOverlay');
+            if (prev && prev.parentNode) prev.parentNode.removeChild(prev);
+
+            var state = { entry: '', first: null, stage: (mode === 'set' ? 'create' : 'enter'), tries: 0 };
+
+            var ov = document.createElement('div');
+            ov.id = 'pinGateOverlay';
+            ov.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:24px;background:linear-gradient(135deg,#F0FDFA 0%,#ECFDF5 100%);font-family:-apple-system,BlinkMacSystemFont,sans-serif;';
+
+            var keypad = '';
+            var labels = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', 'back'];
+            for (var k = 0; k < labels.length; k++) {
+                var lb = labels[k];
+                if (lb === '') { keypad += '<div></div>'; continue; }
+                var disp = (lb === 'back') ? '⌫' : lb;
+                keypad += '<button type="button" data-key="' + lb + '" style="height:62px;border:none;border-radius:16px;background:#fff;color:#0F172A;font-size:23px;font-weight:700;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,0.06);-webkit-tap-highlight-color:transparent;touch-action:manipulation;">' + disp + '</button>';
+            }
+
+            ov.innerHTML =
+                '<div style="width:100%;max-width:340px;background:#fff;padding:34px 26px;border-radius:24px;box-shadow:0 20px 25px -5px rgba(0,0,0,0.06),0 10px 10px -5px rgba(0,0,0,0.02);border:1px solid #E2E8F0;text-align:center;">' +
+                '  <div style="font-size:42px;margin-bottom:8px;">🔒</div>' +
+                '  <h2 id="pinTitle" style="font-size:21px;font-weight:800;color:#0F766E;margin:0 0 6px;letter-spacing:-0.02em;"></h2>' +
+                '  <p id="pinSub" style="font-size:13px;color:#64748B;margin:0 0 20px;line-height:1.5;"></p>' +
+                '  <div id="pinDots" style="display:flex;gap:14px;justify-content:center;margin-bottom:12px;"></div>' +
+                '  <div id="pinErr" style="display:none;color:#B91C1C;font-size:13px;font-weight:600;margin-bottom:12px;min-height:18px;"></div>' +
+                '  <div id="pinPad" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:6px;">' + keypad + '</div>' +
+                (mode === 'enter'
+                    ? '  <div style="margin-top:20px;"><a href="#" id="pinForgot" style="font-size:12px;color:#94A3B8;text-decoration:underline;">PIN을 잊으셨나요? 이메일로 재설정</a></div>'
+                    : '') +
+                '</div>';
+
+            document.body.appendChild(ov);
+            try { document.body.style.overflow = 'hidden'; } catch (e) {}
+
+            var elTitle = ov.querySelector('#pinTitle');
+            var elSub = ov.querySelector('#pinSub');
+            var elDots = ov.querySelector('#pinDots');
+            var elErr = ov.querySelector('#pinErr');
+
+            function texts() {
+                if (state.stage === 'create') { elTitle.textContent = 'PIN 설정'; elSub.textContent = '앱 잠금을 위한 4자리 숫자를 정해 주세요.'; }
+                else if (state.stage === 'confirm') { elTitle.textContent = 'PIN 다시 입력'; elSub.textContent = '확인을 위해 한 번 더 입력해 주세요.'; }
+                else { elTitle.textContent = 'PIN 입력'; elSub.textContent = '4자리 PIN을 입력하면 접속됩니다.'; }
+            }
+            function renderDots() {
+                var s = '';
+                for (var d = 0; d < 4; d++) {
+                    var on = d < state.entry.length;
+                    s += '<div style="width:16px;height:16px;border-radius:50%;border:2px solid #0F766E;background:' + (on ? '#0F766E' : 'transparent') + ';transition:background .12s;"></div>';
+                }
+                elDots.innerHTML = s;
+            }
+            function showErr(msg) { elErr.textContent = msg; elErr.style.display = 'block'; }
+            function clearErr() { elErr.style.display = 'none'; }
+
+            function finish() {
+                try { sessionStorage.setItem('_pinOk', '1'); } catch (e) {}
+                try { document.body.style.overflow = ''; } catch (e) {}
+                document.removeEventListener('keydown', onKey);
+                if (ov.parentNode) ov.parentNode.removeChild(ov);
+                if (onPass) onPass();
+            }
+
+            function process() {
+                if (state.stage === 'create') {
+                    state.first = state.entry; state.entry = ''; state.stage = 'confirm';
+                    texts(); renderDots();
+                } else if (state.stage === 'confirm') {
+                    if (state.entry === state.first) { _setPin(state.entry); finish(); }
+                    else { state.first = null; state.entry = ''; state.stage = 'create'; texts(); renderDots(); showErr('두 번 입력한 PIN이 일치하지 않습니다. 다시 설정해 주세요.'); }
+                } else {
+                    if (_verifyPin(state.entry)) { finish(); }
+                    else { state.tries++; state.entry = ''; renderDots(); showErr('PIN이 올바르지 않습니다. 다시 입력해 주세요.'); }
+                }
+            }
+
+            function push(dig) {
+                if (state.entry.length >= 4) return;
+                clearErr();
+                state.entry += dig; renderDots();
+                if (state.entry.length === 4) { setTimeout(process, 120); }
+            }
+            function back() { if (state.entry.length > 0) { state.entry = state.entry.slice(0, -1); clearErr(); renderDots(); } }
+
+            ov.querySelector('#pinPad').addEventListener('click', function (ev) {
+                var btn = ev.target.closest ? ev.target.closest('button[data-key]') : null;
+                if (!btn) return;
+                var key = btn.getAttribute('data-key');
+                if (key === 'back') back();
+                else if (/^[0-9]$/.test(key)) push(key);
+            });
+
+            function onKey(ev) {
+                if (/^[0-9]$/.test(ev.key)) { push(ev.key); }
+                else if (ev.key === 'Backspace') { back(); }
+            }
+            document.addEventListener('keydown', onKey);
+
+            var forgot = ov.querySelector('#pinForgot');
+            if (forgot) forgot.addEventListener('click', function (ev) { ev.preventDefault(); window._resetPinViaEmail(); });
+
+            texts(); renderDots();
+        }
+
+        /* 설정 → PIN 변경 */
+        window.changeAppPin = function () {
+            if (_hasPin()) {
+                _showPinScreen('enter', function () {
+                    _showPinScreen('set', function () { if (typeof showToast === 'function') showToast('✅ PIN이 변경되었습니다'); });
+                });
+            } else {
+                _showPinScreen('set', function () { if (typeof showToast === 'function') showToast('✅ PIN이 설정되었습니다'); });
+            }
+        };
+
         /** Firebase Auth 세션 확인. currentUser가 있으면 resolve, 없으면 로그인 화면 표시 후 reject. */
         function _ensureFirebaseAuth() {
             return new Promise(function(resolve, reject) {
@@ -8307,11 +8486,25 @@
                         unsub();
                         resolved = true;
                         if (user) {
-                            resolve(user);
+                            // 세션 있음 → PIN 게이트 통과 후 진행
+                            _passPinGate(function() { resolve(user); });
                         } else {
-                            console.warn('[Auth] No currentUser. App requires a real signed-in session.');
-                            _showAuthRequiredScreen();
-                            reject(new Error('auth-required'));
+                            var _cred = _getStoredCred();
+                            if (_cred) {
+                                // 저장된 자격으로 무음 재로그인 (이메일 화면 노출 없음) → PIN 게이트
+                                firebase.auth().signInWithEmailAndPassword(_cred.email, _cred.password)
+                                    .then(function(res) { _passPinGate(function() { resolve(res.user); }); })
+                                    .catch(function(err) {
+                                        console.warn('[Auth] stored-cred sign-in failed:', err && err.code);
+                                        _clearStoredCred();
+                                        _showAuthRequiredScreen();
+                                        reject(new Error('auth-required'));
+                                    });
+                            } else {
+                                console.warn('[Auth] No currentUser / no stored cred. Email login required (first time only).');
+                                _showAuthRequiredScreen();
+                                reject(new Error('auth-required'));
+                            }
                         }
                     });
                     
@@ -8350,8 +8543,9 @@
             try {
                 firebase.auth().signInWithEmailAndPassword(email, password)
                     .then(function() {
-                        // 로그인 성공 시 플래그를 저장하고 페이지 새로고침
+                        // 로그인 성공: 이 기기에 자격 저장(다음부터 PIN만) 후 새로고침
                         try {
+                            _storeCred(email, password);
                             localStorage.setItem('_justLoggedIn', '1');
                             localStorage.removeItem('_fbSyncInit');
                         } catch(e) {}
@@ -8402,7 +8596,7 @@
                     '  <div style="width: 100%; max-width: 400px; background: #ffffff; padding: 40px 32px; border-radius: 24px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02); border: 1px solid #E2E8F0; text-align: center;">',
                     '    <div style="font-size: 48px; margin-bottom: 16px;">🔑</div>',
                     '    <h2 style="font-size: 22px; font-weight: 800; color: #0F766E; margin: 0 0 8px 0; letter-spacing: -0.02em;">임대관리 앱 로그인</h2>',
-                    '    <p style="font-size: 14px; color: #64748B; margin: 0 0 28px 0; line-height: 1.5;">관리자 계정으로 로그인해 주세요.</p>',
+                    '    <p style="font-size: 14px; color: #64748B; margin: 0 0 28px 0; line-height: 1.5;">최초 1회만 이메일로 로그인하면,<br>다음부터는 4자리 PIN으로 접속합니다.</p>',
                     '    ',
                     '    <div id="loginErrorMsg" style="display: none; background: #FEE2E2; border: 1.5px solid #FCA5A5; color: #B91C1C; padding: 12px 16px; border-radius: 12px; font-size: 13px; text-align: left; margin-bottom: 20px; line-height: 1.4;"></div>',
                     '    ',
