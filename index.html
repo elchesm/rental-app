@@ -2457,7 +2457,7 @@
                 <div class="card" style="margin-bottom:8px;">
                     <p style="font-size:13px;color:var(--text-secondary);margin:0 0 10px;line-height:1.6;">
                         엄마 폰·내 폰 어느 쪽에서 저장해도 여기에 기록됩니다.<br>
-                        최대 20개 보관 · 원하는 시점으로 되돌릴 수 있어요.
+                        최근 300개 보관 · 무엇이 어떻게 바뀌었는지(이전값→새값)까지 기록되고, 원하는 시점으로 되돌릴 수 있어요.
                     </p>
                     <button type="button" class="btn btn-secondary" style="width:100%;margin-bottom:12px;" onclick="loadChangelog()">🔄 이력 불러오기</button>
                     <div id="changelogList">
@@ -2465,10 +2465,24 @@
                     </div>
                 </div>
 
+                <div class="settings-section-title">📜 전체 기록 보관함</div>
+                <div class="card" style="margin-bottom:8px;">
+                    <p style="font-size:13px;color:var(--text-secondary);margin:0 0 10px;line-height:1.6;">
+                        모든 변경 요약을 개수 제한 없이 영구 보관합니다(수만 건 가능).<br>
+                        위의 「변경 이력 &amp; 롤백」은 복원용 스냅샷 포함 최근 300개, 여기는 요약만 전체 보관입니다.
+                    </p>
+                    <button type="button" class="btn btn-secondary" style="width:100%;margin-bottom:12px;" onclick="loadAuditLog(true)">📜 전체 기록 불러오기</button>
+                    <div id="auditLogList">
+                        <p class="changelog-empty">「전체 기록 불러오기」를 눌러 확인하세요.</p>
+                    </div>
+                    <button type="button" id="auditLogMoreBtn" class="btn btn-secondary" style="width:100%;margin-top:8px;display:none;" onclick="loadAuditLog(false)">⬇️ 이전 기록 100건 더 보기</button>
+                </div>
+
                 <div class="settings-section-title">정보</div>
                 <div class="card" style="margin-bottom:24px;">
                     <p style="font-size:14px;color:var(--text-secondary);">
-                        <strong style="color:var(--text-primary);">동거동락</strong><br>
+                        <strong style="color:var(--text-primary);">동거동락</strong>
+                        <span style="font-size:11px;color:var(--text-tertiary);">v2026.07.25-sync2</span><br>
                         엄마와 나 둘이 쓰기 좋은 임대관리앱<br>
                         <br>
                         데이터는 먼저 이 폰에 저장되고,<br>
@@ -3181,10 +3195,72 @@
                 });
             });
         }
+        /* ── 삭제 묘비(tombstone) 기록: 삭제한 항목이 상대 폰 병합에서 되살아나는 것을 방지.
+              실제 데이터는 지워지지 않고 「변경 이력 & 롤백」 스냅샷에 항상 남습니다. ── */
+        function _recordDeletionsSinceLastSave() {
+            if (_prevSaveSnapshot == null) return;
+            var prev;
+            try { prev = JSON.parse(_prevSaveSnapshot); } catch (e) { return; }
+            if (!appData.deletedIds || typeof appData.deletedIds !== 'object') appData.deletedIds = {};
+            var keys = ['buildings', 'rooms', 'tenants', 'rents', 'expenses'];
+            var nowIso = new Date().toISOString();
+            keys.forEach(function(k) {
+                var currIds = {};
+                (appData[k] || []).forEach(function(i) { if (i && i.id) currIds[i.id] = true; });
+                (prev[k] || []).forEach(function(p) {
+                    if (p && p.id && !currIds[p.id]) appData.deletedIds[p.id] = nowIso;
+                });
+            });
+            _pruneTombstones();
+        }
+        function _pruneTombstones() {
+            try {
+                var t = appData.deletedIds;
+                if (!t) return;
+                var ids = Object.keys(t);
+                var cutoff = Date.now() - 400 * 24 * 3600 * 1000; // 400일 지난 묘비 정리
+                ids.forEach(function(id) {
+                    var ms = Date.parse(t[id] || '');
+                    if (!isNaN(ms) && ms < cutoff) delete t[id];
+                });
+                ids = Object.keys(t);
+                if (ids.length > 800) { // 상한: 오래된 것부터 정리
+                    ids.sort(function(a, b) { return (Date.parse(t[a]) || 0) - (Date.parse(t[b]) || 0); });
+                    ids.slice(0, ids.length - 800).forEach(function(id) { delete t[id]; });
+                }
+            } catch (e) {}
+        }
+        /** 두 폰의 묘비를 합치고(최신 시각 우선), 묘비보다 오래된 항목을 배열에서 제거.
+            단, 삭제 이후에 다시 수정된 항목은 살립니다(데이터 보존 우선). */
+        function _mergeTombstonesAndApply(mergedObj, localT, remoteT) {
+            var t = {};
+            [localT, remoteT].forEach(function(src) {
+                if (!src || typeof src !== 'object') return;
+                Object.keys(src).forEach(function(id) {
+                    var ms = Date.parse(src[id] || '');
+                    if (isNaN(ms)) return;
+                    var cur = Date.parse(t[id] || '');
+                    if (isNaN(cur) || ms > cur) t[id] = src[id];
+                });
+            });
+            var keys = ['buildings', 'rooms', 'tenants', 'rents', 'expenses'];
+            keys.forEach(function(k) {
+                mergedObj[k] = (mergedObj[k] || []).filter(function(item) {
+                    if (!item || !item.id || !t[item.id]) return true;
+                    var delMs = Date.parse(t[item.id]) || 0;
+                    if (_itemVersionMs(item) > delMs) { delete t[item.id]; return true; } // 삭제 후 수정 → 부활
+                    return false;
+                });
+            });
+            mergedObj.deletedIds = t;
+            return mergedObj;
+        }
+
         function saveData() {
             cleanupInvalidRents();
             // 변경 요약은 _syncPrevSaveSnapshot() 전에 생성해야 이전 상태와 비교 가능
             var _clSummary = _generateChangeSummary();
+            _recordDeletionsSinceLastSave();
             _stampChangedRecordsSinceLastSave();
             try {
                 localStorage.setItem('appData', JSON.stringify(appData));
@@ -6099,6 +6175,16 @@
             return null;
         }
 
+        /** 경량 감사 기록(auditLog): 스냅샷 없이 요약만 저장 → 수만 건 영구 보관용 */
+        function _getUserAuditColRef() {
+            if (!_db) return null;
+            try {
+                var u = firebase.auth && firebase.auth().currentUser;
+                if (u && u.uid) return _db.collection('userAuditLog').doc(u.uid).collection('entries');
+            } catch(e) {}
+            return null;
+        }
+
         // Returns scoped storage path for an authenticated user.
         // Returns null (never a fallback global path) if uid is unavailable.
         // SECURITY: No file should ever be written to taxDocuments/{year}/... (unscoped).
@@ -8262,6 +8348,8 @@
             showToast('✅ CSV 다운로드 완료 (영수증 사진은 미포함)');
         }
         // ============ FIREBASE REALTIME SYNC ============
+        var APP_VERSION = '2026.07.25-sync2';
+        try { console.log('[App] version ' + APP_VERSION); } catch(e) {}
         let _db = null;
         let _fbUnsubscribe = null;
         let _fbDebounceTimer = null;
@@ -8801,6 +8889,11 @@
                         console.warn('[Firestore] Initial load timed out. Falling back to local data.');
                         _firestoreInitialLoadComplete = true;
                         _hideLoadingSpinnerAndRender();
+                        // 클라우드 연결 전 로컬 데이터만 표시 중 → 사용자에게 명확히 알림
+                        _showSyncProblemBanner('⚠️ 클라우드에 아직 연결되지 않았어요. 지금 화면은 이 폰에 저장된 예전 데이터일 수 있어요. 여기를 눌러 다시 연결', function() {
+                            _fbListenerRetryCount = 0;
+                            _scheduleListenerRecovery();
+                        });
                     }
                 }, 5000);
             }
@@ -8809,6 +8902,7 @@
                 clearTimeout(_connectingTimer);
                 _fbListenerErrorCode = null;
                 _fbListenerRetryCount = 0;
+                _hideSyncProblemBanner(); // 수신 재개 → 경고 배너 제거
 
                 // 주의: hasPendingWrites=true 스냅샷도 그대로 처리한다.
                 // 과거에는 여기서 early-return 했지만, 이 폰의 보류 쓰기가 flush되지 못하면
@@ -8847,6 +8941,7 @@
                 _fbListenerErrorCode = (err && err.code) || 'unknown';
                 _showFbStatus('error');
                 _updateFirebaseSettingsUI();
+                _showSyncProblemBanner('🔴 클라우드 수신이 끊겼어요. 지금 화면은 예전 데이터일 수 있어요. 여기를 눌러 다시 연결');
 
                 _firestoreInitialLoadComplete = true;
                 _hideLoadingSpinnerAndRender();
@@ -8855,11 +8950,51 @@
             });
         }
 
+        /** 인증이 완전히 죽었을 때(비밀번호 변경 등): 저장된 자격으로 무음 재로그인 → 실패 시 로그인 화면.
+            더 이상 "조용히 옛 데이터만 보여주는" 상태로 남지 않습니다. */
+        var _authDeadHandling = false;
+        function _handleAuthDead(reasonCode) {
+            if (_authDeadHandling) return;
+            _authDeadHandling = true;
+            console.warn('[Auth] session dead (' + (reasonCode || 'unknown') + ') → silent re-login attempt');
+            var _cred = _getStoredCred();
+            var _finishFail = function() {
+                _authDeadHandling = false;
+                try { _clearStoredCred(); } catch (e) {}
+                try { if (firebase.auth) firebase.auth().signOut(); } catch (e) {}
+                _showSyncProblemBanner('🔒 다시 로그인이 필요해요 (비밀번호가 바뀌었을 수 있어요). 여기를 눌러 로그인하기', function() {
+                    _showAuthRequiredScreen();
+                });
+                showToast('🔒 클라우드 인증이 만료됐어요. 화면 위 빨간 띠를 눌러 다시 로그인해 주세요.', 6000);
+            };
+            if (_cred && firebase.auth) {
+                firebase.auth().signInWithEmailAndPassword(_cred.email, _cred.password)
+                    .then(function() {
+                        _authDeadHandling = false;
+                        _fbListenerRetryCount = 0;
+                        _fbListenerErrorCode = null;
+                        _hideSyncProblemBanner();
+                        showToast('✅ 자동으로 다시 로그인했어요. 동기화를 재개합니다.', 3500);
+                        _startFirestoreListener();
+                    })
+                    .catch(function(err) {
+                        console.warn('[Auth] silent re-login failed:', err && err.code);
+                        _finishFail();
+                    });
+            } else {
+                _finishFail();
+            }
+        }
+
         /** 죽은 onSnapshot 리스너 복구: 토큰 강제 갱신 후 재구독 (지수 백오프, 최대 5회) */
         function _scheduleListenerRecovery() {
             if (_fbListenerRetryTimer) return;
             if (!_db) return;
-            if (_fbListenerRetryCount >= 5) return; // 포그라운드 복귀 시 카운터 리셋 후 재시도
+            if (_fbListenerRetryCount >= 5) {
+                // 재시도 소진 → 인증 문제로 간주하고 무음 재로그인/로그인 화면으로 승격
+                _handleAuthDead(_fbListenerErrorCode);
+                return;
+            }
             var delay = Math.min(30000, 2000 * Math.pow(2, _fbListenerRetryCount));
             _fbListenerRetryCount++;
             _fbListenerRetryTimer = setTimeout(function() {
@@ -8879,11 +9014,16 @@
 
         // 앱이 다시 화면에 보일 때 리스너가 죽어 있으면 즉시 복구 시도
         document.addEventListener('visibilitychange', function() {
-            if (document.visibilityState === 'visible' && _fbListenerErrorCode && _db) {
-                _fbListenerRetryCount = 0;
-                _scheduleListenerRecovery();
+            if (document.visibilityState === 'visible') {
+                if (_fbListenerErrorCode && _db) {
+                    _fbListenerRetryCount = 0;
+                    _scheduleListenerRecovery();
+                }
+                _checkSyncStaleness();
             }
         });
+        // 앱 시작 8초 후: 여전히 오래된 데이터면 경고 배너
+        setTimeout(function() { try { _checkSyncStaleness(); } catch (e) {} }, 8000);
 
         function _mergeRemoteData(remote, meta) {
             meta = meta || {};
@@ -8994,6 +9134,17 @@
                 return e;
             });
 
+            // ── 삭제 묘비 적용: 한쪽에서 지운 항목이 병합으로 되살아나는 문제 방지 ──
+            _mergeTombstonesAndApply(merged, (localData || {}).deletedIds, (remote || {}).deletedIds);
+
+            // ── 마지막으로 확인된 클라우드 데이터 규모 기록 (빈 데이터 덮어쓰기 방지용) ──
+            try {
+                var _remoteTotal = ['buildings','rooms','tenants','rents','expenses'].reduce(function(s, k) {
+                    return s + (((remote || {})[k] || []).length || 0);
+                }, 0);
+                if (_remoteTotal > 0) localStorage.setItem('_fbLastRemoteCount', String(_remoteTotal));
+            } catch (eRC) {}
+
             appData = merged;
 
             // taxProfiles는 5-key 배열 병합에서 누락되므로 별도 처리
@@ -9073,6 +9224,20 @@
                 return Promise.resolve();
             }
             retryAttempt = retryAttempt || 0;
+            // ── 데이터 보호 장치: 로컬이 거의 비어 있는데 클라우드에 데이터가 많으면 절대 덮어쓰지 않음 ──
+            // (캐시 초기화·오류로 로컬이 텅 빈 상태에서 클라우드 원본을 지워버리는 사고 방지)
+            try {
+                var _curTotal = ['buildings','rooms','tenants','rents','expenses'].reduce(function(s, k) {
+                    return s + ((appData[k] || []).length || 0);
+                }, 0);
+                var _lastRemote = parseInt(localStorage.getItem('_fbLastRemoteCount') || '0', 10) || 0;
+                if (_lastRemote >= 10 && _curTotal < _lastRemote * 0.2) {
+                    console.warn('[Firestore] Write blocked: local(' + _curTotal + ') << lastRemote(' + _lastRemote + ')');
+                    _showFbStatus('error');
+                    showToast('🛡️ 안전장치: 이 폰의 데이터가 클라우드보다 훨씬 적어 저장을 멈췄어요. 클라우드 원본을 지키기 위한 조치입니다. 앱을 새로고침해 최신 데이터를 먼저 받아 주세요.', 6000);
+                    return Promise.resolve();
+                }
+            } catch (eGuard) {}
             // Firestore 문서 1MB 제한 → 영수증 base64 이미지 제거 후 저장
             var cloudData = JSON.parse(JSON.stringify(appData));
             cloudData.expenses = (cloudData.expenses || []).map(function(e) {
@@ -9107,7 +9272,8 @@
                                     return _saveToFirestore(1);
                                 }).catch(function() {
                                     _showFbStatus('error');
-                                    showToast('⚠️ 인증이 만료됐어요. 앱을 새로고침해 주세요.', 4500);
+                                    // 토큰 갱신 실패 = 비밀번호 변경 등 → 무음 재로그인/로그인 화면으로 즉시 승격
+                                    _handleAuthDead('save-token-refresh-failed');
                                     throw err;
                                 });
                             }
@@ -9128,9 +9294,43 @@
         }
 
         // ============ CHANGELOG / ROLLBACK ============
-        var _changelogMax = 20;
+        var _changelogMax = 300;      // 클라우드에 보관하는 이력 수 (스냅샷 포함)
+        var _changelogListLimit = 50; // 화면에 한 번에 표시하는 수
         var _changelogTimer = null;
         var _changelogPendingSummary = null;
+
+        /** 수납 상태 등 핵심 필드의 이전값→새값을 사람이 읽을 수 있게 기록 */
+        function _describeItemChange(k, prevItem, currItem) {
+            try {
+                var tenantName = function(tid) {
+                    var t = (appData.tenants || []).find(function(x) { return x && x.id === tid; });
+                    return t ? (t.name || '') : '';
+                };
+                var stLabel = { paid: '납부', pending: '대기', overdue: '미납' };
+                if (k === 'rents') {
+                    var who = tenantName(currItem.tenantId) || currItem.month || '';
+                    var bits = [];
+                    if (prevItem.status !== currItem.status) {
+                        bits.push((stLabel[prevItem.status] || prevItem.status || '?') + '→' + (stLabel[currItem.status] || currItem.status || '?'));
+                    }
+                    if (prevItem.amount !== currItem.amount) {
+                        bits.push('금액 ' + Number(prevItem.amount || 0).toLocaleString() + '→' + Number(currItem.amount || 0).toLocaleString());
+                    }
+                    if (bits.length) return who + ' ' + (currItem.month || '') + ' ' + bits.join(', ');
+                }
+                if (k === 'tenants') {
+                    var bits2 = [];
+                    if (prevItem.rent !== currItem.rent) bits2.push('월세 ' + Number(prevItem.rent || 0).toLocaleString() + '→' + Number(currItem.rent || 0).toLocaleString());
+                    if (prevItem.status !== currItem.status) bits2.push('상태 ' + (prevItem.status || '?') + '→' + (currItem.status || '?'));
+                    if (bits2.length) return (currItem.name || '') + ' ' + bits2.join(', ');
+                }
+                if (k === 'expenses' && prevItem.amount !== currItem.amount) {
+                    return (currItem.date || '') + ' ' + (currItem.category || '') + ' 금액 '
+                        + Number(prevItem.amount || 0).toLocaleString() + '→' + Number(currItem.amount || 0).toLocaleString();
+                }
+            } catch (e) {}
+            return '';
+        }
 
         /** 이전 스냅샷과 비교해 변경 내용을 한 줄로 요약 */
         function _generateChangeSummary() {
@@ -9155,10 +9355,17 @@
                     var ns = added.map(_name).filter(Boolean).slice(0,2).join(', ');
                     parts.push(labelMap[k]+' 추가'+(ns?': '+ns:'')+(added.length>2?' 외 '+(added.length-2)+'건':''));
                 }
-                if (deleted.length) parts.push(labelMap[k]+' 삭제 '+deleted.length+'건');
+                if (deleted.length) {
+                    var dn = deleted.map(_name).filter(Boolean).slice(0,2).join(', ');
+                    parts.push(labelMap[k]+' 삭제'+(dn?': '+dn:'')+' ('+deleted.length+'건)');
+                }
                 if (changed.length) {
+                    var detail = changed.map(function(i) {
+                        return _describeItemChange(k, prevIds[i.id], i);
+                    }).filter(Boolean).slice(0, 3).join(' · ');
                     var ns2 = changed.map(_name).filter(Boolean).slice(0,2).join(', ');
-                    parts.push(labelMap[k]+' 수정'+(ns2?': '+ns2:''));
+                    parts.push(labelMap[k]+' 수정'+(detail ? ': ' + detail : (ns2 ? ': ' + ns2 : ''))
+                        + (changed.length > 3 ? ' 외 ' + (changed.length - 3) + '건' : ''));
                 }
             });
             return parts.length ? parts.join(' / ') : '변경 없음';
@@ -9188,6 +9395,14 @@
             }).catch(function(e) {
                 console.warn('[Changelog] save failed:', e);
             });
+            // ── 경량 감사 기록: 스냅샷 없이 요약만 → 개수 제한 없이 영구 보관 ──
+            try {
+                var auditRef = _getUserAuditColRef();
+                if (auditRef) {
+                    auditRef.add({ ts: Date.now(), summary: summary, device: deviceLabel })
+                        .catch(function(e) { console.warn('[AuditLog] save failed:', e); });
+                }
+            } catch (eA) {}
         }
 
         /** 20개 초과 시 오래된 항목 삭제 */
@@ -9218,7 +9433,7 @@
                 container.innerHTML = '<p class="changelog-empty">Firebase가 연결되지 않았습니다.</p>';
                 return;
             }
-            _clColRef.orderBy('ts','desc').limit(_changelogMax).get()
+            _clColRef.orderBy('ts','desc').limit(_changelogListLimit).get()
                 .then(function(snap) {
                     if (snap.empty) {
                         container.innerHTML = '<p class="changelog-empty">변경 이력이 없습니다.<br>데이터를 수정하면 자동으로 기록됩니다.</p>';
@@ -9291,6 +9506,50 @@
             }, '복원', false);
         }
 
+        // ── 전체 기록 보관함(auditLog) 조회: 100건씩 커서 페이지네이션 ──
+        var _auditLastDoc = null;
+        window.loadAuditLog = function(reset) {
+            var container = document.getElementById('auditLogList');
+            var moreBtn = document.getElementById('auditLogMoreBtn');
+            if (!container) return;
+            var colRef = _getUserAuditColRef();
+            if (!colRef) {
+                container.innerHTML = '<p class="changelog-empty">Firebase 로그인 후 이용할 수 있습니다.</p>';
+                return;
+            }
+            if (reset) {
+                _auditLastDoc = null;
+                container.innerHTML = '<p class="changelog-empty"><span class="spinner" style="width:14px;height:14px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:6px;"></span> 불러오는 중...</p>';
+            }
+            var q = colRef.orderBy('ts', 'desc').limit(100);
+            if (_auditLastDoc) q = q.startAfter(_auditLastDoc);
+            q.get().then(function(snap) {
+                if (reset) container.innerHTML = '';
+                if (snap.empty && reset) {
+                    container.innerHTML = '<p class="changelog-empty">아직 기록이 없습니다.<br>데이터를 수정하면 자동으로 쌓입니다.</p>';
+                    if (moreBtn) moreBtn.style.display = 'none';
+                    return;
+                }
+                var html = snap.docs.map(function(doc) {
+                    var d = doc.data();
+                    var dt = '-';
+                    try { dt = new Date(d.ts).toLocaleString('ko-KR', { year:'2-digit', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }); } catch(e2) {}
+                    return '<div class="changelog-entry">'
+                        + '<div class="changelog-meta">'
+                        +   '<span class="changelog-device">' + (d.device || '') + '</span>'
+                        +   '<span class="changelog-time">' + dt + '</span>'
+                        + '</div>'
+                        + '<div class="changelog-summary">' + escapeHTML(d.summary || '') + '</div>'
+                        + '</div>';
+                }).join('');
+                container.insertAdjacentHTML('beforeend', html);
+                if (snap.docs.length > 0) _auditLastDoc = snap.docs[snap.docs.length - 1];
+                if (moreBtn) moreBtn.style.display = (snap.docs.length === 100) ? 'block' : 'none';
+            }).catch(function(e) {
+                container.innerHTML = '<p class="changelog-empty" style="color:var(--danger);">불러오기 실패: ' + escapeHTML(e.message || '') + '</p>';
+            });
+        };
+
         /** 디바운스 대기 중인 Firestore 저장을 즉시 시도 (탭 종료·백그라운드 전환 시 유실 완화) */
         function _flushFirestorePending() {
             if (!_db) return Promise.resolve();
@@ -9327,6 +9586,50 @@
             };
             line.style.display = 'block';
             line.innerHTML = '마지막 맞춤: 받음 <strong>' + fmt(pull) + '</strong> · 올림 <strong>' + fmt(push) + '</strong>';
+        }
+
+        /* ── 동기화 문제 배너: 작은 상태 알약과 달리, 문제가 해결될 때까지 화면 위에 고정 표시.
+              "조용히 옛날 데이터를 보여주는" 상황을 사용자(특히 엄마 폰)가 즉시 알 수 있게 함. ── */
+        function _showSyncProblemBanner(message, onTap) {
+            try {
+                var el = document.getElementById('syncProblemBanner');
+                if (!el) {
+                    el = document.createElement('div');
+                    el.id = 'syncProblemBanner';
+                    el.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#DC2626;color:#fff;'
+                        + 'padding:12px 16px;font-size:14px;font-weight:700;text-align:center;line-height:1.45;'
+                        + 'box-shadow:0 2px 8px rgba(0,0,0,0.25);cursor:pointer;';
+                    document.body.appendChild(el);
+                }
+                el.textContent = message;
+                el.onclick = function() {
+                    if (typeof onTap === 'function') onTap();
+                    else { _fbListenerRetryCount = 0; _scheduleListenerRecovery(); }
+                };
+                el.style.display = 'block';
+            } catch (e) {}
+        }
+        function _hideSyncProblemBanner() {
+            try {
+                var el = document.getElementById('syncProblemBanner');
+                if (el) el.style.display = 'none';
+            } catch (e) {}
+        }
+        /** 마지막 수신이 오래됐으면 경고 (48시간 기준) */
+        function _checkSyncStaleness() {
+            try {
+                if (!_fbConfigured()) return;
+                var pull = parseInt(localStorage.getItem('_fbLastPullAt') || '0', 10) || 0;
+                if (!pull) return;
+                var ageH = (Date.now() - pull) / 3600000;
+                if (ageH >= 48 && !_fbListenerErrorCode) {
+                    var days = Math.floor(ageH / 24);
+                    _showSyncProblemBanner('⚠️ ' + days + '일 전에 마지막으로 동기화됐어요. 지금 화면은 최신이 아닐 수 있어요. 여기를 눌러 다시 연결', function() {
+                        _fbListenerRetryCount = 0;
+                        if (_db) _scheduleListenerRecovery(); else initFirebase();
+                    });
+                }
+            } catch (e) {}
         }
 
         function _showFbStatus(status) {
