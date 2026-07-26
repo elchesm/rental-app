@@ -2483,7 +2483,7 @@
                 <div class="card" style="margin-bottom:24px;">
                     <p style="font-size:14px;color:var(--text-secondary);">
                         <strong style="color:var(--text-primary);">동거동락</strong>
-                        <span style="font-size:11px;color:var(--text-tertiary);">v2026.07.26-sync9</span><br>
+                        <span style="font-size:11px;color:var(--text-tertiary);">v2026.07.26-sync10</span><br>
                         엄마와 나 둘이 쓰기 좋은 임대관리앱<br>
                         <br>
                         데이터는 먼저 이 폰에 저장되고,<br>
@@ -3923,6 +3923,31 @@
                 depositRefundDate: editingId ? (appData.tenants.find(t => t.id === editingId)?.depositRefundDate || '') : '',
                 rentHistory: editingId ? (appData.tenants.find(t => t.id === editingId)?.rentHistory || []) : []
             };
+            // 임대 방식 전환 감지 (연세 ↔ 월세): 전환 시작월 기록 + 이력 + 연세 기간 태그
+            if (editingId) {
+                var _prevT = appData.tenants.find(t => t.id === editingId);
+                var _prevType = (_prevT && _prevT.rentType) || 'monthly';
+                if (_prevT && _prevType !== rentType) {
+                    var _convM2 = getMonthStr(new Date());
+                    tenantData.rentHistory = (tenantData.rentHistory || []).concat([{
+                        monthlyRent: _prevT.monthlyRent || 0,
+                        managementFee: _prevT.managementFee || 0,
+                        rentType: _prevType,
+                        from: _prevT.contractStart || '',
+                        to: new Date().toISOString().split('T')[0],
+                        reason: 'convert'
+                    }]);
+                    if (_prevType === 'annual' && rentType === 'monthly') {
+                        tenantData.monthlyStart = _convM2; // 이번 달부터 월세로 관리
+                        _tagAnnualPeriodRecords(editingId, _convM2);
+                        showToast('🔄 연세 → 월세 전환: ' + _convM2 + '월부터 매월 관리됩니다. 연세 기간 수납 기록은 수납 탭의 연세 구역에 그대로 보존돼요.', 5000);
+                    } else if (rentType === 'annual') {
+                        tenantData.monthlyStart = '';
+                    }
+                } else if (_prevT) {
+                    tenantData.monthlyStart = _prevT.monthlyStart || '';
+                }
+            }
             // 퇴거일이 오늘 이전이면 자동으로 퇴거(inactive) 처리
             if (tenantData.moveOutDate) {
                 var _todayStr = new Date().toISOString().slice(0, 10);
@@ -4572,6 +4597,22 @@
                 wrap.appendChild(chip);
             });
         }
+        /** 연세→월세 전환 이전(연세 기간)의 수납 기록에 periodType 태그 부여 — 기간별 분리 표시용 */
+        function _tagAnnualPeriodRecords(tenantId, convMonth) {
+            if (!tenantId || !convMonth) return;
+            (appData.rents || []).forEach(function(r) {
+                if (r.tenantId === tenantId && (!r.type || r.type === 'monthly')
+                    && r.month && r.month < convMonth && !r.periodType) {
+                    r.periodType = 'annual';
+                    r.updatedAt = new Date().toISOString();
+                }
+            });
+        }
+        /** 연세→월세 전환 세입자의 월세 관리 시작월 이전인지 (이전 = 연세 기간) */
+        function isBeforeMonthlyStart(tenant, month) {
+            var ms = (tenant && tenant.monthlyStart || '').slice(0, 7);
+            return !!(ms && month < ms);
+        }
         function isAfterContractEndMonth(tenant, month) {
             const tEnd = (tenant && tenant.contractEnd || '').slice(0, 7);
             const tOut = (tenant && tenant.moveOutDate || '').slice(0, 7);
@@ -4591,6 +4632,7 @@
         }
         function createMonthlyRentRecord(tenant, month) {
             if (isAfterContractEndMonth(tenant, month)) return false;
+            if (isBeforeMonthlyStart(tenant, month)) return false; // 연세 기간에는 월세 기록 미생성
             appData.rents.push({
                 id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
                 type: 'monthly',
@@ -4620,6 +4662,7 @@
                 const _tcs = (tenant.contractStart || '').slice(0,7);
                 const tStart = _tmi && _tcs ? (_tmi > _tcs ? _tmi : _tcs) : (_tmi || _tcs);
                 if (tStart && month < tStart) return;
+                if (isBeforeMonthlyStart(tenant, month)) return; // 연세 기간에는 월세 미생성
                 if (isAfterContractEndMonth(tenant, month)) { skippedEnded++; return; }
                 const exists = appData.rents.find(r => r.tenantId === tenant.id && r.month === month && (!r.type || r.type === 'monthly'));
                 if (!exists && createMonthlyRentRecord(tenant, month)) { created++; }
@@ -4648,6 +4691,7 @@
                 const _tcs = (tenant.contractStart || '').slice(0,7);
                 const tStart = _tmi && _tcs ? (_tmi > _tcs ? _tmi : _tcs) : (_tmi || _tcs);
                 if (tStart && month < tStart) return;
+                if (isBeforeMonthlyStart(tenant, month)) return;
                 if (isAfterContractEndMonth(tenant, month)) return;
                 const exists = appData.rents.find(function(r) {
                     return r.tenantId === tenant.id && r.month === month && (!r.type || r.type === 'monthly');
@@ -4866,12 +4910,17 @@
             // 월세/연세 분리
             const monthlyTenants = activeTenants.filter(t => (t.rentType || 'monthly') === 'monthly');
             const annualTenants = activeTenants.filter(t => t.rentType === 'annual');
+            // 연세→월세 전환 세입자: 연세 기간 기록을 연세 구역에 별도 표시
+            const convertedTenants = activeTenants.filter(function(t) {
+                return (t.rentType || 'monthly') === 'monthly' && t.monthlyStart
+                    && (appData.rents || []).some(function(r) { return r.tenantId === t.id && r.periodType === 'annual'; });
+            });
             const { roomMap, buildingMap } = buildLookupMaps();
             const months = [1,2,3,4,5,6,7,8,9,10,11,12];
             const today = new Date();
             const todayStr = getMonthStr(today);
             // 연세 세입자 카드 먼저 표시
-            if (annualTenants.length > 0) {
+            if (annualTenants.length > 0 || convertedTenants.length > 0) {
                 const annualHeader = document.createElement('div');
                 annualHeader.style.cssText = 'font-size:15px;font-weight:700;color:#92400e;background:#fef3c7;padding:10px 14px;border-radius:10px;margin:12px 0 4px;';
                 annualHeader.textContent = '📅 연세 세입자';
@@ -4900,6 +4949,31 @@
                                 }
                             </div>
                         </div>`;
+                    container.appendChild(card);
+                });
+                // 전환 세입자의 연세 기간 기록 (읽기 + 미납 수납 처리 가능)
+                convertedTenants.forEach(function(tenant) {
+                    const room = roomMap[tenant.roomId];
+                    const building = buildingMap[tenant.buildingId];
+                    const annualRecs = (appData.rents || [])
+                        .filter(function(r) { return r.tenantId === tenant.id && r.periodType === 'annual'; })
+                        .sort(function(a, b) { return (a.month || '').localeCompare(b.month || ''); });
+                    const stBadge = { paid: '<span class="badge badge-success">납부완료</span>',
+                                      partial: '<span class="badge badge-warning">부분납부</span>' };
+                    var rows = annualRecs.map(function(r) {
+                        var badge = stBadge[r.status]
+                            || ('<button onclick="markRentPaid(\'' + r.id + '\')" class="btn btn-secondary" style="padding:6px 12px;font-size:13px;">납부 처리</button>');
+                        return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-top:1px solid #F1F5F9;">'
+                            + '<span style="font-size:13px;color:#475569;">' + (r.month || '-') + ' · ₩' + Number(r.amount || 0).toLocaleString() + '</span>'
+                            + badge + '</div>';
+                    }).join('');
+                    const card = document.createElement('div');
+                    card.className = 'rent-year-card';
+                    card.innerHTML = '<div class="rent-year-card-header"><div>'
+                        + '<div class="rent-year-card-name">' + escapeHTML(tenant.name)
+                        + ' <span style="font-size:11px;font-weight:600;color:#2563EB;background:#DBEAFE;padding:2px 8px;border-radius:999px;">🔄 ' + tenant.monthlyStart + ' 월세 전환</span></div>'
+                        + '<div class="rent-year-card-sub">' + escapeHTML(building?.name ?? '-') + ' ' + escapeHTML(room?.roomNumber ?? '-') + '호 · 연세 기간 기록</div>'
+                        + '</div></div>' + (rows || '<div style="font-size:13px;color:#94A3B8;padding:6px 0;">연세 기간 수납 기록 없음</div>');
                     container.appendChild(card);
                 });
             }
@@ -4951,6 +5025,7 @@
                         months.forEach(m => {
                             const mStr = currentYear + '-' + String(m).padStart(2, '0');
                             if (tenantStartForCount && mStr < tenantStartForCount) return; // 입주 전 제외
+                            if (isBeforeMonthlyStart(tenant, mStr)) return; // 연세 기간 제외
                             if (tenantEndForCount && mStr > tenantEndForCount) return; // 퇴실 후 제외
                             if (mStr > todayStr) return; // 미래 월은 미납 집계 제외
                             const r = rentMap[mStr];
@@ -4971,6 +5046,13 @@
                             const mStr = currentYear + '-' + String(m).padStart(2, '0');
                             const r = rentMap[mStr];
                             const isFuture = mStr > todayStr;
+                            // 연세 기간 월: 월세 그리드에서는 '연세'로 표시 (기록은 위 연세 구역에서 관리)
+                            if (isBeforeMonthlyStart(tenant, mStr)) {
+                                return `<div class="rent-month-cell none" style="opacity:0.45;cursor:default;pointer-events:none;background:#FEF3C7;" title="연세 기간">
+                                    <div class="m-label">${m}월</div>
+                                    <div class="m-icon" style="font-size:10px;">연세</div>
+                                </div>`;
+                            }
                             // 입주 전 월: 해당사항없음
                             const isBeforeMove = tenantStartStr && mStr < tenantStartStr;
                             // 퇴실 후 월: 해당사항없음 (단, 납부/부분납부 기록 있으면 그대로 표시)
@@ -8551,7 +8633,7 @@
             showToast('✅ CSV 다운로드 완료 (영수증 사진은 미포함)');
         }
         // ============ FIREBASE REALTIME SYNC ============
-        var APP_VERSION = '2026.07.26-sync9';
+        var APP_VERSION = '2026.07.26-sync10';
         try { console.log('[App] version ' + APP_VERSION); } catch(e) {}
         let _db = null;
         let _fbUnsubscribe = null;
@@ -10360,6 +10442,14 @@
             appData.tenants[idx].monthlyRent = newRent;
             appData.tenants[idx].managementFee = effFee;
             appData.tenants[idx].status = 'active';
+            // 연세 → 월세 전환: 전환 시작월 기록 + 기존 연세 기간 수납 기록에 태그 (기간별 분리 관리)
+            if (oldType === 'annual' && newType === 'monthly') {
+                var _convM = (newStart || '').slice(0, 7);
+                appData.tenants[idx].monthlyStart = _convM;
+                _tagAnnualPeriodRecords(appData.tenants[idx].id, _convM);
+            } else if (newType === 'annual') {
+                appData.tenants[idx].monthlyStart = '';
+            }
             // 새 계약 시작월과 겹치는 기존 pending/overdue 월세 기록 제거 (중복 방지)
             const newStartMonth = newStart.slice(0, 7);
             appData.rents = appData.rents.filter(r => {
