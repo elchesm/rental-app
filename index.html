@@ -2356,6 +2356,7 @@
 
                 <!-- 10. 내보내기 -->
                 <div style="margin:16px 12px 100px;display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                    <button class="btn btn-primary" style="grid-column:1/-1;background:#1D4ED8;" onclick="openTaxReportYearPicker()">🖨️ 연도별 세금보고서 출력</button>
                     <button class="btn btn-primary" style="grid-column:1/-1;background:#0F766E;" onclick="copyTaxAccountantSummary()">📋 세무사 전달용 요약 복사</button>
                     <button class="btn btn-primary" style="background:#0F766E;" onclick="exportTaxFilingPackage()">📥 JSON 내보내기</button>
                     <button class="btn btn-secondary" onclick="exportTaxFilingCSV()">📊 CSV 내보내기</button>
@@ -2482,7 +2483,7 @@
                 <div class="card" style="margin-bottom:24px;">
                     <p style="font-size:14px;color:var(--text-secondary);">
                         <strong style="color:var(--text-primary);">동거동락</strong>
-                        <span style="font-size:11px;color:var(--text-tertiary);">v2026.07.25-sync2</span><br>
+                        <span style="font-size:11px;color:var(--text-tertiary);">v2026.07.25-sync6</span><br>
                         엄마와 나 둘이 쓰기 좋은 임대관리앱<br>
                         <br>
                         데이터는 먼저 이 폰에 저장되고,<br>
@@ -2714,6 +2715,11 @@
                     <label>입주일</label>
                     <input type="date" id="tenantMoveInDate">
                 </div>
+                <div class="form-group">
+                    <label>퇴거일 <span style="font-size: 13px; color: var(--neutral-gray);">(나간 경우만 입력)</span></label>
+                    <input type="date" id="tenantMoveOutDate">
+                    <p style="font-size:12px;color:var(--text-tertiary);margin:4px 0 0;">입력하면 자동으로 퇴거 처리되고, 그 다음 달부터는 미납이 생기지 않아요. (퇴거한 달까지의 미납은 유지)</p>
+                </div>
                 <details class="tenant-extra-section">
                     <summary>👥 비상연락처 · 보증인 <span style="font-size:12px;color:var(--neutral-gray);">(선택)</span></summary>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
@@ -2841,7 +2847,11 @@
                 <div class="form-group">
                     <label>영수증 / 사진 첨부</label>
                     <input type="file" id="receiptInput" accept="image/*" multiple style="display:none" onchange="handleReceiptUpload(this.files)">
-                    <div class="receipt-upload-btn" onclick="document.getElementById('receiptInput').click()">📷 사진 또는 파일 선택</div>
+                    <input type="file" id="receiptCameraInput" accept="image/*" capture="environment" style="display:none" onchange="handleReceiptUpload(this.files)">
+                    <div style="display:flex;gap:8px;">
+                        <div class="receipt-upload-btn" style="flex:1;" onclick="document.getElementById('receiptCameraInput').click()">📷 카메라 촬영</div>
+                        <div class="receipt-upload-btn" style="flex:1;" onclick="document.getElementById('receiptInput').click()">🖼️ 앨범에서 선택</div>
+                    </div>
                     <div id="receiptPreviewList" class="receipt-preview-wrap"></div>
                 </div>
                 <button type="submit" class="btn btn-primary btn-block">저장</button>
@@ -2894,10 +2904,18 @@
                     <input type="date" id="renewEnd">
                 </div>
                 <div class="form-group">
-                    <label>월 임대료 (원)</label>
-                    <input type="number" id="renewRent" min="0">
+                    <label>임대 방식</label>
+                    <select id="renewRentType" onchange="_renewTypeChanged()">
+                        <option value="monthly">월세 (매월)</option>
+                        <option value="annual">연세 (연 1회)</option>
+                    </select>
+                    <p id="renewTypeHint" style="display:none;font-size:12px;color:#2563EB;margin:4px 0 0;">🔄 연세 → 월세 전환: 새 계약 시작월부터 매월 월세로 관리됩니다. 기존 연세 납부 기록은 그대로 보존돼요.</p>
                 </div>
                 <div class="form-group">
+                    <label id="renewRentLabel">월 임대료 (원)</label>
+                    <input type="number" id="renewRent" min="0">
+                </div>
+                <div class="form-group" id="renewFeeGroup">
                     <label>관리비 (원)</label>
                     <input type="number" id="renewFee" min="0">
                 </div>
@@ -3080,7 +3098,11 @@
                 const _mi = (tenant.moveInDate || '').slice(0,7);
                 const _cs = (tenant.contractStart || '').slice(0,7);
                 const tStart = _mi && _cs ? (_mi > _cs ? _mi : _cs) : (_mi || _cs);
-                const tEnd = (tenant.contractEnd || '').slice(0,7);
+                const tEndC = (tenant.contractEnd || '').slice(0,7);
+                const tOutC = (tenant.moveOutDate || '').slice(0,7);
+                // 퇴거월/계약종료월 중 빠른 쪽까지가 월세 발생 구간. 그 이후의 미납·대기 레코드는 잘못 생성된 것 → 제거
+                // (퇴거한 그 달의 미납은 유지되어 실제 밀린 월세는 사라지지 않음)
+                const tEnd = tEndC && tOutC ? (tEndC < tOutC ? tEndC : tOutC) : (tOutC || tEndC);
                 // 입주 전 제거: r.month와 같은 연도 내에서만 체크 (다른 연도면 해당 연도 1월부터 유효)
                 const rYear = r.month.slice(0,4);
                 const tStartYear = tStart ? tStart.slice(0,4) : null;
@@ -3754,6 +3776,7 @@
             document.getElementById('tenantCleaningFee').value = '';
             document.getElementById('tenantPayDay').value = '';
             document.getElementById('tenantMoveInDate').value = '';
+            if (document.getElementById('tenantMoveOutDate')) document.getElementById('tenantMoveOutDate').value = '';
             document.getElementById('tenantMemo').value = '';
             document.getElementById('tenantEmergencyName').value = '';
             document.getElementById('tenantEmergencyPhone').value = '';
@@ -3888,6 +3911,7 @@
                 cleaningFee: parseInt(document.getElementById('tenantCleaningFee').value) || 0,
                 payDay: parseInt(document.getElementById('tenantPayDay').value) || 1,
                 moveInDate: document.getElementById('tenantMoveInDate').value,
+                moveOutDate: (document.getElementById('tenantMoveOutDate') ? document.getElementById('tenantMoveOutDate').value : '') || '',
                 memo: document.getElementById('tenantMemo').value,
                 emergencyName: document.getElementById('tenantEmergencyName').value.trim() || '',
                 emergencyPhone: document.getElementById('tenantEmergencyPhone').value.trim() || '',
@@ -3899,6 +3923,15 @@
                 depositRefundDate: editingId ? (appData.tenants.find(t => t.id === editingId)?.depositRefundDate || '') : '',
                 rentHistory: editingId ? (appData.tenants.find(t => t.id === editingId)?.rentHistory || []) : []
             };
+            // 퇴거일이 오늘 이전이면 자동으로 퇴거(inactive) 처리
+            if (tenant.moveOutDate) {
+                var _todayStr = new Date().toISOString().slice(0, 10);
+                if (tenant.moveOutDate <= _todayStr) tenant.status = 'inactive';
+            } else if (editingId) {
+                // 퇴거일을 지운 경우: 다시 입주 중으로 복귀
+                var _oldT = appData.tenants.find(t => t.id === editingId);
+                if (_oldT && _oldT.moveOutDate && _oldT.status === 'inactive') tenant.status = 'active';
+            }
             if (editingId) {
                 const oldTenant = appData.tenants.find(t => t.id === editingId);
                 const oldRoomId = oldTenant ? oldTenant.roomId : null;
@@ -3980,6 +4013,7 @@
             document.getElementById('tenantCleaningFee').value = tenant.cleaningFee || 0;
             document.getElementById('tenantPayDay').value = tenant.payDay;
             document.getElementById('tenantMoveInDate').value = tenant.moveInDate;
+            if (document.getElementById('tenantMoveOutDate')) document.getElementById('tenantMoveOutDate').value = tenant.moveOutDate || '';
             document.getElementById('tenantMemo').value = tenant.memo;
             document.getElementById('tenantEmergencyName').value = tenant.emergencyName || '';
             document.getElementById('tenantEmergencyPhone').value = tenant.emergencyPhone || '';
@@ -4534,7 +4568,10 @@
         }
         function isAfterContractEndMonth(tenant, month) {
             const tEnd = (tenant && tenant.contractEnd || '').slice(0, 7);
-            return !!(tEnd && month > tEnd);
+            const tOut = (tenant && tenant.moveOutDate || '').slice(0, 7);
+            // 계약종료월 또는 퇴거월 중 빠른 쪽 이후면 true (그 달까지는 월세 발생)
+            const eff = tEnd && tOut ? (tEnd < tOut ? tEnd : tOut) : (tOut || tEnd);
+            return !!(eff && month > eff);
         }
         function previousYear() {
             currentYear--;
@@ -5055,6 +5092,7 @@
                 results.forEach(function(r) { _pendingReceipts.push(r); });
                 renderReceiptPreviews();
                 document.getElementById('receiptInput').value = '';
+                if (document.getElementById('receiptCameraInput')) document.getElementById('receiptCameraInput').value = '';
             });
         }
 
@@ -7548,6 +7586,58 @@
         function openTaxFiling() {
             switchPage('taxPage');
         }
+        // ── 연도별 세금보고서 출력: 데이터가 있는 연도 목록에서 선택 → 인쇄/PDF ──
+        function _taxDataYears() {
+            var years = {};
+            years[new Date().getFullYear()] = true;
+            (appData.rents || []).forEach(function(r) { if (r.month && /^\d{4}/.test(r.month)) years[r.month.slice(0, 4)] = true; });
+            (appData.expenses || []).forEach(function(e) { if (e.date && /^\d{4}/.test(e.date)) years[e.date.slice(0, 4)] = true; });
+            return Object.keys(years).sort().reverse();
+        }
+        function openTaxReportYearPicker() {
+            var el = document.getElementById('taxReportYearModal');
+            if (!el) {
+                el = document.createElement('div');
+                el.id = 'taxReportYearModal';
+                el.className = 'modal-overlay';
+                el.innerHTML = '<div class="modal-content" style="max-width:380px;">'
+                    + '<div class="modal-header"><h2>🖨️ 연도별 세금보고서</h2>'
+                    + '<button class="modal-close" onclick="closeModal(\'taxReportYearModal\')">✕</button></div>'
+                    + '<div style="padding:0 16px 16px;">'
+                    + '<div class="form-group"><label>출력할 연도</label>'
+                    + '<select id="taxReportYearSelect" style="width:100%;padding:10px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:15px;"></select></div>'
+                    + '<p style="font-size:12px;color:var(--text-tertiary);margin:0 0 14px;">선택한 연도의 임대수입·필요경비·세입자 명세가 포함된 신고 자료가 인쇄 화면으로 열립니다. 인쇄 화면에서 PDF로 저장할 수도 있어요.</p>'
+                    + '<div style="display:flex;flex-direction:column;gap:8px;">'
+                    + '<button type="button" class="btn btn-primary" style="width:100%;" onclick="_taxPrintForSelectedYear(\'filing\')">📄 종합소득세 신고 자료 출력</button>'
+                    + '<button type="button" class="btn btn-secondary" style="width:100%;" onclick="_taxPrintForSelectedYear(\'bundle\')">🗂️ 세무사 제출용 묶음 출력</button>'
+                    + '</div></div></div>';
+                document.body.appendChild(el);
+            }
+            var sel = document.getElementById('taxReportYearSelect');
+            sel.innerHTML = _taxDataYears().map(function(y) {
+                return '<option value="' + y + '"' + (String(y) === String(_taxYear) ? ' selected' : '') + '>' + y + '년</option>';
+            }).join('');
+            openModal('taxReportYearModal');
+        }
+        function _taxPrintForSelectedYear(kind) {
+            var sel = document.getElementById('taxReportYearSelect');
+            var y = parseInt(sel && sel.value, 10);
+            if (!y) { showToast('연도를 선택해 주세요.'); return; }
+            if (y !== _taxYear) {
+                // 세금 센터의 연도 전환과 동일한 절차: 현재 연도 프로필 저장 → 연도 변경 → 프로필 로드
+                if (_taxYear && appData.taxProfiles) appData.taxProfiles[_taxYear] = appData.taxProfile;
+                _taxYear = y;
+                initTaxProfile();
+                renderTaxPage();
+            }
+            closeModal('taxReportYearModal');
+            if (kind === 'bundle') printTaxBundleForAccountant();
+            else printTaxFiling();
+        }
+        // 구버전 모달 버튼 호환용 (핸들러 미정의로 인한 오류 방지)
+        function _taxPrevYear() { _taxPagePrevYear(); }
+        function _taxNextYear() { _taxPageNextYear(); }
+        function _taxSwitchTab(tab) { if (typeof _taxPageSwitchTab === 'function') _taxPageSwitchTab(tab); }
         // ════════════════════════════════════════════════
         // 새 렌더링 함수들 (스마트 세금신고 준비센터)
         // ════════════════════════════════════════════════
@@ -8348,7 +8438,7 @@
             showToast('✅ CSV 다운로드 완료 (영수증 사진은 미포함)');
         }
         // ============ FIREBASE REALTIME SYNC ============
-        var APP_VERSION = '2026.07.25-sync2';
+        var APP_VERSION = '2026.07.25-sync6';
         try { console.log('[App] version ' + APP_VERSION); } catch(e) {}
         let _db = null;
         let _fbUnsubscribe = null;
@@ -10095,6 +10185,19 @@
         }
     </script>
     <script>
+        function _renewTypeChanged() {
+            var sel = document.getElementById('renewRentType');
+            var isAnnual = sel && sel.value === 'annual';
+            var lbl = document.getElementById('renewRentLabel');
+            if (lbl) lbl.textContent = isAnnual ? '연세액 (원, 연 1회)' : '월 임대료 (원)';
+            var feeG = document.getElementById('renewFeeGroup');
+            if (feeG) feeG.style.display = isAnnual ? 'none' : '';
+            // 연세 세입자가 월세로 전환하는 경우 안내 문구 표시
+            var hint = document.getElementById('renewTypeHint');
+            var tid = document.getElementById('renewTenantId').value;
+            var tenant = (appData.tenants || []).find(function(t) { return t.id === tid; });
+            if (hint) hint.style.display = (tenant && (tenant.rentType || 'monthly') === 'annual' && !isAnnual) ? 'block' : 'none';
+        }
         function openRenewModal(tenantId) {
             var tenant = (appData.tenants || []).find(function(t) { return t.id === tenantId; });
             if (!tenant) return;
@@ -10102,11 +10205,14 @@
             const newEndDate = new Date(oldEnd);
             newEndDate.setFullYear(newEndDate.getFullYear() + 1);
             document.getElementById('renewTenantId').value = tenantId;
-            document.getElementById('renewModalTenantName').textContent = tenant.name;
+            document.getElementById('renewModalTenantName').textContent = tenant.name
+                + ((tenant.rentType || 'monthly') === 'annual' ? ' · 현재 연세 계약' : ' · 현재 월세 계약');
             document.getElementById('renewStart').value = oldEnd;
             document.getElementById('renewEnd').value = newEndDate.toISOString().split('T')[0];
+            document.getElementById('renewRentType').value = tenant.rentType || 'monthly';
             document.getElementById('renewRent').value = tenant.monthlyRent || 0;
             document.getElementById('renewFee').value = tenant.managementFee || 0;
+            _renewTypeChanged();
             openModal('renewContractModal');
         }
         function submitRenewal() {
@@ -10120,22 +10226,27 @@
             const idx = appData.tenants.findIndex(t => t.id === tenantId);
             if (idx === -1) { showToast('⚠️ 세입자를 찾을 수 없습니다.'); return; }
             const _prev = appData.tenants[idx];
-            // 월세 인상 이력 기록 (이전 계약 한 줄)
+            const newType = (document.getElementById('renewRentType') && document.getElementById('renewRentType').value) || _prev.rentType || 'monthly';
+            const effFee = newType === 'annual' ? 0 : newFee;
+            const oldType = _prev.rentType || 'monthly';
+            // 월세 인상·임대 방식 전환 이력 기록 (이전 계약 한 줄)
             const _oldRent = _prev.monthlyRent || 0;
             const _oldFee = _prev.managementFee || 0;
-            if (_oldRent !== newRent || _oldFee !== newFee) {
+            if (_oldRent !== newRent || _oldFee !== effFee || oldType !== newType) {
                 _prev.rentHistory = (_prev.rentHistory || []).concat([{
                     monthlyRent: _oldRent,
                     managementFee: _oldFee,
+                    rentType: oldType,
                     from: _prev.contractStart || '',
                     to: newStart, // 새 계약 시작일을 종료시점으로 사용
-                    reason: 'renew'
+                    reason: oldType !== newType ? 'convert' : 'renew'
                 }]);
             }
             appData.tenants[idx].contractStart = newStart;
             appData.tenants[idx].contractEnd = newEnd;
+            appData.tenants[idx].rentType = newType;
             appData.tenants[idx].monthlyRent = newRent;
-            appData.tenants[idx].managementFee = newFee;
+            appData.tenants[idx].managementFee = effFee;
             appData.tenants[idx].status = 'active';
             // 새 계약 시작월과 겹치는 기존 pending/overdue 월세 기록 제거 (중복 방지)
             const newStartMonth = newStart.slice(0, 7);
@@ -10149,7 +10260,13 @@
             closeModal('renewContractModal');
             renderTenants();
             renderDashboard();
-            showToast('✅ 계약이 갱신되었습니다!');
+            if (oldType === 'annual' && newType === 'monthly') {
+                showToast('✅ 계약 갱신 완료 — 연세에서 월세로 전환됐어요. 새 계약 시작월부터 매월 관리됩니다.');
+            } else if (oldType === 'monthly' && newType === 'annual') {
+                showToast('✅ 계약 갱신 완료 — 월세에서 연세로 전환됐어요.');
+            } else {
+                showToast('✅ 계약이 갱신되었습니다!');
+            }
         }
     </script>
     <script>
