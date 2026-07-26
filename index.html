@@ -2483,7 +2483,7 @@
                 <div class="card" style="margin-bottom:24px;">
                     <p style="font-size:14px;color:var(--text-secondary);">
                         <strong style="color:var(--text-primary);">동거동락</strong>
-                        <span style="font-size:11px;color:var(--text-tertiary);">v2026.07.26-sync8</span><br>
+                        <span style="font-size:11px;color:var(--text-tertiary);">v2026.07.26-sync9</span><br>
                         엄마와 나 둘이 쓰기 좋은 임대관리앱<br>
                         <br>
                         데이터는 먼저 이 폰에 저장되고,<br>
@@ -3924,13 +3924,13 @@
                 rentHistory: editingId ? (appData.tenants.find(t => t.id === editingId)?.rentHistory || []) : []
             };
             // 퇴거일이 오늘 이전이면 자동으로 퇴거(inactive) 처리
-            if (tenant.moveOutDate) {
+            if (tenantData.moveOutDate) {
                 var _todayStr = new Date().toISOString().slice(0, 10);
-                if (tenant.moveOutDate <= _todayStr) tenant.status = 'inactive';
+                if (tenantData.moveOutDate <= _todayStr) tenantData.status = 'inactive';
             } else if (editingId) {
                 // 퇴거일을 지운 경우: 다시 입주 중으로 복귀
                 var _oldT = appData.tenants.find(t => t.id === editingId);
-                if (_oldT && _oldT.moveOutDate && _oldT.status === 'inactive') tenant.status = 'active';
+                if (_oldT && _oldT.moveOutDate && _oldT.status === 'inactive') tenantData.status = 'active';
             }
             if (editingId) {
                 const oldTenant = appData.tenants.find(t => t.id === editingId);
@@ -3983,7 +3983,13 @@
                     });
                 }
             }
+            var _rentsBefore = (appData.rents || []).length;
             saveData();
+            var _rentsRemoved = _rentsBefore - (appData.rents || []).length;
+            if (tenantData.status === 'inactive' && tenantData.moveOutDate) {
+                showToast('🚪 ' + tenantData.name + ' 퇴거 처리 완료'
+                    + (_rentsRemoved > 0 ? ' — 퇴거 이후 잘못 생성된 미납 ' + _rentsRemoved + '건을 정리했어요' : ''), 4500);
+            }
             closeModal('addTenantModal');
             renderTenants();
             showToast(editingId ? '세입자가 수정되었습니다' : '세입자가 추가되었습니다');
@@ -8545,7 +8551,7 @@
             showToast('✅ CSV 다운로드 완료 (영수증 사진은 미포함)');
         }
         // ============ FIREBASE REALTIME SYNC ============
-        var APP_VERSION = '2026.07.26-sync8';
+        var APP_VERSION = '2026.07.26-sync9';
         try { console.log('[App] version ' + APP_VERSION); } catch(e) {}
         let _db = null;
         let _fbUnsubscribe = null;
