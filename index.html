@@ -2483,7 +2483,7 @@
                 <div class="card" style="margin-bottom:24px;">
                     <p style="font-size:14px;color:var(--text-secondary);">
                         <strong style="color:var(--text-primary);">동거동락</strong>
-                        <span style="font-size:11px;color:var(--text-tertiary);">v2026.07.26-sync10</span><br>
+                        <span style="font-size:11px;color:var(--text-tertiary);">v2026.07.26-sync11</span><br>
                         엄마와 나 둘이 쓰기 좋은 임대관리앱<br>
                         <br>
                         데이터는 먼저 이 폰에 저장되고,<br>
@@ -3109,6 +3109,12 @@
                 const effectiveStart = (tStart && tStartYear === rYear) ? tStart : null;
                 if (effectiveStart && r.month < effectiveStart && r.status === 'pending') return false; // 입주 전 미납 레코드 제거
                 if (tEnd && r.month > tEnd && (r.status === 'pending' || r.status === 'overdue')) return false; // 퇴실 후 미납 레코드 제거
+                // 연세→월세 전환월에 남은 "갱신 예정이던 연세" 미납 청구 제거:
+                // 전환으로 그 연세 갱신은 발생하지 않으므로 잘못된 미납. 금액이 현재 월세와 다르고
+                // 태그되지 않은 pending/overdue만 대상 → 실제 월세 미납·과거 연세 미납(태그됨)은 보존.
+                if (tenant.monthlyStart && r.month === tenant.monthlyStart && !r.periodType
+                    && (r.status === 'pending' || r.status === 'overdue')
+                    && Number(r.amount || 0) !== (Number(tenant.monthlyRent || 0) + Number(tenant.managementFee || 0))) return false;
                 return true;
             });
             return appData.rents.length < before; // 실제로 제거된 레코드가 있으면 true
@@ -5011,7 +5017,7 @@
                     tenants.forEach(tenant => {
                         const monthlyAmount = tenant.monthlyRent + (tenant.managementFee || 0);
                         const rentMap = {};
-                        appData.rents.filter(r => r.tenantId === tenant.id && (!r.type || r.type === 'monthly') && r.month && r.month.startsWith(currentYear + '-'))
+                        appData.rents.filter(r => r.tenantId === tenant.id && (!r.type || r.type === 'monthly') && r.periodType !== 'annual' && r.month && r.month.startsWith(currentYear + '-'))
                             .forEach(r => { rentMap[r.month] = r; });
                         let paidCount = 0, pendingCount = 0;
                         const _mi2 = (tenant.moveInDate || '').slice(0,7);
@@ -8633,7 +8639,7 @@
             showToast('✅ CSV 다운로드 완료 (영수증 사진은 미포함)');
         }
         // ============ FIREBASE REALTIME SYNC ============
-        var APP_VERSION = '2026.07.26-sync10';
+        var APP_VERSION = '2026.07.26-sync11';
         try { console.log('[App] version ' + APP_VERSION); } catch(e) {}
         let _db = null;
         let _fbUnsubscribe = null;
