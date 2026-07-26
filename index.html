@@ -2483,7 +2483,7 @@
                 <div class="card" style="margin-bottom:24px;">
                     <p style="font-size:14px;color:var(--text-secondary);">
                         <strong style="color:var(--text-primary);">동거동락</strong>
-                        <span style="font-size:11px;color:var(--text-tertiary);">v2026.07.25-sync6</span><br>
+                        <span style="font-size:11px;color:var(--text-tertiary);">v2026.07.26-sync8</span><br>
                         엄마와 나 둘이 쓰기 좋은 임대관리앱<br>
                         <br>
                         데이터는 먼저 이 폰에 저장되고,<br>
@@ -5068,10 +5068,19 @@
             _pendingReceipts.forEach(function(src, i) {
                 var div = document.createElement('div');
                 div.className = 'receipt-thumb';
-                div.innerHTML = '<img src="' + src + '" onclick="openReceiptViewer(_pendingReceipts,' + i + ')">'
+                var shown = _isPhotoRef(src) ? _PHOTO_PLACEHOLDER : src;
+                div.innerHTML = '<img data-ridx="' + i + '" src="' + shown + '" onclick="openReceiptViewer(_pendingReceipts,' + i + ')">'
                     + '<div class="receipt-thumb-del" onclick="event.stopPropagation();removePendingReceipt(' + i + ')">✕</div>';
                 wrap.appendChild(div);
             });
+            if (_pendingReceipts.some(_isPhotoRef)) {
+                _resolveReceipts(_pendingReceipts).then(function(srcs) {
+                    srcs.forEach(function(s, i) {
+                        var img = wrap.querySelector('img[data-ridx="' + i + '"]');
+                        if (img) img.src = s;
+                    });
+                });
+            }
         }
 
         function handleReceiptUpload(files) {
@@ -5103,10 +5112,16 @@
 
         // Full-screen receipt viewer
         function openReceiptViewer(imagesArr, startIdx) {
-            _viewerReceipts = imagesArr.slice();
+            _viewerReceipts = imagesArr.slice().map(function(s) { return _isPhotoRef(s) ? _PHOTO_PLACEHOLDER : s; });
             _viewerIdx = startIdx || 0;
             _showViewerFrame();
             document.getElementById('receiptViewerOverlay').style.display = 'flex';
+            if (imagesArr.some(_isPhotoRef)) {
+                _resolveReceipts(imagesArr).then(function(srcs) {
+                    _viewerReceipts = srcs;
+                    _showViewerFrame();
+                });
+            }
         }
         function _showViewerFrame() {
             document.getElementById('receiptViewerImg').src = _viewerReceipts[_viewerIdx];
@@ -5163,23 +5178,28 @@
                 + 'p{margin:0 0 10px;color:#555;font-size:13px;}'
                 + 'img{max-width:100%;border-radius:6px;margin:6px 0;display:block;}'
                 + '</style></head><body>';
-            expenses.forEach(function(exp) {
-                var bld = (appData.buildings||[]).find(function(b){return b.id===exp.buildingId;});
-                var rm  = exp.roomId ? (appData.rooms||[]).find(function(r){return r.id===exp.roomId;}) : null;
-                var loc = (bld ? bld.name+' ' : '') + (rm ? rm.roomNumber+'\ud638' : '\uc804\uccb4');
-                html += '<div class="page"><h2>' + exp.title + '</h2>'
-                    + '<p>' + exp.date + ' | ' + exp.category + ' | \u20a9' + exp.amount.toLocaleString() + ' | ' + loc + '</p>';
-                if (exp.memo) html += '<p style="color:#888;">\uba54\ubaa8: ' + exp.memo + '</p>';
-                exp.receipts.forEach(function(src) {
-                    html += '<img src="' + src + '">';
+            Promise.all(expenses.map(function(exp) {
+                return _resolveReceipts(exp.receipts).then(function(srcs) { return { exp: exp, srcs: srcs }; });
+            })).then(function(items) {
+                items.forEach(function(it) {
+                    var exp = it.exp;
+                    var bld = (appData.buildings||[]).find(function(b){return b.id===exp.buildingId;});
+                    var rm  = exp.roomId ? (appData.rooms||[]).find(function(r){return r.id===exp.roomId;}) : null;
+                    var loc = (bld ? bld.name+' ' : '') + (rm ? rm.roomNumber+'\ud638' : '\uc804\uccb4');
+                    html += '<div class="page"><h2>' + exp.title + '</h2>'
+                        + '<p>' + exp.date + ' | ' + exp.category + ' | \u20a9' + exp.amount.toLocaleString() + ' | ' + loc + '</p>';
+                    if (exp.memo) html += '<p style="color:#888;">\uba54\ubaa8: ' + exp.memo + '</p>';
+                    it.srcs.forEach(function(src) {
+                        html += '<img src="' + src + '">';
+                    });
+                    html += '</div>';
                 });
-                html += '</div>';
+                html += '<script>window.onload=function(){window.print();}<\/script></body></html>';
+                var w = window.open('', '_blank');
+                if (!w) { showToast('\ud31d\uc5c5\uc774 \uc0ac\uc6a9 \ub4f1\ub85d\uc744 \ud5c8\uc6a9\ud574\uc8fc\uc138\uc694'); return; }
+                w.document.write(html);
+                w.document.close();
             });
-            html += '<script>window.onload=function(){window.print();}<\/script></body></html>';
-            var w = window.open('', '_blank');
-            if (!w) { showToast('\ud31d\uc5c5\uc774 \uc0ac\uc6a9 \ub4f1\ub85d\uc744 \ud5c8\uc6a9\ud574\uc8fc\uc138\uc694'); return; }
-            w.document.write(html);
-            w.document.close();
         }
 
         async function shareSelectedReceipts() {
@@ -5194,8 +5214,9 @@
                 var idx = 1;
                 for (var ei = 0; ei < expenses.length; ei++) {
                     var exp = expenses[ei];
-                    for (var ri = 0; ri < exp.receipts.length; ri++) {
-                        var resp = await fetch(exp.receipts[ri]);
+                    var _srcs = await _resolveReceipts(exp.receipts);
+                    for (var ri = 0; ri < _srcs.length; ri++) {
+                        var resp = await fetch(_srcs[ri]);
                         var blob = await resp.blob();
                         var fname = exp.title.replace(/[^\w\uAC00-\uD7A3]/g, '_') + '_' + idx + '.jpg';
                         files.push(new File([blob], fname, {type: 'image/jpeg'}));
@@ -5214,16 +5235,99 @@
         }
 
         // ============ EXPENSES ============
+        /* ── 영수증 사진 클라우드 공유 ──
+           촬영/선택 직후에는 base64로 이 폰에 먼저 저장(오프라인에서도 동작),
+           이어서 Firebase Storage에 업로드해 URL로 교체 → 가족 폰에서도 사진이 보임. */
+        var _photoCache = {};
+        var _PHOTO_PLACEHOLDER = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+            '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="200" height="200" fill="#E2E8F0"/><text x="100" y="105" text-anchor="middle" font-size="40">⏳</text></svg>');
+        function _isPhotoRef(s) { return typeof s === 'string' && s.indexOf('fsphoto:') === 0; }
+        /** receipts 배열의 클라우드 사진 참조(fsphoto:ID)를 실제 이미지로 변환 */
+        function _resolveReceipts(arr) {
+            return Promise.all((arr || []).map(function(s) {
+                if (!_isPhotoRef(s)) return Promise.resolve(s);
+                var id = s.slice(8);
+                if (_photoCache[id]) return Promise.resolve(_photoCache[id]);
+                var col = _getUserPhotosColRef();
+                if (!col) return Promise.resolve(_PHOTO_PLACEHOLDER);
+                return col.doc(id).get().then(function(d) {
+                    if (d.exists && d.data() && d.data().data) { _photoCache[id] = d.data().data; return _photoCache[id]; }
+                    return _PHOTO_PLACEHOLDER;
+                }).catch(function() { return _PHOTO_PLACEHOLDER; });
+            }));
+        }
+        function _isCloudReceipt(s) { return typeof s === 'string' && s.indexOf('data:') !== 0; }
+        function _receiptsForCloud(arr) { return (arr || []).filter(_isCloudReceipt); }
+        function _mergeReceipts(remoteArr, localArr) {
+            var out = [], seen = {};
+            (remoteArr || []).forEach(function(s) { if (_isCloudReceipt(s) && !seen[s]) { seen[s] = 1; out.push(s); } });
+            (localArr || []).forEach(function(s) { if (s && !seen[s]) { seen[s] = 1; out.push(s); } });
+            return out;
+        }
+        function _getUserPhotosColRef() {
+            if (!_db) return null;
+            try {
+                var u = firebase.auth && firebase.auth().currentUser;
+                if (u && u.uid) return _db.collection('userReceipts').doc(u.uid).collection('photos');
+            } catch (e) {}
+            return null;
+        }
+        /** 사진 1장 = Firestore 문서 1개 (무료 요금제에서 동작, Storage 불필요).
+            문서 1MB 제한 대비: 큰 사진은 한 번 더 압축 후 저장. */
+        function _uploadReceiptsToStorage(expenseId, dataUrls) {
+            return new Promise(function(resolve) {
+                var col = _getUserPhotosColRef();
+                if (!col || !dataUrls || !dataUrls.length) { resolve([]); return; }
+                var results = new Array(dataUrls.length).fill(null);
+                var done = 0;
+                dataUrls.forEach(function(dataUrl, i) {
+                    var prep = (dataUrl.length > 900000)
+                        ? compressImage(dataUrl, 1000, 0.6)
+                        : Promise.resolve(dataUrl);
+                    prep.then(function(finalData) {
+                        if (finalData.length > 990000) throw new Error('too-large');
+                        return col.add({
+                            data: finalData,
+                            expenseId: expenseId,
+                            createdAt: new Date().toISOString()
+                        });
+                    }).then(function(ref) {
+                        _photoCache[ref.id] = dataUrl; // 원본 화질로 캐시
+                        results[i] = 'fsphoto:' + ref.id;
+                    }).catch(function(err) {
+                        console.warn('[Receipt] Firestore upload failed:', err && (err.code || err.message));
+                    }).finally(function() {
+                        done++; if (done === dataUrls.length) resolve(results);
+                    });
+                });
+            });
+        }
+        function _uploadPendingReceiptsAndSync(expenseId, newBase64) {
+            if (!newBase64 || !newBase64.length) return;
+            _uploadReceiptsToStorage(expenseId, newBase64).then(function(urls) {
+                var okCount = urls.filter(Boolean).length;
+                if (!okCount) return; // 업로드 실패 → base64로 이 폰에 유지 (다음 저장 때 재시도 가능)
+                var exp = (appData.expenses || []).find(function(x) { return x.id === expenseId; });
+                if (!exp || !exp.receipts) return;
+                urls.forEach(function(u, i) {
+                    if (!u) return;
+                    var idx = exp.receipts.indexOf(newBase64[i]);
+                    if (idx >= 0) exp.receipts[idx] = u; else exp.receipts.push(u);
+                });
+                exp.updatedAt = new Date().toISOString();
+                saveData();
+                try { renderExpenses(); } catch (e2) {}
+                showToast('☁️ 사진 ' + okCount + '장이 클라우드에 올라갔어요. 가족 폰에서도 볼 수 있어요.');
+            });
+        }
         function saveExpense(e) {
             e.preventDefault();
             const expenseTitle = document.getElementById('expenseTitle').value.trim();
             const expenseAmount = parseInt(document.getElementById('expenseAmount').value);
             if (!expenseTitle) { showToast('⚠️ 지출 항목명을 입력해주세요'); return; }
             if (!expenseAmount || isNaN(expenseAmount) || expenseAmount <= 0) { showToast('⚠️ 금액을 올바르게 입력해주세요'); return; }
-            // 기존 영수증 보존 (수정 시) + 새로 추가된 _pendingReceipts 합치기
-            const existingReceipts = editingId
-                ? ((appData.expenses.find(e => e.id === editingId) || {}).receipts || [])
-                : [];
+            // 수정 화면은 기존 사진을 _pendingReceipts에 이미 담고 있으므로, 최종 목록 = _pendingReceipts (중복 방지)
+            const existingReceipts = [];
             const expenseData = {
                 id: editingId || Date.now().toString(),
                 roomId: document.getElementById('expenseRoom').value,
@@ -5233,7 +5337,7 @@
                 amount: expenseAmount,
                 date: document.getElementById('expenseDate').value,
                 memo: document.getElementById('expenseMemo').value,
-                receipts: existingReceipts.concat(_pendingReceipts)
+                receipts: (function(){ var seen={}; return existingReceipts.concat(_pendingReceipts).filter(function(x){ if(!x||seen[x])return false; seen[x]=1; return true; }); })()
             };
             if (editingId) {
                 const index = appData.expenses.findIndex(e => e.id === editingId);
@@ -5241,10 +5345,13 @@
             } else {
                 appData.expenses.push(expenseData);
             }
+            const _newPhotos = _pendingReceipts.filter(function(s) { return typeof s === 'string' && s.indexOf('data:') === 0; });
             saveData();
             closeModal('addExpenseModal');
             renderExpenses();
             showToast(editingId ? '지출이 수정되었습니다' : '지출이 추가되었습니다');
+            // 새로 첨부한 사진을 클라우드에 업로드 → 가족 폰에서도 보이게
+            _uploadPendingReceiptsAndSync(expenseData.id, _newPhotos);
         }
         function editExpense(id) {
             const expense = appData.expenses.find(e => e.id === id);
@@ -8438,7 +8545,7 @@
             showToast('✅ CSV 다운로드 완료 (영수증 사진은 미포함)');
         }
         // ============ FIREBASE REALTIME SYNC ============
-        var APP_VERSION = '2026.07.25-sync6';
+        var APP_VERSION = '2026.07.26-sync8';
         try { console.log('[App] version ' + APP_VERSION); } catch(e) {}
         let _db = null;
         let _fbUnsubscribe = null;
@@ -8851,7 +8958,7 @@
                         sorted = sorted.map(function(e) {
                             if (!e || typeof e !== 'object') return e;
                             var x = Object.assign({}, e);
-                            delete x.receipts;
+                            x.receipts = _receiptsForCloud(x.receipts);
                             return x;
                         });
                     }
@@ -9220,7 +9327,8 @@
             // 로컬에 저장된 영수증 사진 복원 (Firestore에는 용량 문제로 미저장)
             merged.expenses = merged.expenses.map(function(e) {
                 var localE = (localData.expenses || []).find(function(le) { return le.id === e.id; });
-                if (localE && localE.receipts && localE.receipts.length) e.receipts = localE.receipts;
+                // 클라우드 URL 사진 + 아직 업로드 전인 이 폰의 base64 사진 합치기
+                e.receipts = _mergeReceipts(e.receipts, localE && localE.receipts);
                 return e;
             });
 
@@ -9332,7 +9440,7 @@
             var cloudData = JSON.parse(JSON.stringify(appData));
             cloudData.expenses = (cloudData.expenses || []).map(function(e) {
                 var copy = Object.assign({}, e);
-                delete copy.receipts;
+                copy.receipts = _receiptsForCloud(copy.receipts); // URL 사진은 동기화, base64만 제외
                 return copy;
             });
             // 기기 레이블 첨부 → 상대 폰 토스트에 표시용
@@ -9471,7 +9579,7 @@
             }
             var cloudData = JSON.parse(JSON.stringify(appData));
             cloudData.expenses = (cloudData.expenses || []).map(function(e) {
-                var c = Object.assign({}, e); delete c.receipts; return c;
+                var c = Object.assign({}, e); c.receipts = _receiptsForCloud(c.receipts); return c;
             });
             var tz = new Date().getTimezoneOffset(); // 한국: -540, 캐나다: +240~+300
             var deviceLabel = tz <= -480 ? '🇰🇷 한국' : '🇨🇦 캐나다';
@@ -9566,7 +9674,7 @@
                     // 복원 전 현재 상태를 이력에 백업
                     var cloudNow = JSON.parse(JSON.stringify(appData));
                     cloudNow.expenses = (cloudNow.expenses || []).map(function(e) {
-                        var c = Object.assign({}, e); delete c.receipts; return c;
+                        var c = Object.assign({}, e); c.receipts = _receiptsForCloud(c.receipts); return c;
                     });
                     var tzNow = new Date().getTimezoneOffset();
                     var _rbColRef2 = _getUserChangelogColRef();
@@ -9581,7 +9689,7 @@
                     try { local = JSON.parse(localStorage.getItem('appData') || '{}'); } catch(e) { local = {}; }
                     snap.expenses = (snap.expenses || []).map(function(e) {
                         var le = (local.expenses || []).find(function(x) { return x.id === e.id; });
-                        if (le && le.receipts && le.receipts.length) e.receipts = le.receipts;
+                        e.receipts = _mergeReceipts(e.receipts, le && le.receipts);
                         return e;
                     });
                     appData = snap;
@@ -9912,9 +10020,7 @@
             });
             merged.expenses = merged.expenses.map(expense => {
                 const localExpense = (local.expenses || []).find(item => item && item.id === expense.id);
-                if (localExpense && localExpense.receipts && localExpense.receipts.length) {
-                    expense.receipts = localExpense.receipts;
-                }
+                expense.receipts = _mergeReceipts(expense.receipts, localExpense && localExpense.receipts);
                 return expense;
             });
             const before = _appDataForSyncCompare(appData);
